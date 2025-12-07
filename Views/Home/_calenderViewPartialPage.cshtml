@@ -1,0 +1,65 @@
+﻿@model List<WebApplication1.Models.TaskItem>
+
+@{
+    Layout = null;
+    var tasks = ViewBag.tasks;
+}
+<div>
+    <p>This is Partial Page!!!</p>
+</div>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Task</th>
+            <th>1st Hour</th>
+            <th>2nd Hour</th>
+            <th>3rd Hour</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in tasks)
+        {
+            <tr>
+                <td draggable="true" class="draggable">@item.Task</td>
+                <td draggable="true" class="draggable">@item.H1</td>
+                <td draggable="true" class="draggable">@item.H2</td>
+                <td draggable="true" class="draggable">@item.H3</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+let draggedCell = null;
+
+// When dragging starts
+document.querySelectorAll(".draggable").forEach(td => {
+    td.addEventListener("dragstart", function(e) {
+        draggedCell = this;
+    });
+
+    td.addEventListener("dragover", function(e) {
+        e.preventDefault(); // allow drop
+    });
+
+    td.addEventListener("drop", function(e) {
+        e.preventDefault();
+        if (draggedCell && draggedCell !== this) {
+           
+            
+
+            if (this.innerText == "") {
+                this.innerText = draggedCell.innerText;
+            } else {
+                this.innerText = this.innerText + " | " + draggedCell.innerText;
+            }
+
+            
+            draggedCell.innerText = "";
+        }
+        draggedCell = null;
+    });
+});
+</script>
+

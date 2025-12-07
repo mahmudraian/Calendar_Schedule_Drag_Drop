@@ -1,0 +1,208 @@
+﻿@model List<WebApplication1.Models.TaskItemForCalender>
+@{
+   
+    var rows = (List<string>)ViewBag.Rows;
+    int month = (int)ViewBag.Month;
+    int year = (int)ViewBag.Year;
+    var firstDay = new DateTime(year, month, 1);
+    int daysInMonth = DateTime.DaysInMonth(year, month);
+    int dayWidth = 60;
+    int MntWidth = 2;
+    var tasks = ViewBag.tasks as List<WebApplication1.Models.TaskItemForCalender>;
+}
+
+
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; margin: 8px; background:#f3f6f7; }
+        .planner-wrap { border:1px solid #cfd8dc; background:white; overflow:hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        /* header with month and navigation (optional) */
+        .planner-header { padding:8px 12px; display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:1px solid #e0e0e0; }
+        .planner-title { font-size:16px; font-weight:600; }
+
+        .planner-body { display:flex; height:600px; } /* adjust height */
+
+        /* Left label column */
+        .left-col { width:200px; min-width:200px; border-right:1px solid #e0e0e0; background: linear-gradient(#0e787ec0, #0e6f88c9); color:white; overflow:auto; }
+        .row-label { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px; white-space:nowrap; }
+
+        /* Right timeline area */
+        .right-area { flex:1; overflow:auto; position:relative; }
+
+        /* Top days header */
+        .days-header { position:sticky; top:0; z-index:5; background:#ffffff; border-bottom:1px solid #e0e0e0; }
+        .days-row { display:flex; align-items:stretch; }
+        .day-cell { width:@(dayWidth)px; min-width:@(dayWidth)px; height:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #e9eef0; font-size:12px; }
+        .day-cell .day-number { font-weight:600; }
+        .day-cell .day-name { font-size:11px; color:#666; }
+
+        /* Grid rows */
+        .grid { position:relative; }
+        .grid-row { height:68px; /* row height */ border-bottom:1px dashed #e6eef0; position:relative; }
+        .grid-row .day-slot { width:@(dayWidth)px; min-width:@(dayWidth)px; height:100%; float:left; border-right:1px solid #f0f4f6; }
+
+        /* Task bar */
+        .task-bar {
+            position:absolute;
+            height:28px;
+            top:20px; /* vertically centered inside row (adjust) */
+            border-radius:4px;
+            padding:3px 10px 3px 10px;
+            color:#fff;
+            font-size:12px;
+            display:flex;
+            align-items:center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+            overflow:hidden;
+            white-space:nowrap;
+        }
+        .task-bar:after {
+            content: "";
+            width: 0;
+            height: 0;
+            border-top: 14px solid transparent;
+            border-bottom: 14px solid transparent;
+            border-left: 14px solid rgba(0,0,0,0.15);
+            position:absolute;
+            right:-12px;
+            top:0;
+            transform: translateY(0);
+            opacity:0.65;
+        }
+
+        /* simple color fallback */
+        .task-default { background:#d9534f; }
+        .task-label { padding-right:6px; font-weight:600; text-overflow:ellipsis; overflow:hidden; }
+
+        /* small helper to show grid line values at the very bottom for capacity */
+        .bottom-scale { display:flex; border-top:1px solid #e0e0e0; background:#ffffff; }
+        .scale-cell { width:@(dayWidth)px; min-width:@(dayWidth)px; height:28px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#333; border-right:1px solid #e9eef0; }
+    </style>
+
+    <div class="planner-wrap">
+        <div class="planner-header">
+            <div class="planner-title">@firstDay.ToString("MMMM yyyy") — Sewing Planner</div>
+            <!--<div>-->
+                <!-- optional controls -->
+                <!--<a href="@Url.Action("Index", new { month = firstDay.AddMonths(-1).Month, year = firstDay.AddMonths(-1).Year })">◀ Prev</a>
+                &nbsp; | &nbsp;
+                <a href="@Url.Action("Index", new { month = firstDay.AddMonths(1).Month, year = firstDay.AddMonths(1).Year })">Next ▶</a>
+            </div>-->
+        </div>
+
+        <div class="planner-body">
+            <div class="left-col" id="leftCol">
+                @foreach (var r in rows)
+                {
+                    <div class="row-label">@r</div>
+                }
+            </div>
+
+            <div class="right-area" id="rightArea">
+                <!-- top days header (sticky) -->
+                <div class="days-header">
+                    <div style="display:flex;">
+                        <div style="width:0; min-width:0;"></div> <!-- placeholder to align under left-col -->
+                        <div class="days-row" style="width:@(daysInMonth * dayWidth)px;">
+                            @for (int d = 1; d <= daysInMonth; d++)
+                            {
+                                var date = new DateTime(year, month, d);
+                                <div class="day-cell">
+                                    <div class="day-number">@d</div>
+                                    <div class="day-name">@date.ToString("ddd")</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- main grid rows -->
+                <div class="grid" style="width:@(daysInMonth * dayWidth)px;">
+                    @for (int rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+                    {
+                        var rowName = rows[rowIndex];
+                        <div class="grid-row" style="width:@(daysInMonth * dayWidth)px;">
+                            <!-- day cells (visual) -->
+                            @for (int d = 1; d <= daysInMonth; d++)
+                            {
+                                <div class="day-slot"></div>
+                            }
+
+                           
+                            @{
+                                var tasksForRow = tasks.Where(t => string.Equals(t.Line, rowName, StringComparison.OrdinalIgnoreCase)).ToList();
+                                foreach (var t in tasksForRow)
+                                {
+                                    // clamp to month bounds
+                                    var start = t.FromDate < firstDay ? firstDay : t.FromDate;
+                                    var end = t.ToDate > firstDay.AddDays(daysInMonth - 1) ? firstDay.AddDays(daysInMonth - 1) : t.ToDate;
+                                    var startIndex = (int)(start - firstDay).TotalDays; // 0-based
+                                    var spanDays = (int)(end - start).TotalDays + 1;
+                                    var leftPx = startIndex * dayWidth;
+                                    var widthPx = Math.Max(spanDays * dayWidth, 30); // minimum width
+                                    var color = string.IsNullOrEmpty(t.Color) ? "#d9534f" : t.Color;
+                              
+                                    var rowTop = rowIndex * 68; // row height matches .grid-row (68px)
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+
+             
+                <div style="position:absolute; left:0; top:60px; pointer-events:none;">
+                    @{
+                       
+                        for (int rIndex = 0; rIndex < rows.Count; rIndex++)
+                        {
+                            var rowName = rows[rIndex];
+                            var tasksForRow = tasks.Where(t => string.Equals(t.Line, rowName, StringComparison.OrdinalIgnoreCase)).ToList();
+                            foreach (var t in tasksForRow)
+                            {
+                                var start = t.FromDate < firstDay ? firstDay : t.FromDate;
+                                var end = t.ToDate > firstDay.AddDays(daysInMonth - 1) ? firstDay.AddDays(daysInMonth - 1) : t.ToDate;
+                                var startIndex = (int)(start - firstDay).TotalDays; 
+                                var spanDays = (int)(end - start).TotalDays + 1;
+                                var leftPx = startIndex * dayWidth;
+                                var widthPx = Math.Max(spanDays * dayWidth - 8, 36); 
+                                var topPx = rIndex * 68 + 6; 
+                                var color = string.IsNullOrEmpty(t.Color) ? "#d9534f" : t.Color;
+                                var displayText = t.Task;
+                                <div class="task-bar task-default" style="left:@(leftPx)px; top:@(topPx)px; width:@(widthPx)px; background:@(color); pointer-events:auto;">
+                                    <div class="task-label">@displayText</div>
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+
+            </div>
+        </div>
+      
+        <div class="bottom-scale">
+            <div style="width:200px; min-width:200px;"></div>
+            <div style="display:flex; width:@(daysInMonth * dayWidth)px;">
+                @for (int d = 1; d <= daysInMonth; d++)
+                {
+                    <div class="scale-cell">@((firstDay.AddDays(d-1)).ToString("dd"))</div>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Sync left column vertical scroll with right-area vertical scroll for better UX
+        (function () {
+            var leftCol = document.getElementById('leftCol');
+            var rightArea = document.getElementById('rightArea');
+
+            rightArea.addEventListener('scroll', function () {
+                leftCol.scrollTop = rightArea.scrollTop;
+            });
+
+            leftCol.addEventListener('scroll', function () {
+                rightArea.scrollTop = leftCol.scrollTop;
+            });
+        })();
+    </script>

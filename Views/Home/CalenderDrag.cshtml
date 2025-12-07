@@ -1,0 +1,287 @@
+﻿@{
+    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
+    var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
+
+    // Use dates from ViewBag (passed from controller)
+    DateTime startDate = ViewBag.StartDate;
+    DateTime endDate = ViewBag.EndDate;
+
+    int workingHours = 10;
+
+    // For navigation, previous and next month based on startDate
+    DateTime currentMonth = new DateTime(startDate.Year, startDate.Month, 1);
+    DateTime prevMonth = currentMonth.AddMonths(-1);
+    DateTime nextMonth = currentMonth.AddMonths(1);
+}
+
+<style>
+    /* --- Styles (same as before) --- */
+    body {
+        font-family: Arial;
+    }
+
+    .calendar {
+        border: 1px solid #ccc;
+        overflow-x: auto;
+        overflow-y: auto;
+        position: relative;
+        background: #fff;
+        width: 100%;
+        white-space: nowrap;
+    }
+
+    .row {
+        display: flex;
+        position: relative;
+        border-bottom: 1px solid #eee;
+        height: 50px;
+        flex-wrap: nowrap;
+    }
+
+    .line-name {
+        width: 120px;
+        background: #f3f3f3;
+        border-right: 1px solid #ccc;
+        font-weight: bold;
+        flex: 0 0 120px;
+        position: sticky;
+        left: 0;
+        z-index: 90;
+    }
+
+    .row:first-child .line-name {
+        z-index: 110;
+    }
+
+    .cell {
+        min-width: 40px;
+        max-width: 40px;
+        flex: 0 0 40px;
+        border-right: 1px solid #F5E5E1;
+        border-bottom: 1px solid #F5E5E1;
+        text-align: center;
+        font-size: 12px;
+        box-sizing: border-box;
+        position: relative;
+    }
+
+    .hour-row {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .hour-mini {
+        flex: 1;
+        border-left: 1px solid white;
+        height: 100%;
+    }
+
+   /* .task {
+        position: absolute;
+        top: 5px;
+        height: 40px;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 12px;
+        padding: 5px;
+        cursor: move;
+        user-select: none;
+        z-index: 50;
+    }
+*/
+
+
+    .task {
+        position: absolute;
+        left: 0px;
+        top: 64px;
+        width: 200px;
+        height: 32px;
+        white-space: nowrap;
+        overflow: hidden;
+        cursor: e-resize;
+    }
+
+    .today {
+        background: #ffe082 !important;
+        font-weight: bold;
+    }
+
+    .today-line {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: red;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    .row:first-child {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: white;
+    }
+</style>
+
+<h3>Sewing Line Calendar</h3>
+
+<!-- Date Selection Form -->
+<div style="margin-bottom: 15px;">
+    <form id="dateForm" method="get" action="@Url.Action("CalenderDrag")">
+        <label>
+            From:
+            <input type="date" name="FromDate" value="@startDate.ToString("yyyy-MM-dd")" />
+        </label>
+        <label style="margin-left: 10px;">
+            To:
+            <input type="date" name="ToDate" value="@endDate.ToString("yyyy-MM-dd")" />
+        </label>
+        <button type="submit" style="margin-left: 10px;">Load Calendar</button>
+    </form>
+</div>
+
+
+<div class="calendar" id="calendar">
+
+    <!-- Header Row -->
+    <div class="row">
+        <div class="line-name">Line</div>
+        @for (var d = startDate; d <= endDate; d = d.AddDays(1))
+        {
+            var isToday = d.Date == DateTime.Today;
+            <div class="cell @(isToday ? "today" : "")">@d.ToString("dd")</div>
+        }
+    </div>
+
+    <!-- Lines & Tasks -->
+    @foreach (var line in lines)
+    {
+        <div class="row" data-line="@line.Id">
+            <div class="line-name">@line.LineName</div>
+
+            @for (var d = startDate; d <= endDate; d = d.AddDays(1))
+            {
+                var isToday = d.Date == DateTime.Today;
+                <div class="cell @(isToday ? "today" : "")" data-date="@d.ToString("yyyy-MM-dd")">
+                    <div class="hour-row">
+                        @for (int h = 0; h < workingHours; h++)
+                        {
+                            <div class="hour-mini" data-hour="@h"></div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @{
+                var lineTasks = tasks.Where(t => t.SewingLineId == line.Id).ToList();
+            }
+
+            @foreach (var task in lineTasks)
+            {
+                var startOffset = (task.FromDate - startDate).Days;
+                var dayCount = (task.ToDate - task.FromDate).Days + 1;
+
+                <div class="task"
+                     draggable="true"
+                     data-id="@task.Id"
+                     data-start-day="@startOffset"
+                     data-duration="@dayCount"
+                     @*style="background:@task.ColorCode;"*@
+                     >
+                    @task.TaskName
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+(() => {
+    const workingHours = @workingHours;
+    let dragged = null;
+
+    document.addEventListener("dragstart", e => {
+        if (!e.target.classList.contains("task")) return;
+        dragged = e.target;
+        e.dataTransfer.setData("text/plain", "");
+    });
+
+    document.addEventListener("dragover", e => e.preventDefault());
+
+    document.addEventListener("drop", e => {
+        e.preventDefault();
+        if (!dragged) return;
+
+        const targetCell = e.target.closest(".cell");
+        const targetHourMini = e.target.closest(".hour-mini");
+        const row = e.target.closest(".row");
+
+        if (!row || !targetCell || !targetHourMini) {
+            dragged = null;
+            return;
+        }
+
+        row.appendChild(dragged);
+
+        const targetDate = new Date(targetCell.dataset.date);
+        const targetHour = parseInt(targetHourMini.dataset.hour);
+        targetDate.setHours(targetHour, 0, 0, 0);
+
+        const durationDays = parseInt(dragged.dataset.duration || "1");
+        const endDateTime = new Date(targetDate);
+        endDateTime.setDate(endDateTime.getDate() + durationDays);
+
+        const leftCol = row.querySelector(".line-name");
+        const leftOffset = leftCol.getBoundingClientRect().width;
+        const firstCell = row.querySelector(".cell");
+        const dayWidth = firstCell.getBoundingClientRect().width;
+        const hourWidth = dayWidth / workingHours;
+        const allCells = Array.from(row.querySelectorAll(".cell"));
+        const dayIndex = allCells.indexOf(targetCell);
+
+        dragged.style.left = (leftOffset + dayIndex * dayWidth + targetHour * hourWidth) + "px";
+        dragged.style.width = (durationDays * dayWidth) + "px";
+        dragged.style.top = "5px";
+
+        console.log("Task:", dragged.innerText.trim(), "Start:", targetDate, "End:", endDateTime);
+        dragged = null;
+    });
+})();
+
+window.addEventListener("load", () => {
+    document.querySelectorAll(".row").forEach(row => {
+        const leftCol = row.querySelector(".line-name");
+        if (!leftCol) return;
+
+        const leftOffset = leftCol.getBoundingClientRect().width;
+        const firstCell = row.querySelector(".cell");
+        const dayWidth = firstCell.getBoundingClientRect().width;
+
+        row.querySelectorAll(".task").forEach(task => {
+            const startDay = parseInt(task.dataset.startDay || "0");
+            const duration = parseInt(task.dataset.duration || "1");
+
+            task.style.left = (startDay * dayWidth + leftOffset) + "px";
+            task.style.width = (duration * dayWidth) + "px";
+            task.style.top = "5px";
+        });
+    });
+
+    const calendar = document.getElementById("calendar");
+    const todayCell = document.querySelector(".cell.today");
+    if (calendar && todayCell) {
+        calendar.scrollLeft = todayCell.offsetLeft - (calendar.clientWidth / 2);
+
+        const todayLine = document.createElement("div");
+        todayLine.className = "today-line";
+        todayLine.style.left = todayCell.offsetLeft + "px";
+        calendar.appendChild(todayLine);
+    }
+});
+</script>

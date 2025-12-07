@@ -1,0 +1,75 @@
+﻿@model List<WebApplication1.Models.TaskItemForCalender>
+
+@{
+    int month = ViewBag.Month;
+    int year = ViewBag.Year;
+    DateTime firstDay = new DateTime(year, month, 1);
+    int daysInMonth = DateTime.DaysInMonth(year, month);
+    int startDayOfWeek = (int)firstDay.DayOfWeek; // 0=Sunday
+}
+<style>
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #ddd;
+        padding: 10px;
+    }
+
+    .day {
+        height: 120px;
+        background: rgba(255,255,255,0.85);
+        position: relative;
+        padding: 5px;
+        font-size: 14px;
+        border-radius: 5px;
+    }
+
+    .day-number {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .task {
+        background: rgba(0, 123, 255, 0.5);
+        color: white;
+        padding: 2px 4px;
+        margin-top: 3px;
+        font-size: 12px;
+        border-radius: 3px;
+    }
+
+    .empty {
+        background: transparent;
+    }
+</style>
+
+
+<h2>@firstDay.ToString("MMMM yyyy")</h2>
+
+<div class="calendar">
+
+    @* Empty cells before 1st date *@
+    @for (int i = 0; i < startDayOfWeek; i++)
+    {
+        <div class="day empty"></div>
+    }
+
+    @* Actual dates *@
+    @for (int day = 1; day <= daysInMonth; day++)
+    {
+        DateTime currentDate = new DateTime(year, month, day);
+
+        <div class="day">
+            <div class="day-number">@day</div>
+
+            @foreach (var task in Model)
+            {
+                if (currentDate >= task.FromDate && currentDate <= task.ToDate)
+                {
+                    <div class="task">@task.Task</div>
+                }
+            }
+        </div>
+    }
+</div>

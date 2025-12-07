@@ -1,0 +1,27 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<style>
+    table tr td:first-child,
+    table tr th:first-child {
+        width: 100px;
+        min-width: 100px;
+        max-width: 100px;
+    }
+</style>
+
+<main>
+    <section class="row" aria-labelledby="aspnetTitle">
+        <H1>Shah Mahmud Raian!</H1>
+
+    </section>
+
+    <div class="row">
+        @{
+            Html.RenderPartial("~/Views/Home/_calenderViewPartialPage.cshtml");
+            
+          }
+    </div>
+
+</main>
