@@ -96,14 +96,14 @@
 
 
     .task {
+        background-color: #F9DFDF;
+        width: 40%;
         position: absolute;
-        left: 0px;
-        top: 64px;
-        width: 200px;
-        height: 32px;
-        white-space: nowrap;
-        overflow: hidden;
-        cursor: e-resize;
+        top: 50%;
+        font-weight:100;
+        height:45px;
+       justify-content:center;
+        /*    transform: translateY(-50%);*/
     }
 
     .today {
@@ -222,6 +222,7 @@
         const targetHourMini = e.target.closest(".hour-mini");
         const row = e.target.closest(".row");
 
+
         if (!row || !targetCell || !targetHourMini) {
             dragged = null;
             return;
@@ -250,6 +251,18 @@
         dragged.style.top = "5px";
 
         console.log("Task:", dragged.innerText.trim(), "Start:", targetDate, "End:", endDateTime);
+
+        console.log("Dragged Element Info:", {
+            element: dragged,
+            text: dragged.innerText.trim(),
+            dataset: { ...dragged.dataset },
+            duration: dragged.dataset.duration,
+            currentLeft: dragged.style.left,
+            currentTop: dragged.style.top,
+            width: dragged.style.width
+        });
+
+
         dragged = null;
     });
 })();

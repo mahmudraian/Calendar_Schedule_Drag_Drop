@@ -107,7 +107,7 @@ namespace WebApplication1.Controllers
 
         public ActionResult CalenderDrag(DateTime? FromDate = null, DateTime? ToDate = null)
         {
-            // Sample lines
+            
             var lines = new List<SewingLine>
     {
         new SewingLine { Id = 1, LineName="Sewing-L6"},
@@ -122,8 +122,10 @@ namespace WebApplication1.Controllers
     {
         new TaskIteMForDragAndDROP { TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red"},
         new TaskIteMForDragAndDROP { TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black"},
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=4, ColorCode="blue"}
-    };
+        new TaskIteMForDragAndDROP { TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=4, ColorCode="blue"},
+        new TaskIteMForDragAndDROP { TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=2, ColorCode="black"},
+        new TaskIteMForDragAndDROP { TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=4, ColorCode="blue"}
+            };
 
             ViewBag.Lines = lines;
             ViewBag.Tasks = tasks;
