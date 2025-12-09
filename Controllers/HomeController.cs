@@ -110,21 +110,21 @@ namespace WebApplication1.Controllers
             
             var lines = new List<SewingLine>
     {
-        new SewingLine { Id = 1, LineName="Sewing-L6"},
-        new SewingLine { Id = 2, LineName="Sewing-L7"},
-        new SewingLine { Id = 3, LineName="Sewing-L8"},
-        new SewingLine { Id = 4, LineName="Parking 1"},
-        new SewingLine { Id = 5, LineName="Parking 2"},
+        new SewingLine { Id = 1, LineName="Sewing-L6",ManPower = 13,ManWorkLimite=70},
+        new SewingLine { Id = 2, LineName="Sewing-L7",ManPower = 19,ManWorkLimite=120},
+        new SewingLine { Id = 3, LineName="Sewing-L8",ManPower = 23 ,ManWorkLimite=80},
+        new SewingLine { Id = 4, LineName="Parking 1",ManPower = 53 ,ManWorkLimite=90},
+        new SewingLine { Id = 5, LineName="Parking 2",ManPower = 63,ManWorkLimite=100},
     };
 
             // Sample tasks
             var tasks = new List<TaskIteMForDragAndDROP>
     {
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red"},
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black"},
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=4, ColorCode="blue"},
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=2, ColorCode="black"},
-        new TaskIteMForDragAndDROP { TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=4, ColorCode="blue"}
+        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red", Quantity = 20000},
+        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black" , Quantity = 40000},
+        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=4, ColorCode="blue",Quantity=90000},
+        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=2, ColorCode="black",Quantity=80000},
+        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=4, ColorCode="blue",Quantity=60000}
             };
 
             ViewBag.Lines = lines;

@@ -1,7 +1,7 @@
 ﻿@{
     var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
-
+    var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
     // Use dates from ViewBag (passed from controller)
     DateTime startDate = ViewBag.StartDate;
     DateTime endDate = ViewBag.EndDate;
@@ -127,6 +127,19 @@
         z-index: 100;
         background: white;
     }
+
+    .line-title {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .line-info {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #666;
+        display: flex;
+        gap: 10px;
+    }
 </style>
 
 <h3>Sewing Line Calendar</h3>
@@ -159,11 +172,20 @@
         }
     </div>
 
-    <!-- Lines & Tasks -->
+   
     @foreach (var line in lines)
     {
-        <div class="row" data-line="@line.Id">
-            <div class="line-name">@line.LineName</div>
+        <div class="row" data-line="@line.Id" data-ManPower="@line.ManPower" data-ManWorkLimite="@line.ManWorkLimite">
+            <div class="line-name">
+
+                <div class="line-title">@line.LineName</div>
+                <div class="line-info">
+                    <span>MP: @line.ManPower</span>
+                    <span>Limit/H: @line.ManWorkLimite</span>
+                </div>
+
+            </div>
+
 
             @for (var d = startDate; d <= endDate; d = d.AddDays(1))
             {
@@ -192,6 +214,7 @@
                      data-id="@task.Id"
                      data-start-day="@startOffset"
                      data-duration="@dayCount"
+                     data-quantity="@task.Quantity"
                      @*style="background:@task.ColorCode;"*@
                      >
                     @task.TaskName
@@ -206,65 +229,161 @@
     const workingHours = @workingHours;
     let dragged = null;
 
+      var tasks = @Html.Raw(tasksJson);
+    
     document.addEventListener("dragstart", e => {
-        if (!e.target.classList.contains("task")) return;
-        dragged = e.target;
-        e.dataTransfer.setData("text/plain", "");
+        //if (!e.target.classList.contains("task")) return;
+
+        //draggedTask = e.target;
+
+        //e.dataTransfer.setData("text/plain", "");
+        if (e.target.classList.contains("task")) {
+            draggedTask = e.target;
+            e.dataTransfer.setData("text/plain", e.target.dataset.id);
+            e.dataTransfer.effectAllowed = "move";
+        }
+
     });
 
-    document.addEventListener("dragover", e => e.preventDefault());
+    document.addEventListener("dragend", e => {
+        if (!draggedTask) return;
+        draggedTask = null;
+    });
+
+    document.addEventListener("dragover", e => {
+        e.preventDefault();
+
+        if (!draggedTask) return;
+
+        const cell = e.target.closest(".cell");
+        const hourMini = e.target.closest(".hour-mini");
+        const row = e.target.closest(".row");
+
+        if (!cell || !hourMini || !row) return;
+
+        const lineId = row.dataset.line;
+        const startDateStr = cell.dataset.date;      // yyyy-mm-dd
+        const startHour = parseInt(hourMini.dataset.hour);
+        const GivenDurationHours = 10;
+        const TaskId = draggedTask.dataset.id;
+        const TaskQuantity = draggedTask.dataset.quantity;
+        const LineWorkingHourCapacity = row.dataset.manworklimite;
+        const LineManPower = row.dataset.manpower;
+
+        const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
+        console.log("tasks", tasks);
+        updatedTak(TaskId, startDateStr, estimated.endDate)
+
+        
+
+        //console.log("Line ID:", lineId);
+        console.log("Start:", startDateStr, startHour + ":00");
+        console.log("Estimated END:", estimated.endDate, estimated.endHour + ":00");
+        //console.log("Task Quantity:", TaskQuantity);
+        //console.log("Working Hour Capacity:", LineWorkingHourCapacity);
+        //console.log("Man Powerv:", LineManPower);
+        console.log("estimated:", estimated);
+    });
+
 
     document.addEventListener("drop", e => {
         e.preventDefault();
-        if (!dragged) return;
+        if (!draggedTask) return;
 
-        const targetCell = e.target.closest(".cell");
-        const targetHourMini = e.target.closest(".hour-mini");
+        const hourMini = e.target.closest(".hour-mini");
+        const cell = e.target.closest(".cell");
         const row = e.target.closest(".row");
 
-
-        if (!row || !targetCell || !targetHourMini) {
-            dragged = null;
+        if (!hourMini || !cell || !row) {
+            draggedTask = null;
             return;
         }
 
-        row.appendChild(dragged);
 
-        const targetDate = new Date(targetCell.dataset.date);
-        const targetHour = parseInt(targetHourMini.dataset.hour);
-        targetDate.setHours(targetHour, 0, 0, 0);
+        row.appendChild(draggedTask);
 
-        const durationDays = parseInt(dragged.dataset.duration || "1");
-        const endDateTime = new Date(targetDate);
-        endDateTime.setDate(endDateTime.getDate() + durationDays);
-
-        const leftCol = row.querySelector(".line-name");
-        const leftOffset = leftCol.getBoundingClientRect().width;
-        const firstCell = row.querySelector(".cell");
-        const dayWidth = firstCell.getBoundingClientRect().width;
-        const hourWidth = dayWidth / workingHours;
+        // Start hour & day index
+        const startHour = parseInt(hourMini.dataset.hour, 10);
         const allCells = Array.from(row.querySelectorAll(".cell"));
-        const dayIndex = allCells.indexOf(targetCell);
+        const dayIndex = allCells.indexOf(cell);
 
-        dragged.style.left = (leftOffset + dayIndex * dayWidth + targetHour * hourWidth) + "px";
-        dragged.style.width = (durationDays * dayWidth) + "px";
-        dragged.style.top = "5px";
+        // Position calculations
+        const lineWidth = row.querySelector(".line-name").offsetWidth;
+        const dayWidth = row.querySelector(".cell").offsetWidth;
+        const hourWidth = dayWidth / workingHours;
 
-        console.log("Task:", dragged.innerText.trim(), "Start:", targetDate, "End:", endDateTime);
+        draggedTask.style.position = "absolute";
+        draggedTask.style.left = (lineWidth + dayIndex * dayWidth + startHour * hourWidth) + "px";
+        draggedTask.style.top = "5px";
 
-        console.log("Dragged Element Info:", {
-            element: dragged,
-            text: dragged.innerText.trim(),
-            dataset: { ...dragged.dataset },
-            duration: dragged.dataset.duration,
-            currentLeft: dragged.style.left,
-            currentTop: dragged.style.top,
-            width: dragged.style.width
+        // Full task width based on duration
+        const durationDays = parseInt(draggedTask.dataset.duration || "1", 10);
+        draggedTask.style.width = (durationDays * dayWidth) + "px";
+
+        // Log info
+        console.log({
+            taskId: draggedTask.dataset.id,
+            lineId: row.dataset.line,
+            startDate: cell.dataset.date,
+            startHour,
+            durationDays
         });
 
-
-        dragged = null;
+        draggedTask = null;
     });
+
+    function calculateEstimatedEndDate(startDateStr, startHour, givenDurationDays, lineWorkingHourCapacity, lineManPower, taskQuantity) {
+        const totalRequiredHours = Math.ceil(taskQuantity / lineWorkingHourCapacity);
+        const maxAllowedHours = givenDurationDays * workingHours;
+        //let hoursToSchedule = Math.min(totalRequiredHours, maxAllowedHours);
+        let hoursToSchedule = totalRequiredHours;
+        let currentDate = new Date(startDateStr);
+        let currentHour = startHour;
+
+        while (hoursToSchedule > 0) {
+            const availableHoursToday = workingHours - currentHour;
+            console.log("hoursToSchedule", hoursToSchedule);
+            console.log("availableHoursToday", availableHoursToday);
+            if (hoursToSchedule <= availableHoursToday) {
+                currentHour += hoursToSchedule;
+                hoursToSchedule = 0;
+            } else {
+                hoursToSchedule -= availableHoursToday;
+                currentDate.setDate(currentDate.getDate() + 1);
+                currentHour = 0;
+            }
+        }
+
+
+        //console.log("startHour", startHour);
+        // Make endHour 1 to lineWorkingHourCapacity
+        if (currentHour === 0) currentHour = lineWorkingHourCapacity;
+
+        return {
+            endDate: currentDate.toISOString().split("T")[0],
+            endHour: currentHour
+        };
+    }
+
+
+    function updatedTak(taskId, fromDate, toDate) {
+
+        console.log("tasks", tasks);
+        console.log("ID", taskId);
+        console.log("StartDate", fromDate);
+        console.log("EndDate", toDate);
+        const task = tasks.find(t => t.Id == taskId);
+        if (!task) {
+            console.warn("Task not found:", taskId);
+            return;
+        }
+
+        task.FromDate = fromDate;
+        task.ToDate = toDate;
+
+        console.log("Updated Task:", task);
+    }
+
 })();
 
 window.addEventListener("load", () => {
@@ -296,5 +415,14 @@ window.addEventListener("load", () => {
         todayLine.style.left = todayCell.offsetLeft + "px";
         calendar.appendChild(todayLine);
     }
+
+    const button = document.querySelector('.task');
+
+button.addEventListener('mousedown', () => {
+  console.log('Mouse button pressed');
+});
+button.addEventListener('mouseup', () => {
+  console.log('Mouse button released');
+});
 });
 </script>

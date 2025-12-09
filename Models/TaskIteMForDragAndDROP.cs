@@ -12,12 +12,12 @@ namespace WebApplication1.Models
 
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
-
-        // Foreign key
         public int SewingLineId { get; set; }
         public SewingLine SewingLine { get; set; }
-
         public string ColorCode { get; set; } 
+
+        public int Quantity { get; set; }
+
 
     }
 }

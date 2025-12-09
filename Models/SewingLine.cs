@@ -9,6 +9,8 @@ namespace WebApplication1.Models
     {
         public int Id { get; set; }
         public string LineName { get; set; }
+        public int ManPower { get; set; }
 
+        public int ManWorkLimite { get; set; }
     }
 }
