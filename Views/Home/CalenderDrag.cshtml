@@ -1,5 +1,5 @@
 ﻿@{
-    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
+    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLineDto>;
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
     // Use dates from ViewBag (passed from controller)
@@ -10,8 +10,8 @@
 
     // For navigation, previous and next month based on startDate
     DateTime currentMonth = new DateTime(startDate.Year, startDate.Month, 1);
-    DateTime prevMonth = currentMonth.AddMonths(-1);
-    DateTime nextMonth = currentMonth.AddMonths(1);
+    DateTime prevMonth = currentMonth.AddMonths(-12);
+    DateTime nextMonth = currentMonth.AddMonths(11);
 }
 
 <style>
@@ -28,6 +28,7 @@
         background: #fff;
         width: 100%;
         white-space: nowrap;
+        max-height: 700px;
     }
 
     .row {
@@ -100,9 +101,10 @@
         width: 40%;
         position: absolute;
         top: 50%;
-        font-weight:100;
-        height:45px;
-       justify-content:center;
+        font-weight: 100;
+        height: 45px;
+        justify-content: center;
+        border: 1px solid #333;
         /*    transform: translateY(-50%);*/
     }
 
@@ -140,6 +142,13 @@
         display: flex;
         gap: 10px;
     }
+
+   /* .task.drag-preview {
+        opacity: 0.7;
+        outline: 2px dashed #333;
+    }*/
+
+    
 </style>
 
 <h3>Sewing Line Calendar</h3>
@@ -156,6 +165,8 @@
             <input type="date" name="ToDate" value="@endDate.ToString("yyyy-MM-dd")" />
         </label>
         <button type="submit" style="margin-left: 10px;">Load Calendar</button>
+        <button type="button" id="btn-tasks" style="margin-left: 10px;">Load Tasks</button>
+
     </form>
 </div>
 
@@ -172,15 +183,15 @@
         }
     </div>
 
-   
+    <!-- Lines & Tasks -->
     @foreach (var line in lines)
     {
-        <div class="row" data-line="@line.Id" data-ManPower="@line.ManPower" data-ManWorkLimite="@line.ManWorkLimite">
+        <div class="row" data-line="@line.LINE_ID" data-ManPower="@line.MAN_POWER" data-ManWorkLimite="@line.ManWorkLimite">
             <div class="line-name">
 
-                <div class="line-title">@line.LineName</div>
+                <div class="line-title">@line.LINE_NAME</div>
                 <div class="line-info">
-                    <span>MP: @line.ManPower</span>
+                    <span>MP: @line.MAN_POWER</span>
                     <span>Limit/H: @line.ManWorkLimite</span>
                 </div>
 
@@ -201,36 +212,66 @@
             }
 
             @{
-                var lineTasks = tasks.Where(t => t.SewingLineId == line.Id).ToList();
+                var lineTasks = tasks.Where(t => t.SewingLineId == line.LINE_ID).ToList();
             }
 
-            @foreach (var task in lineTasks)
-            {
-                var startOffset = (task.FromDate - startDate).Days;
-                var dayCount = (task.ToDate - task.FromDate).Days + 1;
 
-                <div class="task"
-                     draggable="true"
-                     data-id="@task.Id"
-                     data-start-day="@startOffset"
-                     data-duration="@dayCount"
-                     data-quantity="@task.Quantity"
-                     @*style="background:@task.ColorCode;"*@
-                     >
-                    @task.TaskName
-                </div>
-            }
+
+           
         </div> 
     }
 </div>
-
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-(() => {
+
+     var tasks = @Html.Raw(tasksJson);
+
+    $(document).ready(function () {
     const workingHours = @workingHours;
     let dragged = null;
 
-      var tasks = @Html.Raw(tasksJson);
-    
+        loadSwingLine();
+
+        function updateTaskPreview(taskEl, row, startDateStr, estimatedEndDate) {
+
+           const calendarStart = new Date('@startDate.ToString("yyyy-MM-dd")T00:00:00');
+
+            calendarStart.setHours(0, 0, 0, 0);
+            console.log("calendarStart", calendarStart)
+
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(estimatedEndDate);
+
+            console.log("startDate update Task Preview", startDateStr)
+            console.log("endDate update TaskPreview", estimatedEndDate)
+
+
+            const startDay = dayDiff(calendarStart, startDate);
+            const endDay = dayDiff(calendarStart, endDate) + 1;
+
+            console.log("startDay", startDay)
+            console.log("endDate", endDay)
+            if (startDay < 0 || endDay <= 0) return;
+
+            const dayWidth = row.querySelector(".cell")?.offsetWidth;
+            if (!dayWidth || dayWidth === 0) return;
+
+            const leftBase = row.querySelector(".line-name")?.offsetWidth || 0;
+
+
+            //taskEl.style.position = "absolute";
+            taskEl.style.left = `${leftBase + startDay * dayWidth}px`;
+            taskEl.style.width = `${endDay * dayWidth}px`;
+            taskEl.style.top = "6px";
+
+
+            taskEl.style.transition = "width 0.08s linear";
+
+            taskEl.classList.add("drag-preview");
+        }
+
+
+
     document.addEventListener("dragstart", e => {
         //if (!e.target.classList.contains("task")) return;
 
@@ -240,7 +281,7 @@
         if (e.target.classList.contains("task")) {
             draggedTask = e.target;
             e.dataTransfer.setData("text/plain", e.target.dataset.id);
-            e.dataTransfer.effectAllowed = "move";
+            //e.dataTransfer.effectAllowed = "move";
         }
 
     });
@@ -271,10 +312,12 @@
         const LineManPower = row.dataset.manpower;
 
         const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
-        console.log("tasks", tasks);
-        updatedTak(TaskId, startDateStr, estimated.endDate)
-
-        
+       
+       var taskDrag= updatedTak(TaskId, startDateStr, estimated.endDate,lineId)
+        updateTaskPreview(draggedTask, row, startDateStr, estimated.endDate);
+        const fromDate = $('input[name="FromDate"]').val();
+        LoadTask(tasks, fromDate);
+        console.log("taskDrag:", taskDrag);
 
         //console.log("Line ID:", lineId);
         console.log("Start:", startDateStr, startHour + ":00");
@@ -299,7 +342,7 @@
             return;
         }
 
-
+        console.log("draggedTask", draggedTask);
         row.appendChild(draggedTask);
 
         // Start hour & day index
@@ -330,7 +373,13 @@
         });
 
         draggedTask = null;
+        const fromDate = $('input[name="FromDate"]').val();
+        LoadTask(tasks, fromDate);
     });
+
+
+
+
 
     function calculateEstimatedEndDate(startDateStr, startHour, givenDurationDays, lineWorkingHourCapacity, lineManPower, taskQuantity) {
         const totalRequiredHours = Math.ceil(taskQuantity / lineWorkingHourCapacity);
@@ -365,13 +414,13 @@
         };
     }
 
-
-    function updatedTak(taskId, fromDate, toDate) {
+    function updatedTak(taskId, fromDate, toDate,lineID) {
 
         console.log("tasks", tasks);
         console.log("ID", taskId);
         console.log("StartDate", fromDate);
         console.log("EndDate", toDate);
+        console.log("lineID", lineID);
         const task = tasks.find(t => t.Id == taskId);
         if (!task) {
             console.warn("Task not found:", taskId);
@@ -380,11 +429,115 @@
 
         task.FromDate = fromDate;
         task.ToDate = toDate;
+        task.SewingLineId = lineID;
 
-        console.log("Updated Task:", task);
+        return task;
+        }
+
+
+
+    });
+
+
+    function dayDiff(date1, date2) {
+        const d1 = new Date(date1);
+        const d2 = new Date(date2);
+
+        if (isNaN(d1) || isNaN(d2)) {
+            console.error("Invalid dates in dayDiff", date1,'~~~~~~~~~', date2);
+            return NaN;
+        }
+
+        d1.setHours(0, 0, 0, 0);
+        d2.setHours(0, 0, 0, 0);
+
+        return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
     }
 
-})();
+
+
+    function LoadTask(tasks, calendarStartDate) {
+
+        $('.task').remove();
+
+        const calendarStart = new Date(calendarStartDate);
+        calendarStart.setHours(0, 0, 0, 0);
+
+        tasks.forEach(task => {
+
+            const $row = $('.row[data-line="' + task.SewingLineId + '"]');
+            if (!$row.length) return;
+
+            const $firstCell = $row.find('.cell').first();
+            if (!$firstCell.length) return;
+
+            const taskStart = new Date(task.FromDate.split('T')[0]);
+            const taskEnd = new Date(task.ToDate.split('T')[0]);
+
+            const startDay = dayDiff(calendarStart, taskStart);
+            const duration = dayDiff(taskStart, taskEnd) + 1;
+
+            if (startDay < 0 || duration <= 0) return;
+
+            const dayWidth = $firstCell.outerWidth();
+            const leftBase = $row.find('.line-name').outerWidth();
+
+            const $task = $('<div>', {
+                class: 'task',
+                text: task.TaskName,
+                draggable: true,
+                css: {
+                    left: leftBase + startDay * dayWidth + 'px',
+                    top: '6px',
+                    width: duration * dayWidth + 'px',
+                    position: 'absolute',
+                    //background: task.ColorCode || '#87cefa',
+                    border: '1px solid #333',
+                    //height: '22px',
+                    lineHeight: '22px',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap'
+                }
+            })
+                .attr('data-id', task.Id)
+                .attr('data-duration', duration)
+                .attr('data-quantity', task.Quantity);
+
+            $row.append($task);
+        });
+    }
+
+
+
+ $('#btn-tasks').on('click', function (event) {
+     event.preventDefault();
+
+     const fromDate = $('input[name="FromDate"]').val();
+     const toDate = $('input[name="ToDate"]').val();
+
+     console.log("Load tasks for:", fromDate, "to", toDate);
+ 
+     LoadTask(tasks, fromDate);
+ });
+
+
+    function loadSwingLine() {
+        $.ajax({
+            url: '/Home/SwingLineForPlan', 
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                console.log('Swing Line Data:', response);
+                response.forEach(function (line) {
+                    console.log(line.LINE_NAME);
+                });
+            },
+            error: function (err) {
+                console.error('Error loading swing line', err);
+            }
+        });
+    }
+
 
 window.addEventListener("load", () => {
     document.querySelectorAll(".row").forEach(row => {
@@ -416,13 +569,8 @@ window.addEventListener("load", () => {
         calendar.appendChild(todayLine);
     }
 
-    const button = document.querySelector('.task');
 
-button.addEventListener('mousedown', () => {
-  console.log('Mouse button pressed');
-});
-button.addEventListener('mouseup', () => {
-  console.log('Mouse button released');
-});
+
+
 });
 </script>
