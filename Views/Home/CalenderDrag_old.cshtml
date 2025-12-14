@@ -1,5 +1,5 @@
 ﻿@{
-    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
+    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLineDto>;
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
     // Use dates from ViewBag (passed from controller)
@@ -151,8 +151,6 @@
 
 </style>
 
-
-
 <h3>Sewing Line Calendar</h3>
 
 <!-- Date Selection Form -->
@@ -170,90 +168,162 @@
         <button type="button" id="btn-tasks" style="margin-left: 10px;">Load Tasks</button>
 
     </form>
+</div>
 
 
-    <div class="container-fluid">
-        <div class="row">
+<div style="float:right;padding-bottom:10px">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#OrderModal">
+        Orders
+    </button>
+</div>
 
 
-            <div class="col-3 bg-dark text-white p-3" style="height: 100vh; overflow-y:auto;">
 
-                <h4 class="mb-3">Order List</h4>
+<div class="modal fade" style="max-height:500px" id="OrderModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div id="model-order" class="modal-content">
 
-                <!-- Orders will be loaded here -->
-                <ul class="list-group" id="sidebar-orders">
-                    <li class="text-white">Loading...</li>
-                </ul>
-
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Orders</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
+            <div class="modal-body">
+                <p>Loading...</p>
+            </div>
 
-
-
-            <div class="col-9">
-
-                <div class="calendar" id="calendar">
-
-                    <!-- Header Row -->
-                    <div class="row">
-                        <div class="line-name">Line</div>
-                        @for (var d = startDate; d <= endDate; d = d.AddDays(1))
-                        {
-                            var isToday = d.Date == DateTime.Today;
-                            <div class="cell @(isToday ? "today" : "")">@d.ToString("dd")</div>
-                        }
-                    </div>
-
-                    <!-- Lines & Tasks -->
-                    @foreach (var line in lines)
-                    {
-                        <div class="row" data-line="@line.LINE_ID" data-ManPower="@line.MAN_POWER" data-ManWorkLimite="@line.ManWorkLimite">
-                            <div class="line-name">
-                                <div class="line-title">@line.LINE_NAME</div>
-                                <div class="line-info">
-                                    <span>MP: @line.MAN_POWER</span>
-                                    <span>Limit/H: @line.ManWorkLimite</span>
-                                </div>
-                            </div>
-
-                            @for (var d = startDate; d <= endDate; d = d.AddDays(1))
-                            {
-                                var isToday = d.Date == DateTime.Today;
-                                <div class="cell @(isToday ? "today" : "")" data-date="@d.ToString("yyyy-MM-dd")">
-                                    <div class="hour-row">
-                                        @for (int h = 0; h < workingHours; h++)
-                                        {
-                                            <div class="hour-mini" data-hour="@h"></div>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
             </div>
 
         </div>
     </div>
+</div>
 
 
 
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <script>
+
+<div class="calendar" id="calendar">
+
+    <!-- Header Row -->
+    <div class="row">
+        <div class="line-name">Line</div>
+        @for (var d = startDate; d <= endDate; d = d.AddDays(1))
+        {
+            var isToday = d.Date == DateTime.Today;
+            <div class="cell @(isToday ? "today" : "")">@d.ToString("dd")</div>
+        }
+    </div>
+
+    <!-- Lines & Tasks -->
+    @foreach (var line in lines)
+    {
+        <div class="row" data-line="@line.LINE_ID" data-ManPower="@line.MAN_POWER" data-ManWorkLimite="@line.ManWorkLimite">
+            <div class="line-name">
+
+                <div class="line-title">@line.LINE_NAME</div>
+                <div class="line-info">
+                    <span>MP: @line.MAN_POWER</span>
+                    <span>Limit/H: @line.ManWorkLimite</span>
+                </div>
+
+            </div>
+
+
+            @for (var d = startDate; d <= endDate; d = d.AddDays(1))
+            {
+                var isToday = d.Date == DateTime.Today;
+                <div class="cell @(isToday ? "today" : "")" data-date="@d.ToString("yyyy-MM-dd")">
+                    <div class="hour-row">
+                        @for (int h = 0; h < workingHours; h++)
+                        {
+                            <div class="hour-mini" data-hour="@h"></div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @{
+                var lineTasks = tasks.Where(t => t.SewingLineId == line.LINE_ID).ToList();
+            }
+
+
+
+
+        </div>
+    }
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+
+<!-- jQuery first -->
+<!--<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>-->
+
+ @*jQuery UI next*@ 
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<!-- Bootstrap last (optional) -->
+<!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>-->
+
+
+<script>
 
      var tasks = @Html.Raw(tasksJson);
-      const workingHours = @workingHours;
+
     $(document).ready(function () {
-
-
-
+    const workingHours = @workingHours;
     let dragged = null;
 
         loadSwingLine();
         LoadOrders();
+
+        function updateTaskPreview(taskEl, row, startDateStr, estimatedEndDate) {
+
+           @*const calendarStart = new Date('@startDate.ToString("yyyy-MM-dd")T00:00:00');
+
+            calendarStart.setHours(0, 0, 0, 0);
+            console.log("calendarStart", calendarStart)
+
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(estimatedEndDate);
+
+            console.log("startDate update Task Preview", startDateStr)
+            console.log("endDate update TaskPreview", estimatedEndDate)
+
+
+            const startDay = dayDiff(calendarStart, startDate);
+            const endDay = dayDiff(calendarStart, endDate) + 1;
+
+            console.log("startDay", startDay)
+            console.log("endDate", endDay)
+            if (startDay < 0 || endDay <= 0) return;
+
+            const dayWidth = row.querySelector(".cell")?.offsetWidth;
+            if (!dayWidth || dayWidth === 0) return;
+
+            const leftBase = row.querySelector(".line-name")?.offsetWidth || 0;
+
+
+            //taskEl.style.position = "absolute";
+            taskEl.style.left = `${leftBase + startDay * dayWidth}px`;
+            taskEl.style.width = `${endDay * dayWidth}px`;
+            taskEl.style.top = "6px";
+
+
+            taskEl.style.transition = "width 0.08s linear";
+
+            taskEl.classList.add("drag-preview");*@
+        }
+
+
+
     document.addEventListener("dragstart", e => {
         //if (!e.target.classList.contains("task")) return;
 
@@ -295,16 +365,15 @@
 
         const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
 
-        var taskDrag = updatedTak(TaskId, startDateStr, estimated.endDate, startHour, estimated.endHour, lineId)
-
+       var taskDrag= updatedTak(TaskId, startDateStr, estimated.endDate,lineId)
+        updateTaskPreview(draggedTask, row, startDateStr, estimated.endDate);
         const fromDate = $('input[name="FromDate"]').val();
         LoadTask(tasks, fromDate);
         console.log("taskDrag:", taskDrag);
 
         //console.log("Line ID:", lineId);
         console.log("Start:", startDateStr, startHour + ":00");
-        console.log(`Estimated END: ${estimated.endDate} Hour M ${estimated.endHour}:00`);
-
+        console.log("Estimated END:", estimated.endDate, estimated.endHour + ":00");
         //console.log("Task Quantity:", TaskQuantity);
         //console.log("Working Hour Capacity:", LineWorkingHourCapacity);
         //console.log("Man Powerv:", LineManPower);
@@ -394,16 +463,13 @@
         };
     }
 
-        function updatedTak(taskId, fromDate, toDate,startHour,endHour,lineID) {
+    function updatedTak(taskId, fromDate, toDate,lineID) {
 
-            console.clear();
         console.log("tasks", tasks);
         console.log("ID", taskId);
         console.log("StartDate", fromDate);
         console.log("EndDate", toDate);
         console.log("lineID", lineID);
-        console.log("endHour", endHour);
-        console.log("startHour", startHour);
         const task = tasks.find(t => t.Id == taskId);
         if (!task) {
             console.warn("Task not found:", taskId);
@@ -413,8 +479,6 @@
         task.FromDate = fromDate;
         task.ToDate = toDate;
         task.SewingLineId = lineID;
-        task.endHour = endHour;
-       task.startHour = startHour
 
         return task;
         }
@@ -422,39 +486,6 @@
 
 
     });
-
-        function LoadOrders() {
-            $.ajax({
-                url: '/Home/Orders',
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-
-                    let sidebarList = $('#sidebar-orders');
-                    sidebarList.empty();
-
-                    if (!data || data.length === 0) {
-                        sidebarList.append('<li class="text-white">No orders found.</li>');
-                        return;
-                    }
-
-                    data.forEach(order => {
-                        let li = $(`
-                    <li class="list-group-item bg-dark text-white border-secondary draggable-order">
-                        <strong>Order #${order.OrderId}</strong><br>
-                        Company: ${order.OrderCompany || ''}<br>
-                        Qty: ${order.Quantity} pcs
-                    </li>
-                `);
-                        sidebarList.append(li);
-                    });
-                },
-
-                error: function () {
-                    $('#sidebar-orders').html('<li class="text-white">Error loading orders.</li>');
-                }
-            });
-        }
 
 
     function dayDiff(date1, date2) {
@@ -472,142 +503,141 @@
         return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
     }
 
-    //function LoadTask(tasks, calendarStartDate) {
-
-    //    $('.task').remove();
-
-    //    const calendarStart = new Date(calendarStartDate);
-    //    calendarStart.setHours(0, 0, 0, 0);
-
-    //    tasks.forEach(task => {
-
-    //        const $row = $('.row[data-line="' + task.SewingLineId + '"]');
-    //        if (!$row.length) return;
-
-    //        const $firstCell = $row.find('.cell').first();
-    //        if (!$firstCell.length) return;
-
-    //        const taskStart = new Date(task.FromDate.split('T')[0]);
-    //        const taskEnd = new Date(task.ToDate.split('T')[0]);
-
-    //        const taskStartHour = task.startHour;
-    //        const taskEndHour = task.endHour;
-
-    //        const startDay = dayDiff(calendarStart, taskStart);
-    //        const duration = dayDiff(taskStart, taskEnd) + 1;
-
-    //        if (startDay < 0 || duration <= 0) return;
-
-    //        const dayWidth = $firstCell.outerWidth();
-    //        const leftBase = $row.find('.line-name').outerWidth();
-
-    //        const $task = $('<div>', {
-    //            class: 'task',
-    //            text: task.TaskName,
-    //            draggable: true,
-    //            css: {
-    //                left: leftBase + startDay * dayWidth + 'px',
-    //                top: '6px',
-    //                width: duration * dayWidth + 'px',
-    //                position: 'absolute',
-    //                //background: task.ColorCode || '#87cefa',
-    //                border: '1px solid #333',
-    //                //height: '22px',
-    //                lineHeight: '22px',
-    //                overflow: 'hidden',
-    //                whiteSpace: 'nowrap'
-    //            }
-    //        })
-    //            .attr('data-id', task.Id)
-    //            .attr('data-duration', duration)
-    //            .attr('data-quantity', task.Quantity);
-
-    //        $row.append($task);
-    //    });
-    //}
-
-   function LoadTask(tasks, calendarStartDate) {
-    const workingHours = @workingHours;
-    $('.task').remove();
-
-    const calendarStart = new Date(calendarStartDate);
-    calendarStart.setHours(0, 0, 0, 0);
-
-    tasks.forEach(task => {
-
-        const $row = $('.row[data-line="' + task.SewingLineId + '"]');
-        if (!$row.length) return;
-
-        const $firstCell = $row.find('.cell').first();
-        if (!$firstCell.length) return;
-
-        // ✔ Get REAL hour width
-        const cellWidth = $firstCell.find('.hour-mini').first().outerWidth();
-
-        // ✔ Calculate full day width
-        const dayWidth = workingHours * cellWidth;
-
-        // ✔ Left base (line name width)
-        const leftBase = $row.find('.line-name').outerWidth();
-
-        // Task dates
-        const taskStartDate = new Date(task.FromDate.split('T')[0]);
-        const taskEndDate = new Date(task.ToDate.split('T')[0]);
-
-        const startDay = dayDiff(calendarStart, taskStartDate);
-        if (startDay < 0) return;
-
-        let totalWidth = 0;
-
-        // ✔ Single-day task
-        if (taskStartDate.toDateString() === taskEndDate.toDateString()) {
-            totalWidth = (task.EndHour - task.StartHour + 1) * cellWidth;
-        }
-        else {
-            // ✔ Multi-day task width
-            const firstDayWidth  = (workingHours - task.StartHour) * cellWidth;
-            const lastDayWidth   = (task.EndHour + 1) * cellWidth;
-            const middleDays     = dayDiff(taskStartDate, taskEndDate) - 1;
-
-            totalWidth = firstDayWidth +
-                (middleDays > 0 ? middleDays * dayWidth : 0) +
-                lastDayWidth;
-        }
-
-        // ✔ Correct hour-aligned offset
-        const leftOffset =
-            leftBase +
-            (startDay * dayWidth) +
-            (task.StartHour * cellWidth);
-
-        // Debug
-        console.log("Task:", task.TaskName);
-        console.log("StartHour:", task.StartHour, "EndHour:", task.EndHour);
-        console.log("cellWidth:", cellWidth, "dayWidth:", dayWidth);
-        console.log("leftOffset:", leftOffset, "totalWidth:", totalWidth);
-
-        const $task = $('<div>', {
-            class: 'task',
-            text: task.TaskName,
-            draggable: true,
-            css: {
-                left: leftOffset + 'px',
-                top: '6px',
-                width: totalWidth + 'px',
-                position: 'absolute',
-                border: '1px solid #333',
-                lineHeight: '20px',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap'
-            }
-        })
-        .attr('data-id', task.Id)
-        .attr('data-duration', dayDiff(taskStartDate, taskEndDate) + 1)
-        .attr('data-quantity', task.Quantity);
-
-        $row.append($task);
+    const OrderModal = document.getElementById('OrderModal');
+    OrderModal.addEventListener('show.bs.modal', function (event) {
+        LoadOrders();
     });
-}
+
+    //$(function () {
+    //    // Make the modal draggable by its header
+    //    $("#OrderModal .modal-dialog").draggable({
+    //        handle: ".modal-header",
+    //        containment: "window"
+    //    });
+    //});
+
+
+
+    function LoadOrders() {
+        $.ajax({
+            url: '/Home/Orders',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                let modalBody = $('#OrderModal .modal-body');
+                modalBody.empty(); // Clear previous content
+
+                if (data.length === 0) {
+                    modalBody.append('<p>No orders found.</p>');
+                    return;
+                }
+
+                // Create table
+                let table = $('<table class="table table-bordered table-striped"></table>');
+                let thead = `
+                <thead style="position: sticky; top: 0; background-color: #fff; z-index: 10;">
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Company</th>
+                        <th>Quantity</th>
+                        <th>Maximum Days</th>
+                    </tr>
+                </thead>`;
+                table.append(thead);
+
+                let tbody = $('<tbody></tbody>');
+                data.forEach(order => {
+                    let row = $(`
+                    <tr class="draggable-row">
+                        <td>${order.OrderId}</td>
+                        <td>${order.OrderCompany || ''}</td>
+                        <td>${order.Quantity}</td>
+                        <td>${order.MaximumDays}</td>
+                    </tr>
+                `);
+                    tbody.append(row);
+                });
+
+                table.append(tbody);
+                modalBody.append(table);
+
+                // Make rows draggable using jQuery UI
+                //$('.draggable-row').draggable({
+                //    helper: 'clone', // So the original row stays in place
+                //    cursor: 'move',
+                //    zIndex: 100,
+                //    revert: 'invalid' // Snap back if not dropped
+                //});
+
+                // Optional: Make a drop target (if needed)
+                // $('#DropTarget').droppable({
+                //     accept: '.draggable-row',
+                //     drop: function(event, ui) {
+                //         $(this).append(ui.draggable.clone());
+                //     }
+                // });
+            },
+            error: function (err) {
+                console.error("Error loading orders:", err);
+                $('#OrderModal .modal-body').html('<p>Error loading orders.</p>');
+            }
+        });
+    }
+
+
+    function LoadTask(tasks, calendarStartDate) {
+
+        $('.task').remove();
+
+        const calendarStart = new Date(calendarStartDate);
+        calendarStart.setHours(0, 0, 0, 0);
+
+        tasks.forEach(task => {
+
+            const $row = $('.row[data-line="' + task.SewingLineId + '"]');
+            if (!$row.length) return;
+
+            const $firstCell = $row.find('.cell').first();
+            if (!$firstCell.length) return;
+
+            const taskStart = new Date(task.FromDate.split('T')[0]);
+            const taskEnd = new Date(task.ToDate.split('T')[0]);
+
+            const startDay = dayDiff(calendarStart, taskStart);
+            const duration = dayDiff(taskStart, taskEnd) + 1;
+
+            if (startDay < 0 || duration <= 0) return;
+
+            const dayWidth = $firstCell.outerWidth();
+            const leftBase = $row.find('.line-name').outerWidth();
+
+            const $task = $('<div>', {
+                class: 'task',
+                text: task.TaskName,
+                draggable: true,
+                css: {
+                    left: leftBase + startDay * dayWidth + 'px',
+                    top: '6px',
+                    width: duration * dayWidth + 'px',
+                    position: 'absolute',
+                    //background: task.ColorCode || '#87cefa',
+                    border: '1px solid #333',
+                    //height: '22px',
+                    lineHeight: '22px',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap'
+                }
+            })
+                .attr('data-id', task.Id)
+                .attr('data-duration', duration)
+                .attr('data-quantity', task.Quantity);
+
+            $row.append($task);
+        });
+
+
+
+    }
 
 
 
@@ -631,7 +661,7 @@
             success: function (response) {
                 console.log('Swing Line Data:', response);
                 response.forEach(function (line) {
-
+                   
                 });
             },
             error: function (err) {
@@ -675,6 +705,5 @@ window.addEventListener("load", () => {
 
 
 });
-
-    </script>
+</script>
 

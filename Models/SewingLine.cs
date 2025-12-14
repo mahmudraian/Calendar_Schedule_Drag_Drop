@@ -7,9 +7,9 @@ namespace WebApplication1.Models
 {
     public class SewingLine
     {
-        public int Id { get; set; }
-        public string LineName { get; set; }
-        public int ManPower { get; set; }
+        public int LINE_ID { get; set; }
+        public string LINE_NAME { get; set; }
+        public int MAN_POWER { get; set; }
 
         public int ManWorkLimite { get; set; }
     }

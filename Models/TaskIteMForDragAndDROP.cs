@@ -12,6 +12,8 @@ namespace WebApplication1.Models
 
         public DateTime FromDate { get; set; }
         public DateTime ToDate { get; set; }
+        public int EndHour { get; set; }
+        public int StartHour { get; set; }
         public int SewingLineId { get; set; }
         public SewingLine SewingLine { get; set; }
         public string ColorCode { get; set; } 

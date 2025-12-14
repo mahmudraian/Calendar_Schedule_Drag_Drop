@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -111,36 +112,46 @@ namespace WebApplication1.Controllers
             
             var lines = new List<SewingLine>
     {
-        new SewingLine { Id = 1, LineName="Sewing-L6",ManPower = 13,ManWorkLimite=7000},
-        new SewingLine { Id = 2, LineName="Sewing-L7",ManPower = 19,ManWorkLimite=1200},
-        new SewingLine { Id = 3, LineName="Sewing-L8",ManPower = 23 ,ManWorkLimite=800},
-        new SewingLine { Id = 4, LineName="Parking 1",ManPower = 53 ,ManWorkLimite=900},
-        new SewingLine { Id = 5, LineName="Parking 2",ManPower = 630,ManWorkLimite=10000},
+        new SewingLine { LINE_ID = 1, LINE_NAME="Sewing-L6",MAN_POWER = 13,ManWorkLimite=7000},
+        new SewingLine { LINE_ID = 2, LINE_NAME="Sewing-L7",MAN_POWER = 19,ManWorkLimite=1200},
+        new SewingLine { LINE_ID = 3, LINE_NAME="Sewing-L8",MAN_POWER = 23 ,ManWorkLimite=800},
+        new SewingLine { LINE_ID = 4, LINE_NAME="Parking 1",MAN_POWER = 53 ,ManWorkLimite=900},
+        new SewingLine { LINE_ID = 5, LINE_NAME="Parking 2",MAN_POWER = 630,ManWorkLimite=10000},
+        new SewingLine { LINE_ID = 6, LINE_NAME="Sewing-L6",MAN_POWER = 13,ManWorkLimite=7000},
+        new SewingLine { LINE_ID = 7, LINE_NAME="Sewing-L7",MAN_POWER = 19,ManWorkLimite=1200},
+        new SewingLine { LINE_ID = 8, LINE_NAME="Sewing-L8",MAN_POWER = 23 ,ManWorkLimite=800},
+        new SewingLine { LINE_ID = 9, LINE_NAME="Parking 1",MAN_POWER = 53 ,ManWorkLimite=900},
+        new SewingLine { LINE_ID = 10, LINE_NAME="Parking 2",MAN_POWER = 630,ManWorkLimite=10000},
     };
 
-            // Sample tasks
+          
+       var taskForMains = new List<TaskIteMForDragAndDROP>
+    {
+        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=49000000, ColorCode="red", Quantity = 20000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=70300000, ColorCode="black" , Quantity = 40000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=48400000, ColorCode="blue",Quantity=90000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=60400000, ColorCode="black",Quantity=80000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=51600000, ColorCode="blue",Quantity=60000,EndHour=1,StartHour=3}
+            };
+
+
             var tasks = new List<TaskIteMForDragAndDROP>
     {
-        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=49000000, ColorCode="red", Quantity = 20000},
-        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=70300000, ColorCode="black" , Quantity = 40000},
-        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=48400000, ColorCode="blue",Quantity=90000},
-        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=60400000, ColorCode="black",Quantity=80000},
-        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=51600000, ColorCode="blue",Quantity=60000}
+        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red", Quantity = 20000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black" , Quantity = 40000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=3, ColorCode="blue",Quantity=90000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=4, ColorCode="black",Quantity=80000,EndHour=1,StartHour=3},
+        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=5, ColorCode="blue",Quantity=60000,EndHour=1,StartHour=3}
             };
 
             string filePath = Server.MapPath("~/Content/File/LineJson.json");
             string jsonData = System.IO.File.ReadAllText(filePath);
             var data = JsonConvert.DeserializeObject<List<SewingLineDto>>(jsonData);
 
-            ViewBag.Lines = data;
+            ViewBag.Lines = lines;
             ViewBag.Tasks = tasks;
-
-            // Use provided FromDate and ToDate, or fallback to current month
             DateTime startDate = FromDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             DateTime endDate = ToDate ?? startDate.AddMonths(1).AddDays(-1);
-
-
-            
 
             ViewBag.StartDate = startDate;
             ViewBag.EndDate = endDate;
@@ -150,39 +161,7 @@ namespace WebApplication1.Controllers
 
 
 
-        public ActionResult SewingCalendar(int? month, int? year)
-        {
-            var now = DateTime.Today;
-
-            int selectedMonth = month ?? now.Month;
-            int selectedYear = year ?? now.Year;
-
-            ViewBag.Month = selectedMonth;
-            ViewBag.Year = selectedYear;
-
-            var lines = new List<SewingLine>
-        {
-            new SewingLine { Id = 1, LineName="Sewing-L6"},
-            new SewingLine { Id = 2, LineName="Sewing-L7"},
-            new SewingLine { Id = 3, LineName="Sewing-L8"},
-            new SewingLine { Id = 4, LineName="Parking 1"},
-            new SewingLine { Id = 5, LineName="Parking 2"},
-        };
-
-            var tasks = new List<TaskIteMForDragAndDROP>
-        {
-            new TaskIteMForDragAndDROP { TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red"},
-            new TaskIteMForDragAndDROP { TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="BLACK"},
-            new TaskIteMForDragAndDROP { TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=4, ColorCode="blue"}
-        };
-
-
-
-            ViewBag.Lines = lines;
-            ViewBag.Tasks = tasks;
-
-            return View();
-        }
+       
 
         public JsonResult SwingLineForPlan()
         {
@@ -194,6 +173,27 @@ namespace WebApplication1.Controllers
 
             return Json(data, JsonRequestBehavior.AllowGet);
         }
+
+        public JsonResult Orders()
+        {
+            string filePath = Server.MapPath("~/Content/File/Orders.json");
+
+            string jsonData = System.IO.File.ReadAllText(filePath);
+
+            
+            var orderData = JsonConvert.DeserializeObject<List<JObject>>(jsonData);
+
+            var result = orderData.Select(x => new
+            {
+                OrderId = (int)x["OrderId"],
+                OrderCompany = (String)x["OrderCompany"],
+                Quantity = (int)x["Quantity"],
+                MaximumDays = (int)x["MaximumDays"]
+            }).ToList();
+
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
 
     }
 }
