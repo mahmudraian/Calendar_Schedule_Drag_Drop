@@ -1,5 +1,6 @@
 ﻿@{
     var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
+    var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(lines);
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
     // Use dates from ViewBag (passed from controller)
@@ -244,16 +245,92 @@
 
     <script>
 
-     var tasks = @Html.Raw(tasksJson);
+        var tasks = @Html.Raw(tasksJson);
+        var lines = @Html.Raw(linesJson);
       const workingHours = @workingHours;
     $(document).ready(function () {
-
-
-
-    let dragged = null;
-
         loadSwingLine();
         LoadOrders();
+
+        // Order drag and drop
+        let draggedOrder = null; // use let, not const
+
+        // DRAG START for orders
+        $(document).on('dragstart', '.draggable-order', function (e) {
+            draggedOrder = $(this);
+        });
+
+        // DRAG END
+        $(document).on('dragend', '.draggable-order', function () {
+            draggedOrder = null;
+        });
+
+        // Drag over cells
+        $(document).on('dragover', '.cell', function (e) {
+            e.preventDefault();
+            $(this).addClass('cell-hover');
+        });
+
+        $(document).on('dragleave', '.cell', function () {
+            $(this).removeClass('cell-hover');
+        });
+
+        // DROP: create task from order
+        $(document).on('drop', '.cell', function (e) {
+            e.preventDefault();
+            $(this).removeClass('cell-hover');
+
+            if (!draggedOrder) return;
+
+            const $cell = $(this);
+            const $row = $cell.closest('.row');
+            const lineId = $row.data('line');
+            const startDate = $cell.data('date');
+
+            const $hourMini = $(e.target).closest('.hour-mini');
+            let startHour = 0; // default
+            if ($hourMini.length) {
+                startHour = parseInt($hourMini.data('hour'));
+            }
+
+            
+            const order = {
+                OrderId: parseInt(draggedOrder.find('strong').text().replace('Order #', '')),
+                Quantity: parseInt(draggedOrder.data('quantity')) || 10
+            };
+
+          
+            const line = lines.find(l => l.LINE_ID == lineId);
+            if (!line) {
+                console.error("Line not found for ID:", lineId);
+                return;
+            }
+
+           
+            
+            const durationDays = 10;
+
+          
+            const newTask = createTaskFromOrder(order, line, startDate, durationDays, startHour);
+
+          
+
+            
+            draggedOrder = null;
+
+           
+            const fromDate = $('input[name="FromDate"]').val();
+            LoadTask(tasks, fromDate);
+        });
+
+
+
+
+
+        //task drag and drop
+        let draggedTask = null;
+
+
     document.addEventListener("dragstart", e => {
         //if (!e.target.classList.contains("task")) return;
 
@@ -299,16 +376,7 @@
 
         const fromDate = $('input[name="FromDate"]').val();
         LoadTask(tasks, fromDate);
-        console.log("taskDrag:", taskDrag);
-
-        //console.log("Line ID:", lineId);
-        console.log("Start:", startDateStr, startHour + ":00");
-        console.log(`Estimated END: ${estimated.endDate} Hour M ${estimated.endHour}:00`);
-
-        //console.log("Task Quantity:", TaskQuantity);
-        //console.log("Working Hour Capacity:", LineWorkingHourCapacity);
-        //console.log("Man Powerv:", LineManPower);
-        console.log("estimated:", estimated);
+       
     });
 
 
@@ -325,7 +393,7 @@
             return;
         }
 
-        console.log("draggedTask", draggedTask);
+    
         row.appendChild(draggedTask);
 
         // Start hour & day index
@@ -347,13 +415,7 @@
         draggedTask.style.width = (durationDays * dayWidth) + "px";
 
         // Log info
-        console.log({
-            taskId: draggedTask.dataset.id,
-            lineId: row.dataset.line,
-            startDate: cell.dataset.date,
-            startHour,
-            durationDays
-        });
+      
 
         draggedTask = null;
         const fromDate = $('input[name="FromDate"]').val();
@@ -361,38 +423,7 @@
     });
 
 
-    function calculateEstimatedEndDate(startDateStr, startHour, givenDurationDays, lineWorkingHourCapacity, lineManPower, taskQuantity) {
-        const totalRequiredHours = Math.ceil(taskQuantity / lineWorkingHourCapacity);
-        const maxAllowedHours = givenDurationDays * workingHours;
-        //let hoursToSchedule = Math.min(totalRequiredHours, maxAllowedHours);
-        let hoursToSchedule = totalRequiredHours;
-        let currentDate = new Date(startDateStr);
-        let currentHour = startHour;
 
-        while (hoursToSchedule > 0) {
-            const availableHoursToday = workingHours - currentHour;
-            console.log("hoursToSchedule", hoursToSchedule);
-            console.log("availableHoursToday", availableHoursToday);
-            if (hoursToSchedule <= availableHoursToday) {
-                currentHour += hoursToSchedule;
-                hoursToSchedule = 0;
-            } else {
-                hoursToSchedule -= availableHoursToday;
-                currentDate.setDate(currentDate.getDate() + 1);
-                currentHour = 0;
-            }
-        }
-
-
-        //console.log("startHour", startHour);
-        // Make endHour 1 to lineWorkingHourCapacity
-        if (currentHour === 0) currentHour = lineWorkingHourCapacity;
-
-        return {
-            endDate: currentDate.toISOString().split("T")[0],
-            endHour: currentHour
-        };
-    }
 
         function updatedTak(taskId, fromDate, toDate,startHour,endHour,lineID) {
 
@@ -423,13 +454,13 @@
 
     });
 
+       
         function LoadOrders() {
             $.ajax({
                 url: '/Home/Orders',
                 type: 'GET',
                 dataType: 'json',
                 success: function (data) {
-
                     let sidebarList = $('#sidebar-orders');
                     sidebarList.empty();
 
@@ -439,22 +470,31 @@
                     }
 
                     data.forEach(order => {
+                        // Make li draggable
                         let li = $(`
-                    <li class="list-group-item bg-dark text-white border-secondary draggable-order">
+                    <li class="list-group-item bg-dark text-white border-secondary draggable-order"
+                        draggable="true"
+                        data-orderid="${order.OrderId}"
+                        data-quantity="${order.Quantity}">
                         <strong>Order #${order.OrderId}</strong><br>
                         Company: ${order.OrderCompany || ''}<br>
                         Qty: ${order.Quantity} pcs
                     </li>
                 `);
+
+                      
+
                         sidebarList.append(li);
                     });
                 },
-
                 error: function () {
                     $('#sidebar-orders').html('<li class="text-white">Error loading orders.</li>');
                 }
             });
         }
+
+
+
 
 
     function dayDiff(date1, date2) {
@@ -559,12 +599,12 @@
 
         let totalWidth = 0;
 
-        // ✔ Single-day task
+       
         if (taskStartDate.toDateString() === taskEndDate.toDateString()) {
             totalWidth = (task.EndHour - task.StartHour + 1) * cellWidth;
         }
         else {
-            // ✔ Multi-day task width
+           
             const firstDayWidth  = (workingHours - task.StartHour) * cellWidth;
             const lastDayWidth   = (task.EndHour + 1) * cellWidth;
             const middleDays     = dayDiff(taskStartDate, taskEndDate) - 1;
@@ -574,17 +614,12 @@
                 lastDayWidth;
         }
 
-        // ✔ Correct hour-aligned offset
+      
         const leftOffset =
             leftBase +
             (startDay * dayWidth) +
             (task.StartHour * cellWidth);
 
-        // Debug
-        console.log("Task:", task.TaskName);
-        console.log("StartHour:", task.StartHour, "EndHour:", task.EndHour);
-        console.log("cellWidth:", cellWidth, "dayWidth:", dayWidth);
-        console.log("leftOffset:", leftOffset, "totalWidth:", totalWidth);
 
         const $task = $('<div>', {
             class: 'task',
@@ -610,6 +645,85 @@
 }
 
 
+        function createTaskFromOrder(order, line, startDate, givenDurationHours, startHour) {
+         
+            givenDurationHours = givenDurationHours || 10;
+
+            // Validate input
+            if (!order || !line || !startDate) {
+                console.error("Missing required parameters to create task");
+                return null;
+            }
+
+            
+            const estimated = calculateEstimatedEndDate(
+                startDate,              
+                startHour,               
+                givenDurationHours,      
+                line.ManWorkLimite,     
+                line.MAN_POWER,        
+                order.Quantity      
+            );
+
+            if (!estimated || !estimated.endDate || estimated.endHour === undefined) {
+                console.error("Estimated calculation failed:", estimated);
+                return null;
+            }
+            
+
+            // Create the task object
+            const task = {
+                Id: tasks.length + 1,                            
+                TaskName: `Task From Order #${order.OrderId}`, 
+                Quantity: order.Quantity,
+                SewingLineId: line.LINE_ID,
+                SewingLine: null,                               
+                FromDate: new Date(startDate).toISOString(),    
+                ToDate: new Date(estimated.endDate).toISOString(), 
+                StartHour: startHour,
+                EndHour: estimated.endHour,
+                ColorCode: 'blue'                            
+            };
+
+            console.log("newTask:", task);  
+
+            tasks.push(task); 
+            return task;     
+        }
+
+
+
+
+        function calculateEstimatedEndDate(startDateStr, startHour, givenDurationDays, lineWorkingHourCapacity, lineManPower, taskQuantity) {
+            const totalRequiredHours = Math.ceil(taskQuantity / lineWorkingHourCapacity);
+            const maxAllowedHours = givenDurationDays * workingHours;
+            let hoursToSchedule = totalRequiredHours;
+            let currentDate = new Date(startDateStr);
+            let currentHour = startHour;
+
+            while (hoursToSchedule > 0) {
+                const availableHoursToday = workingHours - currentHour;
+            
+                if (hoursToSchedule <= availableHoursToday) {
+                    currentHour += hoursToSchedule;
+                    hoursToSchedule = 0;
+                } else {
+                    hoursToSchedule -= availableHoursToday;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    currentHour = 0;
+                }
+            }
+
+
+            //console.log("startHour", startHour);
+            // Make endHour 1 to lineWorkingHourCapacity
+            if (currentHour === 0) currentHour = lineWorkingHourCapacity;
+
+            return {
+                endDate: currentDate.toISOString().split("T")[0],
+                endHour: currentHour
+            };
+        }
 
  $('#btn-tasks').on('click', function (event) {
      event.preventDefault();
