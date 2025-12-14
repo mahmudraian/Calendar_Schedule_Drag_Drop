@@ -137,19 +137,19 @@ namespace WebApplication1.Controllers
 
             var tasks = new List<TaskIteMForDragAndDROP>
     {
-        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red", Quantity = 20000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black" , Quantity = 40000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=3, ColorCode="blue",Quantity=90000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=4, ColorCode="black",Quantity=80000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=5, ColorCode="blue",Quantity=60000,EndHour=1,StartHour=3}
+        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red", Quantity = 20000,EndHour=3,StartHour=1},
+        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black" , Quantity = 40000,EndHour=3,StartHour=1},
+        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=3, ColorCode="blue",Quantity=90000,EndHour=3,StartHour=1},
+        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=4, ColorCode="black",Quantity=80000,EndHour=3,StartHour=1},
+        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=5, ColorCode="blue",Quantity=60000,EndHour=3,StartHour=1}
             };
 
             string filePath = Server.MapPath("~/Content/File/LineJson.json");
             string jsonData = System.IO.File.ReadAllText(filePath);
             var data = JsonConvert.DeserializeObject<List<SewingLineDto>>(jsonData);
 
-            ViewBag.Lines = lines;
-            ViewBag.Tasks = tasks;
+            ViewBag.Lines = data;
+            ViewBag.Tasks = taskForMains;
             DateTime startDate = FromDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             DateTime endDate = ToDate ?? startDate.AddMonths(1).AddDays(-1);
 

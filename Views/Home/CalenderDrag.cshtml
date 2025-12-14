@@ -1,5 +1,5 @@
 ﻿@{
-    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLine>;
+    var lines = ViewBag.Lines as List<WebApplication1.Models.SewingLineDto>;
     var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(lines);
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.TaskIteMForDragAndDROP>;
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
@@ -108,6 +108,29 @@
         border: 1px solid #333;
         /*    transform: translateY(-50%);*/
     }
+
+    .task {
+    cursor: grab;
+    transition: left 0.12s linear;
+}
+
+.task.dragging {
+    cursor: grabbing;
+    opacity: 0.85;
+    z-index: 999;
+}
+
+    .task-preview {
+        position: absolute;
+        background-color: rgba(0, 123, 255, 0.3); /* light blue semi-transparent */
+        border: 2px dashed #007bff; /* dashed border */
+        color: #000; /* text color */
+        pointer-events: none; /* don't block mouse */
+        z-index: 9999; /* on top */
+        
+    }
+
+
 
     .today {
         background: #ffe082 !important;
@@ -224,7 +247,7 @@
                                     <div class="hour-row">
                                         @for (int h = 0; h < workingHours; h++)
                                         {
-                                            <div class="hour-mini" data-hour="@h"></div>
+                                            <div class="hour-mini" data-date="@d.ToString("yyyy-MM-dd")" data-hour="@h"></div>
                                         }
                                     </div>
                                 </div>
@@ -254,6 +277,7 @@
 
         // Order drag and drop
         let draggedOrder = null; // use let, not const
+
 
         // DRAG START for orders
         $(document).on('dragstart', '.draggable-order', function (e) {
@@ -293,32 +317,32 @@
                 startHour = parseInt($hourMini.data('hour'));
             }
 
-            
+
             const order = {
                 OrderId: parseInt(draggedOrder.find('strong').text().replace('Order #', '')),
                 Quantity: parseInt(draggedOrder.data('quantity')) || 10
             };
 
-          
+
             const line = lines.find(l => l.LINE_ID == lineId);
             if (!line) {
                 console.error("Line not found for ID:", lineId);
                 return;
             }
 
-           
-            
+
+
             const durationDays = 10;
 
-          
+
             const newTask = createTaskFromOrder(order, line, startDate, durationDays, startHour);
 
-          
 
-            
+
+
             draggedOrder = null;
 
-           
+
             const fromDate = $('input[name="FromDate"]').val();
             LoadTask(tasks, fromDate);
         });
@@ -328,106 +352,375 @@
 
 
         //task drag and drop
-        let draggedTask = null;
+//        let draggedTask = null;
+//        let previewTask = null;
 
 
-    document.addEventListener("dragstart", e => {
-        //if (!e.target.classList.contains("task")) return;
+//        let dragOffsetX = 0;
+//        let dragOffsetY = 0;
 
-        //draggedTask = e.target;
+//  document.addEventListener("dragstart", e => {
+//    if (!e.target.classList.contains("task")) return;
 
-        //e.dataTransfer.setData("text/plain", "");
-        if (e.target.classList.contains("task")) {
-            draggedTask = e.target;
-            e.dataTransfer.setData("text/plain", e.target.dataset.id);
-            //e.dataTransfer.effectAllowed = "move";
-        }
+//    draggedTask = e.target;
+//    e.dataTransfer.setData("text/plain", draggedTask.dataset.id);
 
+//    // calculate mouse offset
+//    const rect = draggedTask.getBoundingClientRect();
+//    dragOffsetX = e.clientX - rect.left;
+//    dragOffsetY = e.clientY - rect.top;
+
+//    // optional: console.log
+//    console.log("dragOffsetX:", dragOffsetX, "dragOffsetY:", dragOffsetY);
+//});
+
+
+//    document.addEventListener("dragend", e => {
+//        if (!draggedTask) return;
+//        draggedTask = null;
+//    });
+
+//    document.addEventListener("dragover", e => {
+//        e.preventDefault();
+
+//        if (!draggedTask) return;
+
+//        const cell = e.target.closest(".cell");
+//        const hourMini = e.target.closest(".hour-mini");
+//        const row = e.target.closest(".row");
+
+//        if (!cell || !hourMini || !row) return;
+
+//        const lineId = row.dataset.line;
+//        const startDateStr = cell.dataset.date;      // yyyy-mm-dd
+//        const startHour = parseInt(hourMini.dataset.hour);
+//        const GivenDurationHours = 10;
+//        const TaskId = draggedTask.dataset.id;
+//        const TaskQuantity = draggedTask.dataset.quantity;
+//        const LineWorkingHourCapacity = row.dataset.manworklimite;
+//        const LineManPower = row.dataset.manpower;
+
+//        const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
+//        console.log("estimated d", estimated.endDate);
+//        console.log("estimated h ", estimated.endHour)
+
+//        var taskDrag = updatedTak(TaskId, startDateStr, estimated.endDate, startHour, estimated.endHour, lineId)
+//        //draggedTask = taskDrag
+//        const fromDate = $('input[name="FromDate"]').val();
+
+//        //LoadTask(tasks, fromDate);
+//        console.log("drawSingleTaskPreview drag over");
+//        drawSingleTaskPreview(
+//            TaskId,
+//            row,
+//            startDateStr,
+//            startHour,
+//            estimated.endDate,
+//            estimated.endHour
+//        );
+
+//    });
+
+
+//    document.addEventListener("drop", e => {
+//        e.preventDefault();
+//        if (!draggedTask) return;
+
+//        const hourMini = e.target.closest(".hour-mini");
+//        const cell = e.target.closest(".cell");
+//        const row = e.target.closest(".row");
+
+//        if (!hourMini || !cell || !row) {
+//            draggedTask = null;
+//            return;
+//        }
+
+//        if (previewTask) {
+//            previewTask.remove();
+//            previewTask = null;
+//        }
+
+//        dragOffsetX = 0;
+//        dragOffsetY = 0;
+
+
+//        row.appendChild(draggedTask);
+
+//        // Start hour & day index
+//        const startHour = parseInt(hourMini.dataset.hour, 10);
+//        const allCells = Array.from(row.querySelectorAll(".cell"));
+//        const dayIndex = allCells.indexOf(cell);
+
+//        // Position calculations
+//        const lineWidth = row.querySelector(".line-name").offsetWidth;
+//        const dayWidth = row.querySelector(".cell").offsetWidth;
+//        const hourWidth = dayWidth / workingHours;
+
+//        draggedTask.style.position = "absolute";
+//        draggedTask.style.left = lineWidth + dayIndex * dayWidth + startHour * hourWidth - dragOffsetX + "px";
+//        draggedTask.style.top = "5px";
+
+//        // Full task width based on duration
+//        const durationDays = parseInt(draggedTask.dataset.duration || "1", 10);
+//        draggedTask.style.width = (durationDays * dayWidth) + "px";
+
+//        // Log info
+
+
+//        draggedTask = null;
+//        const fromDate = $('input[name="FromDate"]').val();
+//        LoadTask(tasks, fromDate);
+//    });
+
+
+
+let draggedTask = null;
+let previewTask = null;
+
+// ------------------- DRAG START -------------------
+document.addEventListener("dragstart", e => {
+    if (!e.target.classList.contains("task")) return;
+
+    draggedTask = e.target;
+    e.dataTransfer.setData("text/plain", draggedTask.dataset.id);
+});
+
+// ------------------- DRAG END -------------------
+document.addEventListener("dragend", () => {
+    draggedTask = null;
+
+    if (previewTask) {
+        previewTask.remove();
+        previewTask = null;
+    }
+});
+
+// ------------------- DRAG OVER -------------------
+document.addEventListener("dragover", e => {
+    e.preventDefault();
+    if (!draggedTask) return;
+
+    const cell = e.target.closest(".cell");
+    const hourMini = e.target.closest(".hour-mini");
+    const row = e.target.closest(".row");
+    if (!cell || !hourMini || !row) return;
+
+    // ---------------- DATA ----------------
+    const lineId = row.dataset.line;
+    const startDateStr = cell.dataset.date;
+    const startHour = parseInt(hourMini.dataset.hour, 10);
+
+    const TaskId = parseInt(draggedTask.dataset.id, 10);
+    const GivenDurationHours = parseInt(draggedTask.dataset.duration || 10, 10);
+    const TaskQuantity = draggedTask.dataset.quantity;
+    const LineWorkingHourCapacity = row.dataset.manworklimite;
+    const LineManPower = row.dataset.manpower;
+
+    // ---------------- ESTIMATION ----------------
+    const estimated = calculateEstimatedEndDate(
+        startDateStr,
+        startHour,
+        GivenDurationHours,
+        LineWorkingHourCapacity,
+        LineManPower,
+        TaskQuantity
+    );
+
+    updatedTak(
+        TaskId,
+        startDateStr,
+        estimated.endDate,
+        startHour,
+        estimated.endHour,
+        lineId
+    );
+
+    // ---------------- GRID CALCULATION ----------------
+    const $row = $(row);
+    const $firstCell = $row.find('.cell').first();
+    const hourWidth = $firstCell.find('.hour-mini').first().outerWidth();
+    const workingHours = @workingHours;
+    const dayWidth = workingHours * hourWidth;
+    const leftBase = $row.find('.line-name').outerWidth();
+
+    const calendarStart = new Date($('input[name="FromDate"]').val());
+    calendarStart.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(estimated.endDate);
+
+    const startDayIndex = dayDiff(calendarStart, startDate);
+    if (startDayIndex < 0) return;
+
+    // ---------------- WIDTH CALCULATION ----------------
+    let totalHours = 0;
+
+    if (startDate.toDateString() === endDate.toDateString()) {
+        totalHours = estimated.endHour - startHour;
+    } else {
+        const firstDayHours = workingHours - startHour;
+        const lastDayHours = estimated.endHour;
+        const middleDays = dayDiff(startDate, endDate) - 1;
+
+        totalHours =
+            firstDayHours +
+            (middleDays > 0 ? middleDays * workingHours : 0) +
+            lastDayHours;
+    }
+
+    if (totalHours <= 0) return;
+
+    const width = totalHours * hourWidth;
+
+    // ---------------- LEFT POSITION (GRID-BASED) ----------------
+    const left =
+        leftBase +
+        startDayIndex * dayWidth +
+        startHour * hourWidth;
+
+    const top = 5;
+
+    // ---------------- PREVIEW CREATE / UPDATE ----------------
+    if (!previewTask) {
+        previewTask = $('<div class="task task-preview"></div>');
+        $row.append(previewTask);
+    }
+
+    const task = tasks.find(t => t.Id === TaskId);
+
+    previewTask.text(task.TaskName);
+    previewTask.css({
+        position: 'absolute',
+        left: left + 'px',
+        top: top + 'px',
+        width: width + 'px',
+        opacity: 0.6
     });
+});
 
-    document.addEventListener("dragend", e => {
-        if (!draggedTask) return;
+// ------------------- DROP -------------------
+document.addEventListener("drop", e => {
+    e.preventDefault();
+    if (!draggedTask) return;
+
+    const cell = e.target.closest(".cell");
+    const hourMini = e.target.closest(".hour-mini");
+    const row = e.target.closest(".row");
+    if (!cell || !hourMini || !row) {
         draggedTask = null;
-    });
+        return;
+    }
 
-    document.addEventListener("dragover", e => {
-        e.preventDefault();
+    const startHour = parseInt(hourMini.dataset.hour, 10);
+    const allCells = Array.from(row.querySelectorAll(".cell"));
+    const dayIndex = allCells.indexOf(cell);
 
-        if (!draggedTask) return;
+    const lineWidth = row.querySelector(".line-name").offsetWidth;
+    const dayWidth = row.querySelector(".cell").offsetWidth;
+    const hourWidth = dayWidth / @workingHours;
 
-        const cell = e.target.closest(".cell");
-        const hourMini = e.target.closest(".hour-mini");
-        const row = e.target.closest(".row");
+    // ---------------- MOVE REAL TASK ----------------
+    row.appendChild(draggedTask);
+    draggedTask.style.position = "absolute";
+    draggedTask.style.left =
+        (lineWidth + dayIndex * dayWidth + startHour * hourWidth) + "px";
+    draggedTask.style.top = "5px";
 
-        if (!cell || !hourMini || !row) return;
+    // ---------------- CLEANUP ----------------
+    if (previewTask) {
+        previewTask.remove();
+        previewTask = null;
+    }
 
-        const lineId = row.dataset.line;
-        const startDateStr = cell.dataset.date;      // yyyy-mm-dd
-        const startHour = parseInt(hourMini.dataset.hour);
-        const GivenDurationHours = 10;
-        const TaskId = draggedTask.dataset.id;
-        const TaskQuantity = draggedTask.dataset.quantity;
-        const LineWorkingHourCapacity = row.dataset.manworklimite;
-        const LineManPower = row.dataset.manpower;
+    draggedTask = null;
 
-        const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
+    // ---------------- RELOAD TASKS ----------------
+    const fromDate = $('input[name="FromDate"]').val();
+    LoadTask(tasks, fromDate);
+});
 
-        var taskDrag = updatedTak(TaskId, startDateStr, estimated.endDate, startHour, estimated.endHour, lineId)
 
-        const fromDate = $('input[name="FromDate"]').val();
+    function LoadTaskWithDelay(tasks, fromDate, delay = 1000) {
+    clearTimeout(loadTaskTimer);
+
+    loadTaskTimer = setTimeout(() => {
         LoadTask(tasks, fromDate);
-       
+    }, delay);
+}
+
+
+        function drawSingleTaskPreview(TaskId, row, startDateStr, startHour, endDateStr, endHour) {
+
+
+            const task = tasks.find(t => t.Id == TaskId);
+            console.log("task :", TaskId);
+    const workingHours = @workingHours;
+
+    const $row = $(row);
+    const $firstCell = $row.find('.cell').first();
+    if (!$firstCell.length) return;
+
+    const hourWidth = $firstCell.find('.hour-mini').first().outerWidth();
+    const dayWidth  = workingHours * hourWidth;
+    const leftBase  = $row.find('.line-name').outerWidth();
+
+    const calendarStart = new Date($('input[name="FromDate"]').val());
+    calendarStart.setHours(0, 0, 0, 0);
+
+    const startDate = new Date(startDateStr);
+    const endDate   = new Date(endDateStr);
+
+    const startDayIndex = dayDiff(calendarStart, startDate);
+    if (startDayIndex < 0) return;
+
+    // ---- total hours ----
+    let totalHours = 0;
+
+    if (startDate.toDateString() === endDate.toDateString()) {
+        totalHours = endHour - startHour;
+    } else {
+        const firstDayHours = workingHours - startHour;
+        const lastDayHours  = endHour;
+        const middleDays    = dayDiff(startDate, endDate) - 1;
+
+        totalHours =
+            firstDayHours +
+            (middleDays > 0 ? middleDays * workingHours : 0) +
+            lastDayHours;
+    }
+
+    if (totalHours <= 0) return;
+
+    const width = totalHours * hourWidth;
+    //const left =
+    //    leftBase +
+    //    (startDayIndex * dayWidth) +
+    //    (startHour * hourWidth);
+
+
+            // ----- Calculate left & top with mouse offset -----
+            const left = leftBase + (startDayIndex * dayWidth) + (startHour * hourWidth) - dragOffsetX;
+            const top = 4 - dragOffsetY;  // small adjustment if needed
+
+    // ---- CREATE PREVIEW ONCE ----
+    if (!previewTask) {
+        previewTask = $('<div class="task task-preview"></div>');
+        $row.append(previewTask);
+    }
+
+            console.log("previewTask", previewTask);
+            previewTask.text(task.TaskName);
+    previewTask.css({
+        left: left + 'px',
+        top: '4px',
+        width: width + 'px'
     });
-
-
-    document.addEventListener("drop", e => {
-        e.preventDefault();
-        if (!draggedTask) return;
-
-        const hourMini = e.target.closest(".hour-mini");
-        const cell = e.target.closest(".cell");
-        const row = e.target.closest(".row");
-
-        if (!hourMini || !cell || !row) {
-            draggedTask = null;
-            return;
-        }
-
-    
-        row.appendChild(draggedTask);
-
-        // Start hour & day index
-        const startHour = parseInt(hourMini.dataset.hour, 10);
-        const allCells = Array.from(row.querySelectorAll(".cell"));
-        const dayIndex = allCells.indexOf(cell);
-
-        // Position calculations
-        const lineWidth = row.querySelector(".line-name").offsetWidth;
-        const dayWidth = row.querySelector(".cell").offsetWidth;
-        const hourWidth = dayWidth / workingHours;
-
-        draggedTask.style.position = "absolute";
-        draggedTask.style.left = (lineWidth + dayIndex * dayWidth + startHour * hourWidth) + "px";
-        draggedTask.style.top = "5px";
-
-        // Full task width based on duration
-        const durationDays = parseInt(draggedTask.dataset.duration || "1", 10);
-        draggedTask.style.width = (durationDays * dayWidth) + "px";
-
-        // Log info
-      
-
-        draggedTask = null;
-        const fromDate = $('input[name="FromDate"]').val();
-        LoadTask(tasks, fromDate);
-    });
-
-
+}
 
 
         function updatedTak(taskId, fromDate, toDate,startHour,endHour,lineID) {
 
-            console.clear();
+
         console.log("tasks", tasks);
         console.log("ID", taskId);
         console.log("StartDate", fromDate);
@@ -454,7 +747,7 @@
 
     });
 
-       
+
         function LoadOrders() {
             $.ajax({
                 url: '/Home/Orders',
@@ -482,7 +775,7 @@
                     </li>
                 `);
 
-                      
+
 
                         sidebarList.append(li);
                     });
@@ -567,6 +860,7 @@
     //}
 
    function LoadTask(tasks, calendarStartDate) {
+
     const workingHours = @workingHours;
     $('.task').remove();
 
@@ -575,69 +869,77 @@
 
     tasks.forEach(task => {
 
-        const $row = $('.row[data-line="' + task.SewingLineId + '"]');
+        const $row = $(`.row[data-line="${task.SewingLineId}"]`);
         if (!$row.length) return;
 
         const $firstCell = $row.find('.cell').first();
         if (!$firstCell.length) return;
 
-        // ✔ Get REAL hour width
-        const cellWidth = $firstCell.find('.hour-mini').first().outerWidth();
+        // ---- Hour & Day sizes ----
+        const hourWidth = $firstCell.find('.hour-mini').first().outerWidth();
+        const dayWidth  = workingHours * hourWidth;
+        const leftBase  = $row.find('.line-name').outerWidth();
 
-        // ✔ Calculate full day width
-        const dayWidth = workingHours * cellWidth;
+        // ---- Dates ----
+        const startDate = new Date(task.FromDate.split('T')[0]);
+        const endDate   = new Date(task.ToDate.split('T')[0]);
 
-        // ✔ Left base (line name width)
-        const leftBase = $row.find('.line-name').outerWidth();
+        const startDayIndex = dayDiff(calendarStart, startDate);
+        if (startDayIndex < 0) return;
 
-        // Task dates
-        const taskStartDate = new Date(task.FromDate.split('T')[0]);
-        const taskEndDate = new Date(task.ToDate.split('T')[0]);
+        const startHour = parseInt(task.StartHour);
+        const endHour   = parseInt(task.EndHour);
 
-        const startDay = dayDiff(calendarStart, taskStartDate);
-        if (startDay < 0) return;
+        // ---- TOTAL HOURS CALCULATION ----
+        let totalHours = 0;
 
-        let totalWidth = 0;
+        if (startDate.toDateString() === endDate.toDateString()) {
+            // Same day
+            totalHours = endHour - startHour;
+        } else {
+            // Multi day
+            const firstDayHours = workingHours - startHour;
+            const lastDayHours  = endHour;
+            const middleDays    = dayDiff(startDate, endDate)-1;
 
-       
-        if (taskStartDate.toDateString() === taskEndDate.toDateString()) {
-            totalWidth = (task.EndHour - task.StartHour + 1) * cellWidth;
+            totalHours =
+                firstDayHours +
+                (middleDays > 0 ? middleDays * workingHours : 0) +
+                lastDayHours;
         }
-        else {
-           
-            const firstDayWidth  = (workingHours - task.StartHour) * cellWidth;
-            const lastDayWidth   = (task.EndHour + 1) * cellWidth;
-            const middleDays     = dayDiff(taskStartDate, taskEndDate) - 1;
 
-            totalWidth = firstDayWidth +
-                (middleDays > 0 ? middleDays * dayWidth : 0) +
-                lastDayWidth;
-        }
+        if (totalHours <= 0) return;
 
-      
+        const totalWidth = totalHours * hourWidth;
+
+        // ---- LEFT OFFSET (DATE + HOUR MATCH) ----
         const leftOffset =
             leftBase +
-            (startDay * dayWidth) +
-            (task.StartHour * cellWidth);
+            (startDayIndex * dayWidth) +
+            (startHour * hourWidth);
 
-
+        // ---- DRAW TASK ----
         const $task = $('<div>', {
             class: 'task',
             text: task.TaskName,
             draggable: true,
             css: {
-                left: leftOffset + 'px',
-                top: '6px',
-                width: totalWidth + 'px',
                 position: 'absolute',
+                left: leftOffset + 'px',
+                top: '4px',
+                width: totalWidth + 'px',
+                height: '45px',
                 border: '1px solid #333',
-                lineHeight: '20px',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap'
+                lineHeight: '45px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden'
             }
         })
         .attr('data-id', task.Id)
-        .attr('data-duration', dayDiff(taskStartDate, taskEndDate) + 1)
+        .attr('data-start-date', task.FromDate)
+        .attr('data-start-hour', startHour)
+        .attr('data-end-date', task.ToDate)
+        .attr('data-end-hour', endHour)
         .attr('data-quantity', task.Quantity);
 
         $row.append($task);
@@ -645,8 +947,91 @@
 }
 
 
+
+        //function LoadTask(tasks, calendarStartDate) {
+
+        //    $('.task').remove();
+
+        //    const calendarStart = new Date(calendarStartDate);
+        //    calendarStart.setHours(0, 0, 0, 0);
+
+        //    tasks.forEach(task => {
+
+        //        const $row = $(`.row[data-line="${task.SewingLineId}"]`);
+        //        if (!$row.length) return;
+
+        //        const $firstCell = $row.find('.cell').first();
+        //        if (!$firstCell.length) return;
+
+        //        const hourWidth = $firstCell.find('.hour-mini').first().outerWidth();
+        //        const dayWidth = workingHours * hourWidth;
+        //        const leftBase = $row.find('.line-name').outerWidth();
+
+        //        // ---- Task Dates ----
+        //        const startDate = new Date(task.FromDate.split('T')[0]);
+        //        const endDate = new Date(task.ToDate.split('T')[0]);
+
+        //        const startDayIndex = dayDiff(calendarStart, startDate);
+        //        if (startDayIndex < 0) return;
+
+        //        const startHour = parseInt(task.StartHour);
+        //        const endHour = parseInt(task.EndHour);
+
+        //        // ---- WIDTH CALCULATION (hour-accurate) ----
+        //        let totalHours = 0;
+
+        //        if (startDate.toDateString() === endDate.toDateString()) {
+        //            totalHours = endHour - startHour;
+        //        } else {
+        //            const firstDayHours = workingHours - startHour;
+        //            const lastDayHours = endHour;
+        //            const middleDays = dayDiff(startDate, endDate) - 1;
+
+        //            totalHours =
+        //                firstDayHours +
+        //                (middleDays > 0 ? middleDays * workingHours : 0) +
+        //                lastDayHours;
+        //        }
+
+        //        const totalWidth = totalHours * hourWidth;
+
+        //        // ---- LEFT OFFSET ----
+        //        const leftOffset =
+        //            leftBase +
+        //            (startDayIndex * dayWidth) +
+        //            (startHour * hourWidth);
+
+        //        // ---- CREATE TASK ----
+        //        const $task = $('<div>', {
+        //            class: 'task',
+        //            text: task.TaskName,
+        //            draggable: true,
+        //            css: {
+        //                position: 'absolute',
+        //                left: leftOffset + 'px',
+        //                top: '6px',
+        //                width: totalWidth + 'px',
+        //                height: '45px',
+        //                border: '1px solid #333',
+        //                lineHeight: '45px',
+        //                whiteSpace: 'nowrap',
+        //                overflow: 'hidden'
+        //            }
+        //        })
+        //            .attr('data-id', task.Id)
+        //            .attr('data-start-date', task.FromDate)
+        //            .attr('data-start-hour', startHour)
+        //            .attr('data-end-date', task.ToDate)
+        //            .attr('data-end-hour', endHour);
+
+        //        $row.append($task);
+        //    });
+        //}
+
+
+
         function createTaskFromOrder(order, line, startDate, givenDurationHours, startHour) {
-         
+
             givenDurationHours = givenDurationHours || 10;
 
             // Validate input
@@ -655,40 +1040,40 @@
                 return null;
             }
 
-            
+
             const estimated = calculateEstimatedEndDate(
-                startDate,              
-                startHour,               
-                givenDurationHours,      
-                line.ManWorkLimite,     
-                line.MAN_POWER,        
-                order.Quantity      
+                startDate,
+                startHour,
+                givenDurationHours,
+                line.ManWorkLimite,
+                line.MAN_POWER,
+                order.Quantity
             );
 
             if (!estimated || !estimated.endDate || estimated.endHour === undefined) {
                 console.error("Estimated calculation failed:", estimated);
                 return null;
             }
-            
+
 
             // Create the task object
             const task = {
-                Id: tasks.length + 1,                            
-                TaskName: `Task From Order #${order.OrderId}`, 
+                Id: tasks.length + 1,
+                TaskName: `Task From Order #${order.OrderId}`,
                 Quantity: order.Quantity,
                 SewingLineId: line.LINE_ID,
-                SewingLine: null,                               
-                FromDate: new Date(startDate).toISOString(),    
-                ToDate: new Date(estimated.endDate).toISOString(), 
+                SewingLine: null,
+                FromDate: new Date(startDate).toISOString(),
+                ToDate: new Date(estimated.endDate).toISOString(),
                 StartHour: startHour,
                 EndHour: estimated.endHour,
-                ColorCode: 'blue'                            
+                ColorCode: 'blue'
             };
 
-            console.log("newTask:", task);  
+            console.log("newTask:", task);
 
-            tasks.push(task); 
-            return task;     
+            tasks.push(task);
+            return task;
         }
 
 
@@ -703,7 +1088,7 @@
 
             while (hoursToSchedule > 0) {
                 const availableHoursToday = workingHours - currentHour;
-            
+
                 if (hoursToSchedule <= availableHoursToday) {
                     currentHour += hoursToSchedule;
                     hoursToSchedule = 0;
