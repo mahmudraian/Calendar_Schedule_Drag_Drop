@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -148,8 +149,14 @@ namespace WebApplication1.Controllers
             string jsonData = System.IO.File.ReadAllText(filePath);
             var data = JsonConvert.DeserializeObject<List<SewingLineDto>>(jsonData);
 
+            string taskFilePath = Server.MapPath("~/Content/File/taskJson.json");
+            string taskJsonData = System.IO.File.ReadAllText(taskFilePath);
+
+            var taskData = JsonConvert.DeserializeObject<List<PlanProductionModel>>(taskJsonData);
+
+            
             ViewBag.Lines = data;
-            ViewBag.Tasks = taskForMains;
+            ViewBag.Tasks = taskData;
             DateTime startDate = FromDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             DateTime endDate = ToDate ?? startDate.AddMonths(1).AddDays(-1);
 

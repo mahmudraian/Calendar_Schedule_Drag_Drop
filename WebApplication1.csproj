@@ -138,6 +138,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\SewingLineDto.cs" />
+    <Compile Include="Models\PlanProductionModel.cs" />
     <Compile Include="Models\TaskIteMForDragAndDROP.cs" />
     <Compile Include="Models\SewingLine.cs" />
     <Compile Include="Models\TaskItemForCalender.cs" />
