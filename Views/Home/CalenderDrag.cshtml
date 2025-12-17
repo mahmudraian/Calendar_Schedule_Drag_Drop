@@ -231,9 +231,10 @@
                     <!-- Lines & Tasks -->
                     @foreach (var line in lines)
                     {
-                        <div class="row" data-line="@line.LINE_ID" data-ManPower="@line.MAN_POWER" data-ManWorkLimite="@line.ManWorkLimite">
+                        var manpower = @line.MAN_POWER == 0 ? 10 : @line.MAN_POWER;
+                        <div class="row" data-line="@line.LINE_ID" data-ManPower="@manpower" data-ManWorkLimite="@line.ManWorkLimite">
                             <div class="line-name">
-                                <div class="line-title">@line.LINE_NAME</div>
+                                <div class="line-title">@line.LINE_NAME ~~ @manpower</div>
                                 <div class="line-info">
                                     <span>MP: @line.MAN_POWER</span>
                                     <span>Limit/H: @line.ManWorkLimite</span>
@@ -490,8 +491,14 @@
         }
 
 
-let draggedTask = null;
-let previewTask = null;
+        let draggedTask = null;
+        let previewTask = null;
+
+        let lastHover = {
+            cell: null,
+            hourMini: null,
+            row: null
+        };
 document.addEventListener("dragstart", e => {
     if (!e.target.classList.contains("task")) return;
 
@@ -519,6 +526,10 @@ document.addEventListener("dragend", () => {
                 const row = e.target.closest(".row");
 
                 if (!cell || !hourMini || !row) return;
+                console.log("DRAGOVER hour:", hourMini);
+                lastHover.cell = cell;
+                lastHover.hourMini = hourMini;
+                lastHover.row = row;
 
                 const lineId = row.dataset.line;
                 const startDateStr = cell.dataset.date;  
@@ -530,18 +541,18 @@ document.addEventListener("dragend", () => {
                 const LineManPower = row.dataset.manpower;
 
                 const estimated = calculateEstimatedEndDate(startDateStr, startHour, GivenDurationHours, LineWorkingHourCapacity, LineManPower, TaskQuantity)
-                console.clear();
+               
                 console.log("estimated startDateStr", startDateStr);
                 console.log("estimated startHour ", startHour)
                 console.log("estimated endDate", estimated.endDate);
                 console.log("estimated endHour ", estimated.endHour)
                 console.log("estimated TaskName ", draggedTask.dataset)
 
-                var taskDrag = updatedTak(TaskId, startDateStr, estimated.endDate, startHour, estimated.endHour, lineId)
+                var taskDrag = updatedTask(TaskId, startDateStr, estimated.endDate, startHour, estimated.endHour, lineId)
                 const fromDate = $('input[name="FromDate"]').val();
 
                 //LoadTask(tasks, fromDate);
-                LoadTaskWithID(TaskId, draggedTask.dataset.name, fromDate, lineId, startDateStr, estimated.endDate, startHour, estimated.endHour)
+                LoadTaskWithID(TaskId, draggedTask.dataset.name, fromDate, lineId, startDateStr, estimated.endDate, startHour, estimated.endHour, TaskQuantity)
                 
 
             });
@@ -550,14 +561,16 @@ document.addEventListener("drop", e => {
     e.preventDefault();
     if (!draggedTask) return;
 
-    const cell = e.target.closest(".cell");
-    const hourMini = e.target.closest(".hour-mini");
-    const row = e.target.closest(".row");
+    //const cell = e.target.closest(".cell");
+    //const hourMini = e.target.closest(".hour-mini");
+    //const row = e.target.closest(".row");
+    const { cell, hourMini, row } = lastHover;
     if (!cell || !hourMini || !row) {
+        console.warn("Drop without valid hover position");
         draggedTask = null;
         return;
     }
-
+    console.log("Drop ")
     const startHour = parseInt(hourMini.dataset.hour, 10);
     const allCells = Array.from(row.querySelectorAll(".cell"));
     const dayIndex = allCells.indexOf(cell);
@@ -595,33 +608,57 @@ document.addEventListener("drop", e => {
     }, delay);
 }
 
-        function updatedTak(taskId, fromDate, toDate,startHour,endHour,lineID) {
-            console.log("updatedTak tasks", tasks);
-            console.log(" updatedTak ID", taskId);
-            console.log(" updatedTak StartDate", fromDate);
-            console.log("updatedTak EndDate", toDate);
-            console.log("updatedTak lineID", lineID);
-            console.log("updatedTak endHour", endHour);
-            console.log("updatedTak startHour", startHour);
+        function updatedTask(taskId, fromDate, toDate, startHour, endHour, lineID) {
+
             const task = tasks.find(t => t.plan_id == taskId);
-        if (!task) {
-            console.warn("Task not found:", taskId);
-            return;
+            if (!task) {
+                console.warn("Task not found:", taskId);
+                return null;
+            }
+
+            task.start_date = normalizeToDMY(fromDate);
+            task.end_date = normalizeToDMY(toDate);
+
+            task.start_hour = parseInt(startHour, 10);
+            task.end_hour = parseInt(endHour, 10);
+            task.line_id = parseInt(lineID, 10);
+
+            console.log("Updated task (normalized):", task);
+            return task;
         }
 
-            task.start_date = fromDate;
-            task.end_date = toDate;
-            task.line_id = lineID;
-            task.end_hour = endHour;
-            task.start_hour = startHour
-
-            console.log("updated task", task);
-        return task;
-        }
 
 
 
     });
+
+
+        function normalizeToDMY(date) {
+
+            if (date instanceof Date) {
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}-${m}-${y}`;
+            }
+
+            if (typeof date === "string") {
+
+                // YYYY-MM-DD
+                if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                    const [y, m, d] = date.split("-");
+                    return `${d}-${m}-${y}`;
+                }
+
+                // DD-MM-YYYY
+                if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
+                    return date;
+                }
+            }
+
+            console.error("Invalid date format:", date);
+            return null;
+        }
 
 
         function LoadOrders() {
@@ -663,21 +700,18 @@ document.addEventListener("drop", e => {
         }
 
 
-    function dayDiff(date1, date2) {
-        //const d1 = new Date(date1);
-        //const d2 = new Date(date2);
-        const d1 = new Date(date1);
-        const d2 = new Date(date2);
-        if (isNaN(d1) || isNaN(d2)) {
-            console.error("Invalid dates in dayDiff", date1,'~~~~~~~~~', date2);
-            return NaN;
+        function dayDiff(date1, date2) {
+            const d1 = parseDMY(date1);
+            const d2 = parseDMY(date2);
+
+            if (!d1 || !d2 || isNaN(d1) || isNaN(d2)) {
+                console.error("Invalid dates in dayDiff", date1, "~~~~~~~~~", date2);
+                return 0;
+            }
+
+            const diffMs = d2 - d1;
+            return Math.floor(diffMs / (1000 * 60 * 60 * 24));
         }
-
-        d1.setHours(0, 0, 0, 0);
-        d2.setHours(0, 0, 0, 0);
-
-        return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-    }
 
     //function LoadTask(tasks, calendarStartDate) {
 
@@ -733,12 +767,16 @@ document.addEventListener("drop", e => {
     //    });
     //}
         function parseDMY(dateStr) {
-            if (!dateStr) {
-                console.error("Invalid date string:", dateStr);
-                return null;
-            }
+            if (!dateStr) return null;
 
-            const [day, month, year] = dateStr.split('-').map(Number);
+            // If already a Date object
+            if (dateStr instanceof Date) return dateStr;
+
+            // Expecting DD-MM-YYYY
+            const parts = dateStr.split("-");
+            if (parts.length !== 3) return null;
+
+            const [day, month, year] = parts.map(Number);
             return new Date(year, month - 1, day);
         }
 
@@ -805,7 +843,7 @@ document.addEventListener("drop", e => {
         // ---- DRAW TASK ----
         const $task = $('<div>', {
             class: 'task',
-            id: `task-${task.plan_id}`,
+            id: `task_${task.plan_id}`,
             text: task.JOB_NO,
             draggable: true,
             css: {
@@ -821,10 +859,10 @@ document.addEventListener("drop", e => {
             }
         })
             .attr('data-id', task.plan_id)
-            .attr('data-start-date', task.start_date)
-        .attr('data-start-hour', startHour)
-            .attr('data-end-date', task.EndDate)
-        .attr('data-end-hour', endHour)
+            .attr('data-start-date', parseDMY(task.start_date))
+            .attr('data-start-hour', startHour)
+            .attr('data-end-date', parseDMY(task.end_date))
+            .attr('data-end-hour', endHour)
             .attr('data-quantity', task.plan_qnty)
             .attr('data-name', task.JOB_NO);
 
@@ -833,14 +871,20 @@ document.addEventListener("drop", e => {
         }
 
 
-    function LoadTaskWithID(TaskId, TaskName, calendarStartDate, LineID, startDate, endDate,StartHour,EndHour) {
+        function LoadTaskWithID(TaskId, TaskName, calendarStartDate, LineID, startDate, endDate, StartHour, EndHour, TaskQuantity) {
 
     const workingHours = @workingHours;
-    $(`#task-${TaskId}`).remove();
-            
+            $(`#task_${TaskId}`).remove();
+            startDate = parseDMY(startDate)
+            endDate = parseDMY(endDate)
     const calendarStart = new Date(calendarStartDate);
     calendarStart.setHours(0, 0, 0, 0);
-
+            const task = tasks.find(t => t.plan_id == TaskId);
+            LineID = task.line_id;
+            startDate = task.start_date;
+            endDate = task.end_date
+            StartHour = task.start_hour
+            EndHour = task.end_hour
         const $row = $(`.row[data-line="${LineID}"]`);
         if (!$row.length) return;
 
@@ -891,7 +935,7 @@ document.addEventListener("drop", e => {
             console.log("TaskName", TaskName);
         const $task = $('<div>', {
             class: 'task',
-            id: `task-${TaskId}`,
+            id: `task_${TaskId}`,
             text: TaskName,
             draggable: true,
             css: {
@@ -906,12 +950,20 @@ document.addEventListener("drop", e => {
                 overflow: 'hidden'
             }
         })
+        //    .attr('data-id', TaskId)
+        //    .attr('data-start-date', startDate)
+        //.attr('data-start-hour', startHour)
+        //    .attr('data-end-date', endDate)
+        //.attr('data-end-hour', endHour)
+        ////.attr('data-quantity', task.Quantity);
+
             .attr('data-id', TaskId)
             .attr('data-start-date', startDate)
-        .attr('data-start-hour', startHour)
+            .attr('data-start-hour', startHour)
             .attr('data-end-date', endDate)
-        .attr('data-end-hour', endHour)
-        //.attr('data-quantity', task.Quantity);
+            .attr('data-end-hour', endHour)
+            .attr('data-quantity', TaskQuantity)
+            .attr('data-name', TaskName);
 
         $row.append($task);
     

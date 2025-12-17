@@ -202,6 +202,7 @@
     <Content Include="Views\Home\CalenderIndex.cshtml" />
     <Content Include="Views\Home\CalenderDrag.cshtml" />
     <Content Include="Views\Home\SewingCalendar.cshtml" />
+    <Content Include="Views\Home\UpdateCalenderDrag.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
