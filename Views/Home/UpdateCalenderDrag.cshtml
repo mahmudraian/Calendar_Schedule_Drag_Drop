@@ -8,92 +8,182 @@
     int workingHours = 10; // daily working hours
 }
 <style>
-    #calendar .row {
-        display: flex;
-        height: 70px; /* increased row height */
-        border-bottom: 1px solid #ddd;
-        position: relative;
+    :root {
+        --line-width: 180px;
+        --cell-width: 120px;
+/*        --row-height: 55px;*/
     }
 
+    /* Wrapper */
     .calendar-wrapper {
         overflow-x: auto;
         border: 1px solid #ccc;
-        max-height: 700px;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        max-height: 550px;
     }
 
-    .calendar-header, .row {
-        display: flex;
-    }
 
-    .line-name {
-        width: 200px; /* slightly wider for readability */
-        flex-shrink: 0;
-        background: #f2f2f2;
-        padding: 8px;
-        box-sizing: border-box;
+    /* Header */
+    .calendar-header {
         position: sticky;
-        left: 0;
-        z-index: 5;
-        font-weight: bold;
+        top: 0;
+        z-index: 1000; /* higher than tasks */
+        background-color: #f8f9fa;
+        display: flex;
+        border-bottom: 2px solid #ddd;
+        /* IMPORTANT */
+        background-clip: padding-box;
     }
 
-    .cell {
-        flex: 1;
-        border-left: 1px solid #eee;
-        position: relative;
-        min-width: 80px; /* increase cell width */
+
+
+    /* Body */
+    .calendar-body {
+        display: flex;
+        flex-direction: column;
     }
+
+    .calendar-row {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        height: var(--row-height); /* 🔑 source of height */
+        position: relative;
+        width: max-content;
+        height: 55px;
+    }
+
+
+    .calendar-header .cell::after {
+        background: #ddd;
+    }
+
+    .calendar-header .cell {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .row {
+        display: flex;
+        flex-wrap: nowrap;
+        height: var(--row-height);
+        position: relative;
+    }
+
+        /* solid row border */
+        .row::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 1px;
+            background: #dcdcdc;
+        }
+
+   
+
+
+    /* line column */
+    .line-name {
+        width: var(--line-width);
+        min-width: var(--line-width);
+        flex-shrink: 0;
+        padding: 10px;
+        background: #fafafa;
+        border-right: 1px solid #ddd;
+        font-weight: 600;
+        border-bottom: 1px solid #e9d7d7;
+        position: sticky;
+    }
+
+    /* calendar cell */
+    .cell {
+        width: var(--cell-width);
+        min-width: var(--cell-width);
+        flex-shrink: 0;
+        position: relative;
+        border-bottom: 1px solid #e9d7d7;
+    }
+
+        /* vertical grid lines */
+        .cell::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 1px;
+            background-color: #e0e0e0; /* slightly darker */
+            pointer-events: none;
+        }
+
+
+
+    /* Sunday */
+    .disabled-day {
+        background: #f3f3f3;
+    }
+
+/*    .task {
+        position: absolute;
+        top: 5px;
+        height: calc(var(--row-height));
+        line-height: calc(var(--row-height) - 10px);
+        background-color: #F5AFAF;
+        z-index: 5;
+        border:1px solid;
+        padding:1px;
+    }*/
 
     .task {
-        position: absolute;
-        height: 60px; /* taller task */
-        background: #4caf50;
-        color: white;
-        text-align: center;
-        line-height: 60px; /* match row height */
+        height: 30px;
+        background: #ff6600;
+        color: #fff;
+        font-size: 12px;
+        z-index: 10;
         border-radius: 4px;
-        cursor: grab;
-        overflow: hidden;
-        font-size: 14px;
+        cursor: pointer;
     }
 
-    .cell-hover {
-        background: rgba(0,123,255,0.2);
-    }
 
 </style>
-
-<h3>Sewing Line Calendar</h3>
-
 <div style="margin-bottom:15px;">
-    <form id="dateForm" method="get" action="@Url.Action("UpdateCalenderDrag")">
-        From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" />
-        To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" />
-        <button type="submit">Load Calendar</button>
-        <button type="button" id="btn-tasks">Load Tasks</button>
-    </form>
 
-</div>
+    <h3>Sewing Line Calendar</h3>
 
-<div class="container-fluid">
-    <div class="row">
-        @*<div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
-            <h4>Order List</h4>
-            <ul id="sidebar-orders"><li>Loading...</li></ul>
-        </div>*@
+    <div style="margin-bottom:15px;">
+        <form id="dateForm" method="get" action="@Url.Action("UpdateCalenderDrag")">
+            From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" />
+            To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" />
+            <button type="submit">Load Calendar</button>
+            <button type="button" id="btn-tasks">Load Tasks</button>
+        </form>
 
-        <div class="col-12">
-            <div id="calendar-wrapper" style="overflow-x: auto; border: 1px solid #ccc; white-space: nowrap; max-height: 500px;">
-                <div id="calendar-header" style="display:flex; position:sticky; top:0; background:#fff; z-index:10;"></div>
-                <div id="calendar-body"></div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            @*<div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
+                    <h4>Order List</h4>
+                    <ul id="sidebar-orders"><li>Loading...</li></ul>
+                </div>*@
+
+            <div class="col-12">
+                <div class="calendar-wrapper">
+                    <div id="calendar-header" class="calendar-header"></div>
+                    <div id="calendar-body" class="calendar-body"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<script>
+    <script>
 const WORKING_HOURS = @workingHours;
 let tasks = @Html.Raw(tasksJson);
 let lines = @Html.Raw(linesJson);
@@ -127,38 +217,49 @@ function dayDiff(a,b){
 }
 
 // --- Calendar Render ---
-    // --- Calendar Render ---
     function renderCalendar() {
         const fromDate = parseDateSafe($('input[name="FromDate"]').val());
         const toDate = parseDateSafe($('input[name="ToDate"]').val());
         if (!fromDate || !toDate) return;
 
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-        // --- Header ---
-        const header = document.getElementById('calendar-header');
-        header.innerHTML = '<div class="line-name">Line</div>';
-
-        // Calculate number of days dynamically
         const totalDays = dayDiff(fromDate, toDate);
+
+        /* ================= HEADER ================= */
+        const header = document.getElementById('calendar-header');
+        header.innerHTML = '';
+
+        const headerLine = document.createElement('div');
+        headerLine.className = 'line-name';
+        headerLine.textContent = 'Line';
+        header.appendChild(headerLine);
 
         for (let i = 0; i <= totalDays; i++) {
             const currentDate = addDays(fromDate, i);
+
             const cell = document.createElement('div');
             cell.className = 'cell';
-            cell.style.width = '60px';
-            cell.style.borderLeft = '1px solid #eee';
-            cell.textContent = `${dayNames[currentDate.getDay()]} ${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
             cell.dataset.date = formatYMD(currentDate);
+            cell.innerHTML = `
+            <div>${dayNames[currentDate.getDay()]}</div>
+            <div>
+            ${currentDate.getDate()}/
+            ${currentDate.getMonth() + 1}/
+            ${currentDate.getFullYear()}
+            </div>
+
+        `;
+
             header.appendChild(cell);
         }
 
-        // --- Body ---
+        /* ================= BODY ================= */
         const body = document.getElementById('calendar-body');
         body.innerHTML = '';
+
         lines.forEach(line => {
             const row = document.createElement('div');
-            row.className = 'row';
+            row.className = 'calendar-row';
             row.dataset.line = line.LINE_ID;
 
             const lineDiv = document.createElement('div');
@@ -168,154 +269,126 @@ function dayDiff(a,b){
 
             for (let i = 0; i <= totalDays; i++) {
                 const currentDate = addDays(fromDate, i);
+                const isSunday = currentDate.getDay() === 0;
 
-                // Header cell
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.style.width = '80px'; // match CSS
-                cell.style.borderLeft = '1px solid #eee';
-                cell.textContent = `${dayNames[currentDate.getDay()]} ${currentDate.getDate()}/${currentDate.getMonth() + 1}`;
                 cell.dataset.date = formatYMD(currentDate);
-                header.appendChild(cell);
-            }
 
-            // Body cells
-            lines.forEach(line => {
-                const row = document.createElement('div');
-                row.className = 'row';
-                row.dataset.line = line.LINE_ID;
-
-                const lineDiv = document.createElement('div');
-                lineDiv.className = 'line-name';
-                lineDiv.textContent = line.LINE_NAME;
-                row.appendChild(lineDiv);
-
-                for (let i = 0; i <= totalDays; i++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.style.width = '80px'; // match header width
-                    row.appendChild(cell);
+                if (isSunday) {
+                    cell.classList.add('disabled-day');
                 }
 
-                body.appendChild(row);
-            });
-
+                row.appendChild(cell);
+            }
 
             body.appendChild(row);
         });
-
-        renderTasks(fromDate); // render tasks in days scale
+        renderTasks(fromDate,toDate) 
     }
 
+        function parseDMY(dateStr) {
+            if (!dateStr) return null;
 
-    // --- Render tasks scaled by weeks ---
-    function renderTasksWeek(calendarStart) {
-        tasks.forEach(task => {
-            const row = document.querySelector(`.row[data-line="${task.line_id}"]`);
-            if (!row) return;
+            // supports: "03-01-2026" OR "03 - 01 - 2026"
+            const parts = dateStr.includes('-')
+                ? dateStr.split('-')
+                : dateStr.split(' - ');
 
-            const start = parseDateSafe(task.start_date);
-            const end = parseDateSafe(task.end_date);
-            if (!start || !end) return;
+            if (parts.length !== 3) return null;
 
-            // Task start and duration in weeks
-            const startWeekIndex = Math.floor(dayDiff(calendarStart, start) / 7);
-            const durationWeeks = Math.ceil((dayDiff(start, end) + 1) / 7);
+            const day = Number(parts[0]);
+            const month = Number(parts[1]);
+            const year = Number(parts[2]);
 
-            const $row = $(row);
-            const weekWidth = $row.find('.cell').first().outerWidth();
-            const leftBase = $row.find('.line-name').outerWidth();
-            const leftOffset = leftBase + startWeekIndex * weekWidth;
-            const totalWidth = durationWeeks * weekWidth;
-
-            const $task = $('<div>', {
-                class: 'task',
-                text: task.JOB_NO,
-                title: `${task.JOB_NO}\n${task.start_date} → ${task.end_date}`,
-                draggable: true,
-                css: {
-                    position: 'absolute',
-                    left: leftOffset + 'px',
-                    top: '4px',
-                    width: totalWidth + 'px',
-                    height: '45px',
-                    lineHeight: '45px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    background: '#4CAF50',
-                    color: '#fff',
-                    borderRadius: '4px',
-                    cursor: 'grab'
-                }
-            }).attr({
-                'data-id': task.plan_id,
-                'data-start-date': task.start_date,
-                'data-end-date': task.end_date,
-            });
-
-            $row.append($task);
-        });
-    }
-
-// --- Render Tasks ---
-function renderTasks(calendarStart){
-    tasks.forEach(task=>{
-        const row=document.querySelector(`.row[data-line="${task.line_id}"]`);
-        if(!row) return;
-
-        const start=parseDateSafe(task.start_date);
-        const end=parseDateSafe(task.end_date);
-        if(!start||!end) return;
-
-        let startDayIndex = dayDiff(calendarStart,start);
-        if(startDayIndex<0) startDayIndex=0;
-
-        let totalHours;
-        if(start.toDateString() === end.toDateString()){
-            totalHours = task.end_hour - task.start_hour;
-        } else {
-            const daysBetween = dayDiff(start,end)-1;
-            totalHours = (WORKING_HOURS - task.start_hour) + daysBetween*WORKING_HOURS + task.end_hour;
+            return new Date(year, month - 1, day);
         }
 
-        const $row = $(row);
-        const dayWidth = $row.find('.cell').first().outerWidth();
-        const hourWidth = dayWidth / WORKING_HOURS;
-        const leftBase = $row.find('.line-name').outerWidth();
-        const leftOffset = leftBase + startDayIndex*dayWidth + task.start_hour*hourWidth;
-        const totalWidth = totalHours*hourWidth;
 
-        const $task = $('<div>',{
-            class:'task',
-            text:task.JOB_NO,
-            draggable:true,
-            css:{
-                position:'absolute',
-                left:leftOffset+'px',
-                top:'4px',
-                width:totalWidth+'px',
-                height:'45px',
-                lineHeight:'45px',
-                whiteSpace:'nowrap',
-                overflow:'hidden',
-                background:'#4CAF50',
-                color:'#fff',
-                borderRadius:'4px',
-                cursor:'grab'
-            }
-        }).attr({
-            'data-id':task.plan_id,
-            'data-start-date':formatYMD(start),
-            'data-start-hour':task.start_hour,
-            'data-end-date':formatYMD(end),
-            'data-end-hour':task.end_hour,
-            'data-name':task.JOB_NO,
-            'data-quantity':task.plan_qnty
-        });
+        // Helper to get days difference (calendar days, not hours)
+        function dayDiff(start, end) {
+            const msPerDay = 24 * 60 * 60 * 1000;
+            return Math.round((end - start) / msPerDay);
+        }
 
-        $row.append($task);
-    });
-}
+
+        function durationToHours(duration) {
+            const days = Math.floor(duration);
+            const fraction = duration - days;
+            return (days * WORKING_HOURS) + Math.round(fraction * WORKING_HOURS);
+        }
+
+        const TASK_COLORS = [
+            "#FF5733",
+            "#33B5E5",
+            "#9C27B0",
+            "#4CAF50",
+            "#FFC107",
+            "#E91E63",
+            "#009688",
+            "#3F51B5",
+            "#FF9800",
+            "#795548"
+        ];
+
+        function getRandomTaskColor() {
+            return TASK_COLORS[Math.floor(Math.random() * TASK_COLORS.length)];
+        }
+
+        function renderTasks(calendarStart, calendarEnd) {
+            document.querySelectorAll('.task').forEach(t => t.remove());
+
+            tasks.forEach(task => {
+                const row = document.querySelector(
+                    `.calendar-row[data-line="${task.line_id}"]`
+                );
+                if (!row) return;
+
+                let start = parseDMY(task.start_date);
+                if (!start) return;
+
+                // ✅ STRICT FILTER — do NOT clamp
+                if (start < calendarStart || start > calendarEnd) return;
+
+                const startDayIndex = dayDiff(calendarStart, start);
+
+                const firstCell = row.querySelector('.cell');
+                if (!firstCell) return;
+
+                const dayWidth = firstCell.offsetWidth;
+                const hourWidth = dayWidth / WORKING_HOURS;
+                const lineWidth = row.querySelector('.line-name')?.offsetWidth || 180;
+
+                const left =
+                    lineWidth +
+                    (startDayIndex * dayWidth) +
+                    (task.start_hour * hourWidth);
+
+                const width = hourWidth * durationToHours(task.duration);
+
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'task';
+                taskDiv.textContent = task.JOB_NO;
+
+                taskDiv.style.position = 'absolute';
+                taskDiv.style.left = `${left}px`;
+                taskDiv.style.width = `${Math.max(width, 4)}px`;
+                taskDiv.style.top = '0px';
+                taskDiv.style.background = getRandomTaskColor();
+
+                taskDiv.dataset.id = task.plan_id;
+                taskDiv.dataset.startDate = task.start_date;
+                taskDiv.dataset.end_date = task.end_date;
+                taskDiv.dataset.startHour = task.start_hour;
+                taskDiv.dataset.end_hour = task.end_hour;
+                taskDiv.dataset.duration = task.duration;
+                taskDiv.dataset.name = task.plan_id;
+                taskDiv.dataset.quantity = task.plan_qnty;
+                row.appendChild(taskDiv);
+            });
+        }
+
+
 
 // --- Hover / Drag ---
 function getHoverInfo(e,row){
@@ -379,4 +452,4 @@ $(document).ready(()=>{
     renderCalendar();
     $('#btn-tasks').click(()=>renderCalendar());
 });
-</script>
+    </script>

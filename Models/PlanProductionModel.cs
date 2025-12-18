@@ -44,6 +44,9 @@ namespace WebApplication1.Models
         [JsonProperty("end_hour")]
         public int EndHour { get; set; }
 
+        [JsonProperty("duration")]
+        public double Duration { get; set; }
+
         [JsonProperty("plan_qnty")]
         public int PlanQuantity { get; set; }
 
