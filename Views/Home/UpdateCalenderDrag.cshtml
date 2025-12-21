@@ -7,7 +7,7 @@
     DateTime endDate = ViewBag.EndDate;
     int workingHours = 10; // daily working hours
 }
-<style>
+@*<style>
     :root {
         --line-width: 180px;
         --cell-width: 120px;
@@ -17,42 +17,37 @@
     /* Wrapper */
     .calendar-wrapper {
         overflow-x: auto;
+        overflow-y: auto;
         border: 1px solid #ccc;
-        white-space: nowrap;
-        -webkit-overflow-scrolling: touch;
-        max-height: 550px;
+/*        max-height: 550px;*/
     }
-
 
     /* Header */
     .calendar-header {
         position: sticky;
         top: 0;
-        z-index: 1000; /* higher than tasks */
+        z-index: 100000;
         background-color: #f8f9fa;
-        display: flex;
         border-bottom: 2px solid #ddd;
-        /* IMPORTANT */
-        background-clip: padding-box;
     }
 
-
+    /* Header + rows must match width */
+    .calendar-header,
+    .calendar-row {
+        display: flex;
+/*        flex-wrap: nowrap;*/
+        min-width: max-content;
+        position: relative;
+    }
 
     /* Body */
     .calendar-body {
-        display: flex;
-        flex-direction: column;
+        display: block;
     }
 
     .calendar-row {
-        display: inline-flex;
-        flex-wrap: nowrap;
-        height: var(--row-height); /* 🔑 source of height */
-        position: relative;
-        width: max-content;
-        height: 55px;
+        max-height: 55px;
     }
-
 
     .calendar-header .cell::after {
         background: #ddd;
@@ -65,10 +60,11 @@
         font-weight: 600;
     }
 
+
     .row {
         display: flex;
         flex-wrap: nowrap;
-        height: var(--row-height);
+        max-height: var(--row-height);
         position: relative;
     }
 
@@ -97,6 +93,8 @@
         font-weight: 600;
         border-bottom: 1px solid #e9d7d7;
         position: sticky;
+        left: 0;
+        z-index: 5000000;
     }
 
     /* calendar cell */
@@ -146,6 +144,178 @@
         z-index: 10;
         border-radius: 4px;
         cursor: pointer;
+        position: absolute;
+    }
+    .task-preview {
+        opacity: 0.5;
+        border: 2px dashed #333;
+        z-index: 9999;
+    }
+
+
+</style>*@
+
+<style>
+    :root {
+        --line-width: 180px;
+        --cell-width: 120px;
+        --row-height: 55px;
+    }
+
+    /* Scrollable calendar body */
+    .calendar-wrapper {
+        overflow: auto;
+        border: 1px solid #ccc;
+        position: relative;
+        height:100vh;
+    }
+
+    /* Header (sticky top inside wrapper) */
+    .calendar-header {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #f8f9fa;
+        border-bottom: 2px solid #ddd;
+        min-width: max-content;
+        height: auto !important;
+    }
+
+    /* Calendar rows */
+    .calendar-row {
+        display: flex;
+        min-width: max-content;
+        height: auto !important;
+        position: relative;
+    }
+
+    /* Sticky left column (line name) */
+    .line-name {
+        width: var(--line-width);
+        min-width: var(--line-width);
+        flex-shrink: 0;
+        padding: 10px;
+        background: #fafafa;
+        font-weight: 600;
+        border-right: 1px solid #ddd;
+        border-bottom: 1px solid #e9d7d7;
+        position: sticky;
+        left: 0;
+        z-index: 900;
+    }
+
+    /* Header cell */
+/*    .calendar-header .cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 600;
+    }*/
+
+    .calendar-header .cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 4px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Calendar cell */
+    .cell {
+        width: var(--cell-width);
+        min-width: var(--cell-width);
+        flex-shrink: 0;
+        position: relative;
+        border-bottom: 1px solid #e9d7d7;
+    }
+
+        /* Vertical grid line */
+        .cell::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 1px;
+            background: #e0e0e0;
+            pointer-events: none;
+        }
+
+    /* Header grid line darker */
+    .calendar-header .cell::after {
+        background: #ccc;
+    }
+    .calendar-body {
+        height: auto;
+        min-height: unset;
+        height: auto !important;
+    }
+    /* Row bottom border */
+    .calendar-row::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: #dcdcdc;
+    }
+
+    /* Disabled day (Sunday) */
+    .disabled-day {
+        background: #f3f3f3;
+    }
+
+    /* Task block */
+    /*.task {
+        position: absolute;
+        top: 12px;
+        height: 30px;*/
+/*        background: #ff6600;*/
+        /*color: #fff;
+        font-size: 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        z-index: 10;
+    }*/
+
+
+
+    /* Drag preview */
+    .task-preview {
+        opacity: 0.5;
+        border: 2px dashed #333;
+        z-index: 9999;
+    }
+
+    .task {
+        position: absolute;
+        height: 34px;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: grab;
+        will-change: transform;
+    }
+
+    .task-first {
+        height: 5px;
+    }
+
+    .task-second {
+        height: 24px;
+        display: flex;
+        align-items: center;
+        padding-left: 6px;
+        color: #fff;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    .task-third {
+        height: 5px;
     }
 
 
@@ -166,12 +336,12 @@
 
     <div class="container-fluid">
         <div class="row">
-            @*<div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
+            <div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
                     <h4>Order List</h4>
                     <ul id="sidebar-orders"><li>Loading...</li></ul>
-                </div>*@
+                </div>
 
-            <div class="col-12">
+            <div class="col-9">
                 <div class="calendar-wrapper">
                     <div id="calendar-header" class="calendar-header"></div>
                     <div id="calendar-body" class="calendar-body"></div>
@@ -189,8 +359,8 @@ let tasks = @Html.Raw(tasksJson);
 let lines = @Html.Raw(linesJson);
     const TOTAL_DAYS = 365 * 2; // 2 years
     const TOTAL_WEEKS = 104; // 2 years
-let draggedTask = null;
-let lastHover = null;
+//let draggedTask = null;
+//let lastHover = null;
 
 // --- Date Helpers ---
 function parseDateSafe(str){
@@ -243,9 +413,7 @@ function dayDiff(a,b){
             cell.innerHTML = `
             <div>${dayNames[currentDate.getDay()]}</div>
             <div>
-            ${currentDate.getDate()}/
-            ${currentDate.getMonth() + 1}/
-            ${currentDate.getFullYear()}
+            ${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}
             </div>
 
         `;
@@ -256,12 +424,13 @@ function dayDiff(a,b){
         /* ================= BODY ================= */
         const body = document.getElementById('calendar-body');
         body.innerHTML = '';
-
+       
+      
         lines.forEach(line => {
             const row = document.createElement('div');
             row.className = 'calendar-row';
             row.dataset.line = line.LINE_ID;
-
+            console.log("line", line);
             const lineDiv = document.createElement('div');
             lineDiv.className = 'line-name';
             lineDiv.textContent = line.LINE_NAME;
@@ -284,7 +453,10 @@ function dayDiff(a,b){
 
             body.appendChild(row);
         });
-        renderTasks(fromDate,toDate) 
+        //renderTasks(fromDate,toDate) 
+        requestAnimationFrame(() => {
+            renderTasks(fromDate, toDate) 
+        });
     }
 
         function parseDMY(dateStr) {
@@ -317,139 +489,669 @@ function dayDiff(a,b){
             const fraction = duration - days;
             return (days * WORKING_HOURS) + Math.round(fraction * WORKING_HOURS);
         }
-
+        function convertToDMY(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const d = String(day).padStart(2, '0');
+            const m = String(month).padStart(2, '0');
+            const y = year;
+            return `${d}-${m}-${y}`;
+        }
         const TASK_COLORS = [
-            "#FF5733",
-            "#33B5E5",
-            "#9C27B0",
-            "#4CAF50",
-            "#FFC107",
-            "#E91E63",
-            "#009688",
-            "#3F51B5",
-            "#FF9800",
-            "#795548"
+            "#FF5733", // red-orange
+            "#33B5E5", // light blue
+            "#9C27B0", // purple
+            "#4CAF50", // green
+            "#FFC107", // amber
+            "#E91E63", // pink
+            "#009688", // teal
+            "#3F51B5", // indigo
+            "#FF9800", // orange
+            "#795548", // brown
+
+            "#8BC34A", // light green
+            "#CDDC39", // lime
+            "#673AB7", // deep purple
+            "#03A9F4", // sky blue
+            "#00BCD4", // cyan
+            "#F44336", // red
+            "#607D8B", // blue grey
+            "#FF5722", // deep orange
+            "#9E9E9E", // grey
+            "#1ABC9C", // turquoise
+
+            "#2ECC71", // emerald
+            "#3498DB", // peter river
+            "#9B59B6", // amethyst
+            "#34495E", // wet asphalt
+            "#16A085", // green sea
+            "#27AE60", // nephritis
+            "#2980B9", // belize hole
+            "#8E44AD", // wisteria
+            "#C0392B", // pomegranate
+            "#F39C12"  // sun flower
         ];
+
 
         function getRandomTaskColor() {
             return TASK_COLORS[Math.floor(Math.random() * TASK_COLORS.length)];
         }
 
+        function calculateEstimatedEndDate(startDateStr, startHour, givenDurationDays, lineWorkingHourCapacity, lineManPower, taskQuantity) {
+            const totalRequiredHours = Math.ceil(taskQuantity / lineWorkingHourCapacity);
+            const maxAllowedHours = givenDurationDays * workingHours;
+            let hoursToSchedule = totalRequiredHours;
+            let currentDate = new Date(startDateStr);
+            let currentHour = startHour;
+
+            while (hoursToSchedule > 0) {
+                const availableHoursToday = workingHours - currentHour;
+
+                if (hoursToSchedule <= availableHoursToday) {
+                    currentHour += hoursToSchedule;
+                    hoursToSchedule = 0;
+                } else {
+                    hoursToSchedule -= availableHoursToday;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                    currentHour = 0;
+                }
+            }
+
+
+            //console.log("startHour", startHour);
+            // Make endHour 1 to lineWorkingHourCapacity
+            if (currentHour === 0) currentHour = lineWorkingHourCapacity;
+
+            return {
+                endDate: currentDate.toISOString().split("T")[0],
+                endHour: currentHour
+            };
+        }
+
+        //function renderTasks(calendarStart, calendarEnd) {
+
+        //    document.querySelectorAll('.task').forEach(t => t.remove());
+        //    document.querySelectorAll('.task-Secound').forEach(t => t.remove());
+        //    document.querySelectorAll('.task-Third').forEach(t => t.remove());
+        //    console.log("tasks", tasks)
+        //    //tasks.slice(0,150).forEach(task => {
+        //    tasks.forEach(task => {
+        //        const row = document.querySelector(
+        //            `.calendar-row[data-line="${task.line_id}"]`
+        //        );
+        //        if (!row) return;
+
+        //        const start = parseDMY(task.start_date);
+        //        if (!start) return;
+
+        //        if (start <= calendarStart || start >= calendarEnd) return;
+
+        //        const firstCell = row.querySelector('.cell');
+        //        if (!firstCell) return;
+
+        //        const dayWidth = firstCell.offsetWidth;
+        //        const hourWidth = dayWidth / WORKING_HOURS;
+        //        const lineWidth = row.querySelector('.line-name')?.offsetWidth || 180;
+
+        //        const startDayIndex = dayDiff(calendarStart, start);
+
+        //        const left =
+        //            lineWidth +
+        //            (startDayIndex * dayWidth) +
+        //            (task.start_hour * hourWidth);
+
+
+        //        const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
+        //        const remainingDays = totalDays - startDayIndex;
+
+        //        const maxVisibleHours =
+        //            (remainingDays * WORKING_HOURS) - task.start_hour;
+
+        //        const visibleHours = Math.min(
+        //            durationToHours(task.duration),
+        //            maxVisibleHours
+        //        );
+
+        //        if (visibleHours <= 0) return;
+
+        //        const width = visibleHours * hourWidth;
+
+        //        const taskDiv = document.createElement('div');
+        //        taskDiv.className = 'task';
+        //        taskDiv.textContent = "Plan-" + task.plan_id;
+
+        //        taskDiv.style.left = `${left}px`;
+        //        taskDiv.style.width = `${Math.max(width, 6)}px`;
+        //        taskDiv.style.top = `0px`;
+        //        taskDiv.draggable = true;
+
+
+        //        const taskColor = getRandomTaskColor();
+        //        taskDiv.innerHTML = `
+        //            <div class="task-first" style="background:${ getRandomTaskColor() };">  </div>
+        //            <div class="task-second" style="background:${ getRandomTaskColor() };">
+        //                <p>Plan-${task.plan_id}</p>
+        //            </div>
+        //            <div class="task-third" style="background:${ getRandomTaskColor()};">
+
+        //                </div>
+        //        `;
+
+
+
+        //        taskDiv.dataset.id = task.plan_id;
+        //        taskDiv.dataset.startDate = task.start_date;
+        //        taskDiv.dataset.end_date = task.end_date;
+        //        taskDiv.dataset.startHour = task.start_hour;
+        //        taskDiv.dataset.end_hour = task.end_hour;
+        //        taskDiv.dataset.duration = task.duration;
+        //        taskDiv.dataset.name = task.plan_id;
+        //        taskDiv.dataset.quantity = task.plan_qnty;
+
+
+        //        row.appendChild(taskDiv);
+
+        //    });
+        //}
+
         function renderTasks(calendarStart, calendarEnd) {
+
+            // Remove old tasks (cheap)
             document.querySelectorAll('.task').forEach(t => t.remove());
 
+            /* ================= CACHE LAYOUT ================= */
+            const firstRow = document.querySelector('.calendar-row');
+            if (!firstRow) return;
+
+            const firstCell = firstRow.querySelector('.cell');
+            const dayWidth = firstCell.offsetWidth;
+            const hourWidth = dayWidth / WORKING_HOURS;
+            const lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
+
+            /* ================= CACHE ROWS ================= */
+            const rowMap = new Map();
+            document.querySelectorAll('.calendar-row').forEach(row => {
+                rowMap.set(row.dataset.line, row);
+            });
+
+            /* ================= FRAGMENTS ================= */
+            const fragmentMap = new Map();
+
             tasks.forEach(task => {
-                const row = document.querySelector(
-                    `.calendar-row[data-line="${task.line_id}"]`
-                );
+
+                const row = rowMap.get(String(task.line_id));
                 if (!row) return;
 
-                let start = parseDMY(task.start_date);
-                if (!start) return;
-
-                // ✅ STRICT FILTER — do NOT clamp
-                if (start < calendarStart || start > calendarEnd) return;
+                const start = parseDMY(task.start_date);
+                if (!start || start < calendarStart || start > calendarEnd) return;
 
                 const startDayIndex = dayDiff(calendarStart, start);
-
-                const firstCell = row.querySelector('.cell');
-                if (!firstCell) return;
-
-                const dayWidth = firstCell.offsetWidth;
-                const hourWidth = dayWidth / WORKING_HOURS;
-                const lineWidth = row.querySelector('.line-name')?.offsetWidth || 180;
 
                 const left =
                     lineWidth +
                     (startDayIndex * dayWidth) +
                     (task.start_hour * hourWidth);
 
-                const width = hourWidth * durationToHours(task.duration);
+                const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
+                const remainingDays = totalDays - startDayIndex;
 
+                const maxVisibleHours =
+                    (remainingDays * WORKING_HOURS) - task.start_hour;
+
+                const visibleHours = Math.min(
+                    durationToHours(task.duration),
+                    maxVisibleHours
+                );
+
+                if (visibleHours <= 0) return;
+
+                const width = visibleHours * hourWidth;
+
+                /* ================= TASK ================= */
                 const taskDiv = document.createElement('div');
                 taskDiv.className = 'task';
-                taskDiv.textContent = task.JOB_NO;
+                taskDiv.draggable = true;
 
-                taskDiv.style.position = 'absolute';
-                taskDiv.style.left = `${left}px`;
-                taskDiv.style.width = `${Math.max(width, 4)}px`;
-                taskDiv.style.top = '0px';
-                taskDiv.style.background = getRandomTaskColor();
+                // GPU-friendly movement
+                taskDiv.style.transform = `translateX(${left}px)`;
+                taskDiv.style.width = `${Math.max(width, 6)}px`;
 
+                /* ONE COLOR */
+                const taskColor = getRandomTaskColor();
+
+                taskDiv.innerHTML = `
+            <div class="task-first" style="background:#00BCD4;"></div>
+            <div class="task-second" style="background:#2ECC71;">
+                <p>Plan-${task.plan_id}</p>
+            </div>
+            <div class="task-third" style="background:#607D8B;"></div>
+        `;
+
+                /* DATA */
                 taskDiv.dataset.id = task.plan_id;
                 taskDiv.dataset.startDate = task.start_date;
-                taskDiv.dataset.end_date = task.end_date;
+                taskDiv.dataset.endDate = task.end_date;
                 taskDiv.dataset.startHour = task.start_hour;
-                taskDiv.dataset.end_hour = task.end_hour;
+                taskDiv.dataset.endHour = task.end_hour;
                 taskDiv.dataset.duration = task.duration;
-                taskDiv.dataset.name = task.plan_id;
                 taskDiv.dataset.quantity = task.plan_qnty;
-                row.appendChild(taskDiv);
+
+                /* FRAGMENT */
+                let fragment = fragmentMap.get(task.line_id);
+                if (!fragment) {
+                    fragment = document.createDocumentFragment();
+                    fragmentMap.set(task.line_id, fragment);
+                }
+
+                fragment.appendChild(taskDiv);
+            });
+
+            /* ================= SINGLE DOM WRITE ================= */
+            fragmentMap.forEach((fragment, lineId) => {
+                const row = rowMap.get(String(lineId));
+                if (row) row.appendChild(fragment);
             });
         }
 
 
 
-// --- Hover / Drag ---
-function getHoverInfo(e,row){
-    const rowRect=row.getBoundingClientRect();
-    const lineWidth=row.querySelector(".line-name").offsetWidth;
-    const x=e.clientX - rowRect.left - lineWidth;
-    if(x<0) return null;
 
-    const cells=row.querySelectorAll(".cell");
-    const dayWidth=cells[0].offsetWidth;
-    const hourWidth=dayWidth/WORKING_HOURS;
-    const dayIndex=Math.floor(x/dayWidth);
-    const hour=Math.floor((x%dayWidth)/hourWidth);
-    if(!cells[dayIndex]) return null;
 
-    return {row, cell: cells[dayIndex], dayIndex, hour};
-}
 
-document.addEventListener("dragstart",e=>{
-    if(e.target.classList.contains("task")) draggedTask=e.target;
-});
+        let draggedTask = null;
+        let previewTask = null;
+        let lastHover = null;
+        let ticking = false;
 
-document.addEventListener("dragend",()=>{
-    draggedTask=null;
-    lastHover=null;
-});
+        function getHoverInfo(e, row) {
 
-document.addEventListener("dragover",e=>{
-    e.preventDefault();
-    if(!draggedTask) return;
-    lastHover=getHoverInfo(e,e.target.closest(".row"));
-});
+            const rowRect = row.getBoundingClientRect();
+            const lineName = row.querySelector(".line-name");
+            if (!lineName) return null;
 
-document.addEventListener("drop",e=>{
-    e.preventDefault();
-    if(!draggedTask || !lastHover) return;
+            const lineWidth = lineName.offsetWidth;
+            const x = e.clientX - rowRect.left - lineWidth;
 
-    const {row, cell, hour} = lastHover;
-    const taskId = draggedTask.dataset.id;
-    const task = tasks.find(t => t.plan_id == taskId);
-    if(!task) return;
+            if (x < 0) return null;
 
-    // Preserve duration
-    const durationHours = task.end_hour + dayDiff(parseDateSafe(task.start_date), parseDateSafe(task.end_date))*WORKING_HOURS - task.start_hour;
-    task.start_date = cell.dataset.date;
-    task.start_hour = hour;
-    const endDateObj = addDays(parseDateSafe(cell.dataset.date), Math.floor((hour + durationHours)/WORKING_HOURS));
-    const endHour = (hour + durationHours) % WORKING_HOURS;
-    task.end_date = formatYMD(endDateObj);
-    task.end_hour = endHour;
-    task.line_id = parseInt(row.dataset.line);
+            const cells = row.querySelectorAll(".cell");
+            if (!cells.length) return null;
 
-    draggedTask = null;
-    lastHover = null;
+            const dayWidth = cells[0].offsetWidth;
+            const hourWidth = dayWidth / WORKING_HOURS;
 
-    renderCalendar();
-});
+            let dayIndex = Math.floor(x / dayWidth);
+            dayIndex = Math.max(0, Math.min(dayIndex, cells.length - 1));
+
+            let hour = Math.floor((x % dayWidth) / hourWidth);
+            hour = Math.max(0, Math.min(hour, WORKING_HOURS - 1));
+
+            return {
+                row,
+                cell: cells[dayIndex],
+                dayIndex,
+                hour
+            };
+        }
+
+
+        function cleanupDrag() {
+            // Remove the preview task if it exists
+            if (previewTask) {
+                if (previewTask.parentNode) {
+                    previewTask.parentNode.removeChild(previewTask);
+                }
+                previewTask = null;
+            }
+
+            // Reset dragged task reference
+            draggedTask = null;
+            lastHover = null;
+        }
+
+
+        function showPreview({ row, cell, hour }) {
+            if (!draggedTask) return;
+
+            // Remove preview from previous row if necessary
+            if (previewTask && previewTask.parentElement !== row) {
+                previewTask.remove();
+                previewTask = null;
+            }
+
+            // Create preview if it doesn't exist
+            if (!previewTask) {
+                previewTask = draggedTask.cloneNode(true);
+                previewTask.classList.add("task-preview");
+                previewTask.style.pointerEvents = "none";
+                row.appendChild(previewTask);
+            }
+            console.log("showPreview", previewTask);
+            console.log("hover date", cell.dataset.date);
+            const dayWidth = cell.offsetWidth;
+            const hourWidth = dayWidth / WORKING_HOURS;
+            const lineWidth = row.querySelector('.line-name')?.offsetWidth || 180;
+
+            const cells = [...row.querySelectorAll(".cell")];
+            const dayIndex = cells.indexOf(cell);
+
+            const left = lineWidth + (dayIndex * dayWidth) + (hour * hourWidth);
+
+            previewTask.style.left = `${left}px`;
+            previewTask.style.top = `10px`; // vertically centered in the row
+        }
+
+        function showPreviewOptimized(e, draggedTask, width = null) {
+            if (!draggedTask) return;
+
+            // Create preview if it doesn't exist
+            if (!previewTask) {
+                previewTask = draggedTask.cloneNode(true);
+                previewTask.classList.add("task-preview");
+                previewTask.style.pointerEvents = "none";
+                previewTask.style.position = "fixed"; // fixed to follow mouse
+                previewTask.style.top = '0';
+                previewTask.style.left = '0';
+                previewTask.style.willChange = "transform, width"; // GPU accelerated
+                document.body.appendChild(previewTask);
+            }
+
+            // Dynamically update width if provided
+            if (width !== null) {
+                previewTask.style.width = `${width}px`;
+            } else {
+                previewTask.style.width = `${draggedTask.offsetWidth}px`;
+            }
+
+            // Get mouse position
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Optional: center preview on cursor
+            const offsetX = previewTask.offsetWidth / 2;
+            const offsetY = previewTask.offsetHeight / 2;
+
+            // GPU transform for smooth movement
+            previewTask.style.transform = `translate(${mouseX - offsetX}px, ${mouseY - offsetY}px)`;
+        }
+
+
+
+        function moveTaskToRow(taskDiv, newRow, cell, hour, durationHours) {
+            const dayWidth = cell.offsetWidth;
+            const hourWidth = dayWidth / WORKING_HOURS;
+            const lineWidth = newRow.querySelector(".line-name")?.offsetWidth || 180;
+
+            const cells = [...newRow.querySelectorAll(".cell")];
+            const dayIndex = cells.indexOf(cell);
+
+            const left = lineWidth + (dayIndex * dayWidth) + (hour * hourWidth);
+
+            // Remove from old row
+            taskDiv.remove();
+            newRow.appendChild(taskDiv);
+
+            // Smooth GPU movement
+            taskDiv.style.transform = `translateX(${left}px) translateY(0px)`;
+        }
+
+
+        document.addEventListener("dragstart", e => {
+            if (!e.target.classList.contains("task")) return;
+            draggedTask = e.target;
+
+            const img = new Image();
+            img.src = "";
+            e.dataTransfer.setDragImage(img, 0, 0);
+        });
+
+        document.addEventListener("dragover", e => {
+            e.preventDefault();
+            if (!draggedTask) return;
+
+            const row = e.target.closest(".calendar-row");
+            if (!row) return;
+
+            const hover = getHoverInfo(e, row);
+            if (!hover) return;
+
+            lastHover = hover;
+            //showPreview(hover);
+            
+
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    showPreviewOptimized(e, draggedTask);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        //document.addEventListener("drop", e => {
+        //    e.preventDefault();
+        //    if (!draggedTask || !lastHover) return;
+        //    const { row, cell, hour } = lastHover;
+        //    if (!row || !cell) {
+        //        alert("Invalid drop location. Please try again.");
+        //        cleanupDrag();
+        //        return;
+        //    }
+        //    const taskId = parseInt(draggedTask.dataset.id);
+        //    const task = tasks.find(t => t.plan_id === taskId);
+        //    console.log("tasks", tasks)
+        //    if (!task) return;
+
+        //    const durationHours = task.duration;
+        //    console.log("cell.dataset.date", convertToDMY(cell.dataset.date))
+        //    task.start_date = convertToDMY(cell.dataset.date);
+        //    task.start_hour = hour;
+        //    task.line_id = parseInt(row.dataset.line);
+        //    //const endDateObj = addDays(parseDMY(cell.dataset.date), Math.floor((hour + durationHours) / WORKING_HOURS));
+        //    //task.end_date = `${String(endDateObj.getDate()).padStart(2, '0')}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${endDateObj.getFullYear()}`;
+        //    //task.end_hour = (hour + durationHours) % WORKING_HOURS;
+        //    //task.line_id = parseInt(row.dataset.line);
+        //    console.log("after update", task)
+        //    cleanupDrag();
+        //    const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+        //    const toDate = parseDateSafe($('input[name="ToDate"]').val());
+        //    //renderTasks(fromDate, toDate)
+        //    requestAnimationFrame(() => {
+        //        renderTasks(fromDate, toDate)
+        //    });
+        //});
+
+        document.addEventListener("drop", e => {
+            e.preventDefault();
+            if (!draggedTask || !lastHover) return;
+
+            const { row, cell, hour } = lastHover;
+            if (!row || !cell) {
+                alert("Invalid drop location.");
+                cleanupDrag();
+                return;
+            }
+
+            const taskId = parseInt(draggedTask.dataset.id);
+            const task = tasks.find(t => t.plan_id === taskId);
+            if (!task) return;
+
+            // Update task data
+            task.start_date = convertToDMY(cell.dataset.date);
+            task.start_hour = hour;
+            task.line_id = parseInt(row.dataset.line);
+
+            // Move task visually using GPU transform instead of re-render
+            moveTaskToRow(draggedTask, row, cell, hour, task.duration);
+
+            requestAnimationFrame(() => cleanupDrag());
+        });
+
+ // Order drag and drop
+ let draggedOrder = null; // use let, not const
+ let dragOrderhover = null;
+
+ // DRAG START for orders
+ $(document).on('dragstart', '.draggable-order', function (e) {
+     draggedOrder = $(this);
+ });
+
+ // DRAG END
+ $(document).on('dragend', '.draggable-order', function () {
+     draggedOrder = null;
+ });
+
+ // Drag over cells
+ $(document).on('dragover', '.cell', function (e) {
+     e.preventDefault();
+     $(this).addClass('cell-hover');
+
+     const row = e.target.closest(".calendar-row");
+     if (!row) return;
+
+     const hover = getHoverInfo(e, row);
+     if (!hover) return;
+
+     dragOrderhover = hover;
+ });
+
+ $(document).on('dragleave', '.cell', function () {
+     $(this).removeClass('cell-hover');
+ });
+
+ // DROP: create task from order
+ $(document).on('drop', '.cell', function (e) {
+     e.preventDefault();
+     $(this).removeClass('cell-hover');
+
+     if (!draggedOrder) return;
+     const orderHover = dragOrderhover;
+     console.log("hover", orderHover.hour);
+     const lineId = parseInt(orderHover.row.dataset.line);
+     const startDate = convertToDMY(orderHover.cell.dataset.date);
+     let startHour = orderHover.hour;
+     
+     const order = {
+         OrderId: parseInt(draggedOrder.find('strong').text().replace('Order #', '')),
+         Quantity: parseInt(draggedOrder.data('quantity')) || 10
+     };
+
+
+     const line = lines.find(l => l.LINE_ID == lineId);
+     if (!line) {
+         console.error("Line not found for ID:", lineId.LINE_ID);
+         return;
+     } else {
+         console.log("Log", lineId);
+     }
+
+
+
+     const durationDays = 10;
+
+
+     const newTask = createPlanFromOrder(order, line, startDate, durationDays, startHour);
+
+
+
+
+     draggedOrder = null;
+
+
+     const fromDate = $('input[name="FromDate"]').val();
+     //LoadTask(tasks, fromDate);
+ });
+
+
+        //data
+        function LoadOrders() {
+            $.ajax({
+                url: '/Home/Orders',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    let sidebarList = $('#sidebar-orders');
+                    sidebarList.empty();
+
+                    if (!data || data.length === 0) {
+                        sidebarList.append('<li class="text-white">No orders found.</li>');
+                        return;
+                    }
+
+                    data.forEach(order => {
+                        // Make li draggable
+                        let li = $(`
+             <li class="list-group-item bg-dark text-white border-secondary draggable-order"
+                 draggable="true"
+                 data-orderid="${order.OrderId}"
+                 data-quantity="${order.Quantity}">
+                 <strong>Order #${order.OrderId}</strong><br>
+                 Company: ${order.OrderCompany || ''}<br>
+                 Qty: ${order.Quantity} pcs
+             </li>
+         `);
+
+
+
+                        sidebarList.append(li);
+                    });
+                },
+                error: function () {
+                    $('#sidebar-orders').html('<li class="text-white">Error loading orders.</li>');
+                }
+            });
+        }
+
+        function createPlanFromOrder(order, line, startDate, givenDurationHours, startHour) {
+
+            givenDurationHours = givenDurationHours || 10;
+
+            // Validate input
+            if (!order || !line || !startDate) {
+                console.error("Missing required parameters to create task");
+                return null;
+            }
+
+
+            const estimated = calculateEstimatedEndDate(
+                startDate,
+                startHour,
+                givenDurationHours,
+                line.ManWorkLimite,
+                line.MAN_POWER,
+                order.Quantity
+            );
+
+            if (!estimated || !estimated.endDate || estimated.endHour === undefined) {
+                console.error("Estimated calculation failed:", estimated);
+                return null;
+            }
+
+
+            // Create the task object
+            const task = {
+                Id: tasks.length + 1,
+                TaskName: `Task From Order #${order.OrderId}`,
+                Quantity: order.Quantity,
+                SewingLineId: line.LINE_ID,
+                SewingLine: null,
+                FromDate: new Date(startDate).toISOString(),
+                ToDate: new Date(estimated.endDate).toISOString(),
+                StartHour: startHour,
+                EndHour: estimated.endHour,
+                ColorCode: 'blue'
+            };
+
+            console.log("newTask:", task);
+
+            tasks.push(task);
+            return task;
+        }
+
 
 // --- Init ---
 $(document).ready(()=>{
     renderCalendar();
+    LoadOrders();
     $('#btn-tasks').click(()=>renderCalendar());
 });
     </script>
