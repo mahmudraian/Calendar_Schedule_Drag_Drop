@@ -336,12 +336,12 @@
 
     <div class="container-fluid">
         <div class="row">
-            <div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
+            @*<div class="col-3 bg-dark text-white p-3" style="height:100vh;overflow-y:auto;">
                     <h4>Order List</h4>
                     <ul id="sidebar-orders"><li>Loading...</li></ul>
-                </div>
+                </div>*@
 
-            <div class="col-9">
+            <div class="col-12">
                 <div class="calendar-wrapper">
                     <div id="calendar-header" class="calendar-header"></div>
                     <div id="calendar-body" class="calendar-body"></div>
@@ -430,6 +430,9 @@ function dayDiff(a,b){
             const row = document.createElement('div');
             row.className = 'calendar-row';
             row.dataset.line = line.LINE_ID;
+            row.dataset.manpower = line.MAN_POWER;
+            row.dataset.manpowercapacity = line.ManWorkLimite;
+            row.dataset.efficiency = line.EFFICIENCY;
             console.log("line", line);
             const lineDiv = document.createElement('div');
             lineDiv.className = 'line-name';
@@ -652,6 +655,20 @@ function dayDiff(a,b){
 
         //    });
         //}
+        let dayWidth = 0;
+        let hourWidth = 0;
+        let lineWidth = 180;
+        function getLayout() {
+            const firstRow = document.querySelector('.calendar-row');
+            if (!firstRow) return null;
+
+            const firstCell = firstRow.querySelector('.cell');
+            if (!firstCell) return null;
+
+            dayWidth = firstCell.offsetWidth;
+            hourWidth = dayWidth / WORKING_HOURS;
+            lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
+        }
 
         function renderTasks(calendarStart, calendarEnd) {
 
@@ -659,13 +676,20 @@ function dayDiff(a,b){
             document.querySelectorAll('.task').forEach(t => t.remove());
 
             /* ================= CACHE LAYOUT ================= */
-            const firstRow = document.querySelector('.calendar-row');
-            if (!firstRow) return;
+            //const firstRow = document.querySelector('.calendar-row');
+            //if (!firstRow) return;
 
-            const firstCell = firstRow.querySelector('.cell');
-            const dayWidth = firstCell.offsetWidth;
-            const hourWidth = dayWidth / WORKING_HOURS;
-            const lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
+            //const firstCell = firstRow.querySelector('.cell');
+            //const dayWidth = firstCell.offsetWidth;
+            //const hourWidth = dayWidth / WORKING_HOURS;
+            //const lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
+
+          
+            if (!dayWidth || !hourWidth || !lineWidth) {
+                getLayout();
+            }
+
+            
 
             /* ================= CACHE ROWS ================= */
             const rowMap = new Map();
@@ -762,6 +786,25 @@ function dayDiff(a,b){
         let lastHover = null;
         let ticking = false;
 
+        let cachedWidth = null;
+        let rafRunning = false;
+
+        function renderPreview() {
+            if (!previewTask) {
+                rafRunning = false;
+                return;
+            }
+
+            const offsetX = cachedWidth ? cachedWidth / 2 : 60;
+            const offsetY = 12;
+
+            previewTask.style.transform =
+                `translate3d(${mouseX - offsetX}px, ${mouseY - offsetY}px, 0)`;
+
+            requestAnimationFrame(renderPreview);
+        }
+
+
         function getHoverInfo(e, row) {
 
             const rowRect = row.getBoundingClientRect();
@@ -795,18 +838,21 @@ function dayDiff(a,b){
 
 
         function cleanupDrag() {
-            // Remove the preview task if it exists
-            if (previewTask) {
-                if (previewTask.parentNode) {
-                    previewTask.parentNode.removeChild(previewTask);
-                }
-                previewTask = null;
-            }
+            const preview = document.querySelector(".task-preview");
+            if (preview) preview.remove();
+            console.log("cleaning")
+            if (dragTimeout) clearTimeout(dragTimeout);
+            dragTimeout = null;
 
-            // Reset dragged task reference
-            draggedTask = null;
             lastHover = null;
+            lastHoverCell = null;
+            draggedTask = null;
+            duration = null;
+            previewTask = null;
+            cachedWidth = null;
+            rafRunning = false;
         }
+
 
 
         function showPreview({ row, cell, hour }) {
@@ -840,40 +886,102 @@ function dayDiff(a,b){
             previewTask.style.top = `10px`; // vertically centered in the row
         }
 
-        function showPreviewOptimized(e, draggedTask, width = null) {
-            if (!draggedTask) return;
+     
 
-            // Create preview if it doesn't exist
+        //let rafId = null;
+        //let cachedWidth = null;
+
+        //function showPreviewOptimized(e, draggedTask, duration = null) {
+        //    if (!draggedTask) return;
+
+        //    // Create preview once
+        //    if (!previewTask) {
+        //        previewTask = draggedTask.cloneNode(true);
+        //        previewTask.classList.add("task-preview");
+        //        previewTask.style.pointerEvents = "none";
+        //        previewTask.style.position = "fixed";
+        //        previewTask.style.top = "0";
+        //        previewTask.style.left = "0";
+        //        previewTask.style.willChange = "transform";
+        //        document.body.appendChild(previewTask);
+        //    }
+
+        //    if (!dayWidth) getLayout();
+
+        //    // Calculate width ONLY when duration changes
+        //    if (duration !== null) {
+        //        cachedWidth = duration * dayWidth;
+        //        previewTask.style.width = `${cachedWidth}px`;
+        //    } else if (!cachedWidth) {
+        //        cachedWidth = draggedTask.offsetWidth;
+        //        previewTask.style.width = `${cachedWidth}px`;
+        //    }
+
+        //    const mouseX = e.clientX;
+        //    const mouseY = e.clientY;
+
+        //    // Fixed cursor offset → no layout reads
+        //    const offsetX = cachedWidth / 2;
+        //    const offsetY = 12;
+
+        //    // Cancel previous frame
+        //    if (rafId) cancelAnimationFrame(rafId);
+
+        //    rafId = requestAnimationFrame(() => {
+        //        previewTask.style.transform =
+        //            `translate3d(${mouseX - offsetX}px, ${mouseY - offsetY}px, 0)`;
+        //    });
+        //}
+
+        function showPreviewOptimized(draggedTask, duration = null) {
             if (!previewTask) {
                 previewTask = draggedTask.cloneNode(true);
                 previewTask.classList.add("task-preview");
                 previewTask.style.pointerEvents = "none";
-                previewTask.style.position = "fixed"; // fixed to follow mouse
-                previewTask.style.top = '0';
-                previewTask.style.left = '0';
-                previewTask.style.willChange = "transform, width"; // GPU accelerated
+                previewTask.style.position = "fixed";
+                previewTask.style.top = "0";
+                previewTask.style.left = "0";
+                previewTask.style.willChange = "transform";
                 document.body.appendChild(previewTask);
             }
 
-            // Dynamically update width if provided
-            if (width !== null) {
-                previewTask.style.width = `${width}px`;
-            } else {
-                previewTask.style.width = `${draggedTask.offsetWidth}px`;
+            if (!dayWidth) getLayout();
+
+            // Update width only when duration changes
+            if (duration !== null) {
+                cachedWidth = duration * dayWidth;
+                previewTask.style.width = `${cachedWidth}px`;
+            } else if (!cachedWidth) {
+                cachedWidth = draggedTask.offsetWidth;
+                previewTask.style.width = `${cachedWidth}px`;
             }
 
-            // Get mouse position
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-
-            // Optional: center preview on cursor
-            const offsetX = previewTask.offsetWidth / 2;
-            const offsetY = previewTask.offsetHeight / 2;
-
-            // GPU transform for smooth movement
-            previewTask.style.transform = `translate(${mouseX - offsetX}px, ${mouseY - offsetY}px)`;
+            // Start RAF loop once
+            if (!rafRunning) {
+                rafRunning = true;
+                requestAnimationFrame(renderPreview);
+            }
         }
 
+
+
+        //function moveTaskToRow(taskDiv, newRow, cell, hour, durationHours) {
+        //    const dayWidth = cell.offsetWidth;
+        //    const hourWidth = dayWidth / WORKING_HOURS;
+        //    const lineWidth = newRow.querySelector(".line-name")?.offsetWidth || 180;
+
+        //    const cells = [...newRow.querySelectorAll(".cell")];
+        //    const dayIndex = cells.indexOf(cell);
+
+        //    const left = lineWidth + (dayIndex * dayWidth) + (hour * hourWidth);
+
+        //    // Remove from old row
+        //    taskDiv.remove();
+        //    newRow.appendChild(taskDiv);
+
+        //    // Smooth GPU movement
+        //    taskDiv.style.transform = `translateX(${left}px) translateY(0px)`;
+        //}
 
 
         function moveTaskToRow(taskDiv, newRow, cell, hour, durationHours) {
@@ -884,14 +992,95 @@ function dayDiff(a,b){
             const cells = [...newRow.querySelectorAll(".cell")];
             const dayIndex = cells.indexOf(cell);
 
-            const left = lineWidth + (dayIndex * dayWidth) + (hour * hourWidth);
+            const left =
+                lineWidth +
+                (dayIndex * dayWidth) +
+                (hour * hourWidth);
 
             // Remove from old row
             taskDiv.remove();
             newRow.appendChild(taskDiv);
 
-            // Smooth GPU movement
-            taskDiv.style.transform = `translateX(${left}px) translateY(0px)`;
+            // Width based on duration (hours)
+            if (!durationHours) {
+                const width = durationHours * hourWidth;
+                taskDiv.style.width = `${width}px`;
+            }
+
+            // GPU-accelerated move
+            taskDiv.style.transform = `translate3d(${left}px, 0, 0)`;
+
+            // 🔹 Update dataset AFTER moving
+            taskDiv.dataset.startDate = cell.dataset.date;
+            taskDiv.dataset.startHour = hour;
+            taskDiv.dataset.duration = durationHours;
+
+            // Calculate end hour / date if needed
+            const totalHours = hour + durationHours;
+            taskDiv.dataset.endHour = totalHours % WORKING_HOURS;
+
+            const endDayOffset = Math.floor(totalHours / WORKING_HOURS);
+            const endCell = cells[dayIndex + endDayOffset];
+
+            if (endCell) {
+                taskDiv.dataset.endDate = endCell.dataset.date;
+            }
+
+            taskDiv.dataset.line = newRow.dataset.line;
+        }
+
+
+        function getDuration(hover, totalQuantity) {
+            const { row, cell, hour: startHour } = hover;
+            totalQuantity = 100000;
+            // convert dataset values to numbers
+            //const manpower = Number(row.dataset.manpower) || Math.floor(Math.random() * 10) + 1;
+            //const efficiency = row.dataset.efficiency|| 0;
+            //const hourlyQty = Number(row.dataset.manpowercapacity) || 0;
+
+            const manpower = 1000;
+            const efficiency = "100%";
+            const hourlyQty = 800;
+
+            console.log("manpower", manpower);
+            console.log("efficiency", parseFloat(efficiency));
+            console.log("hourlyQty", hourlyQty);
+
+            if (!hourlyQty || !efficiency) return 0;
+
+            // effective hourly output
+            const effectiveHourlyOutput = parseFloat(efficiency) * hourlyQty;
+            console.log("effectiveHourlyOutput", effectiveHourlyOutput);
+            // total hours (DOUBLE)
+            const totalHours = totalQuantity / effectiveHourlyOutput;
+       
+            console.log("Number(totalHours.toFixed(1))",Number(totalHours.toFixed(1)));
+
+            // return double with 1 decimal (e.g. 30.2)
+
+            if (effectiveHourlyOutput <= 0) return null;
+
+            // Total hours (double)
+            const durationHours = Number(totalHours.toFixed(1));
+
+            /* ---------------- END TIME CALCULATION ---------------- */
+            const totalStartHours = startHour + durationHours;
+
+            const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
+            const endHour = Math.floor(totalStartHours % WORKING_HOURS);
+
+
+            // Calculate end date
+            const startDate = new Date(cell.dataset.date);
+
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + endDayOffset);
+
+            console.log("startDate", startDate);
+            console.log("durationHours", durationHours);
+            console.log("endDate", endDate);
+            console.log("endHour", endHour)
+            return durationHours;
         }
 
 
@@ -904,9 +1093,49 @@ function dayDiff(a,b){
             e.dataTransfer.setDragImage(img, 0, 0);
         });
 
+       
+        let dragTimeout = null;
+        let lastHoverCell = null;
+       
+
+        //document.addEventListener("dragover", e => {
+        //    e.preventDefault();
+        //    if (!draggedTask) return;
+
+        //    const row = e.target.closest(".calendar-row");
+        //    if (!row) return;
+
+        //    const hover = getHoverInfo(e, row);
+        //    if (!hover) return;
+
+
+        //    lastHover = hover;
+
+
+        //    showPreviewOptimized(e, draggedTask, duration);
+
+
+        //    if (lastHoverCell !== hover.cell) {
+        //        lastHoverCell = hover.cell;
+
+        //        if (dragTimeout) clearTimeout(dragTimeout);
+
+        //        dragTimeout = setTimeout(() => {
+        //            requestAnimationFrame(() => {
+        //                duration = Math.floor(Math.random() * 10) + 1;
+        //                showPreviewOptimized(e, draggedTask, duration);
+        //                console.log("Duration recalculated after 1s pause:", duration);
+        //            });
+        //        }, 1000);
+        //    }
+        //});
+
         document.addEventListener("dragover", e => {
             e.preventDefault();
             if (!draggedTask) return;
+
+            mouseX = e.clientX;
+            mouseY = e.clientY;
 
             const row = e.target.closest(".calendar-row");
             if (!row) return;
@@ -915,50 +1144,28 @@ function dayDiff(a,b){
             if (!hover) return;
 
             lastHover = hover;
-            //showPreview(hover);
-            
 
-            if (!ticking) {
-                requestAnimationFrame(() => {
-                    showPreviewOptimized(e, draggedTask);
-                    ticking = false;
-                });
-                ticking = true;
+            // Always show preview (fast)
+            showPreviewOptimized(draggedTask, duration);
+
+            // Only recalc when cell changes
+            if (hover.cell !== lastHoverCell) {
+                lastHoverCell = hover.cell;
+
+                if (dragTimeout) clearTimeout(dragTimeout);
+
+                const quantity = Number(draggedTask.dataset.quantity) || 0;
+
+                dragTimeout = setTimeout(() => {
+                    duration = getDuration(hover, quantity);
+                    //duration = Math.floor(Math.random() * 10) + 1;
+                    showPreviewOptimized(draggedTask, duration);
+                    console.log("Duration recalculated after 1s pause:", duration);
+                }, 1000);
             }
         });
 
-        //document.addEventListener("drop", e => {
-        //    e.preventDefault();
-        //    if (!draggedTask || !lastHover) return;
-        //    const { row, cell, hour } = lastHover;
-        //    if (!row || !cell) {
-        //        alert("Invalid drop location. Please try again.");
-        //        cleanupDrag();
-        //        return;
-        //    }
-        //    const taskId = parseInt(draggedTask.dataset.id);
-        //    const task = tasks.find(t => t.plan_id === taskId);
-        //    console.log("tasks", tasks)
-        //    if (!task) return;
 
-        //    const durationHours = task.duration;
-        //    console.log("cell.dataset.date", convertToDMY(cell.dataset.date))
-        //    task.start_date = convertToDMY(cell.dataset.date);
-        //    task.start_hour = hour;
-        //    task.line_id = parseInt(row.dataset.line);
-        //    //const endDateObj = addDays(parseDMY(cell.dataset.date), Math.floor((hour + durationHours) / WORKING_HOURS));
-        //    //task.end_date = `${String(endDateObj.getDate()).padStart(2, '0')}-${String(endDateObj.getMonth() + 1).padStart(2, '0')}-${endDateObj.getFullYear()}`;
-        //    //task.end_hour = (hour + durationHours) % WORKING_HOURS;
-        //    //task.line_id = parseInt(row.dataset.line);
-        //    console.log("after update", task)
-        //    cleanupDrag();
-        //    const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-        //    const toDate = parseDateSafe($('input[name="ToDate"]').val());
-        //    //renderTasks(fromDate, toDate)
-        //    requestAnimationFrame(() => {
-        //        renderTasks(fromDate, toDate)
-        //    });
-        //});
 
         document.addEventListener("drop", e => {
             e.preventDefault();
@@ -977,15 +1184,21 @@ function dayDiff(a,b){
 
             // Update task data
             task.start_date = convertToDMY(cell.dataset.date);
+            console.log("date", convertToDMY(cell.dataset.date));
             task.start_hour = hour;
             task.line_id = parseInt(row.dataset.line);
 
             // Move task visually using GPU transform instead of re-render
-            moveTaskToRow(draggedTask, row, cell, hour, task.duration);
+            if (!duration) {
+                moveTaskToRow(draggedTask, row, cell, hour, draggedTask.dataset.duration);
+            } else {
+                moveTaskToRow(draggedTask, row, cell, hour, duration);
+            }
+         
 
             requestAnimationFrame(() => cleanupDrag());
         });
-
+        document.addEventListener("dragend", cleanupDrag());
  // Order drag and drop
  let draggedOrder = null; // use let, not const
  let dragOrderhover = null;
@@ -1147,11 +1360,22 @@ function dayDiff(a,b){
             return task;
         }
 
+        function getAllPlansfromApi() {
+            $.get("http://202.4.125.191/platform_erp/logic-api/index.php/api/planning/line_info/company_id/1/location_id/2/floor_id/0/user/1/date/2025-12-21", function (data) {
+                console.log("Plans received:", data);
+                
+            }).fail(function (err) {
+                console.error("API request failed:", err);
+            });
+        }
+
+
 
 // --- Init ---
 $(document).ready(()=>{
     renderCalendar();
     LoadOrders();
+    //getAllPlansfromApi()
     $('#btn-tasks').click(()=>renderCalendar());
 });
     </script>
