@@ -19,7 +19,7 @@ namespace WebApplication1.Models
         public int MAN_POWER { get; set; }
         public string EFFICIENCY { get; set; }
 
-        public int ManWorkLimite = 1000;
+        public int ManWorkLimite { get; set; }
     }
 
 }

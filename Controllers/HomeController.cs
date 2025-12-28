@@ -2,16 +2,29 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
+using System.Web.Http.Results;
 using System.Web.Mvc;
+using System.Web.Services;
 using WebApplication1.Models;
+using WebApplication1.Service;
 
 namespace WebApplication1.Controllers
 {
     public class HomeController : Controller
     {
+
+        private readonly DbService _dbService;
+        public HomeController() {
+
+          
+            _dbService = new DbService();
+        }
+
         public ActionResult Index()
         {
             var tasks = new List<TaskItem>
@@ -308,8 +321,41 @@ namespace WebApplication1.Controllers
             var taskData = JsonConvert.DeserializeObject<List<PlanProductionModel>>(taskJsonData);
 
 
-            ViewBag.Lines = data;
-            ViewBag.Tasks = taskData;
+            string query = "SELECT * FROM LINE;SELECT * FROM [PLAN];";
+
+            var ds = _dbService.GetDataFromQueryWithOutParam(query);
+
+
+            var linesFromDB = ds.Tables[0].AsEnumerable().Select(x => new SewingLineDto
+            {
+             
+                LINE_ID = x.Field<int>("LINE_ID"),
+                LINE_NAME = x.Field<string>("LINE_NAME"),
+                MAN_POWER = x.Field<int>("ManPower"),
+                ManWorkLimite = x.Field<int>("ManWorkLimite"),
+                SEWING_LINE_SERIAL = x.Field<decimal>("SEWING_LINE_SERIAL"),
+                FLOOR_ID = x.Field<int>("FLOOR_ID"),
+                COMPANY_NAME = x.Field<string>("COMPANY_NAME"),
+                EFFICIENCY = x.Field<string>("EFFICENCY"),
+            }).ToList();
+
+            var tasksFromDB = ds.Tables[1].AsEnumerable().Select(x => new PlanProductionModel 
+            {
+
+                JobNo = x.Field<string>("JOB_NO"),
+                PlanId = x.Field<int>("PlanID"),
+                StartDate = x.Field<string>("StartDate"),
+                EndDate = x.Field<string>("EndDate"),
+                StartHour = x.Field<int>("StartHour"),
+                EndHour = x.Field<int>("EndHour"),
+                LineId = x.Field<int>("LINE_ID"),
+            }).ToList();
+
+
+
+
+            ViewBag.Lines = linesFromDB;
+            ViewBag.Tasks = tasksFromDB;
             DateTime startDate = FromDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
             DateTime endDate = ToDate ?? startDate.AddMonths(1).AddDays(-1);
 
@@ -318,5 +364,58 @@ namespace WebApplication1.Controllers
 
             return View();
         }
-    }
+
+
+        public JsonResult GetTotalLines()
+        {
+            string query = "SELECT * FROM LINE;SELECT * FROM [PLAN];";
+
+            var ds = _dbService.GetDataFromQueryWithOutParam(query);
+
+
+                var lines = ds.Tables[0].AsEnumerable().Select(x =>  new
+                {
+                    ID = x["ID"],
+                    LINE_ID = x["LINE_ID"],
+                    LINE_NAME = x["LINE_NAME"],
+                    ManPower = x["ManPower"]
+                }).ToList();
+
+            var tasks = ds.Tables[1].AsEnumerable().Select(x => new
+            {
+                ID = x["ID"],
+                LINE_ID = x["JOB_NO"],
+                LINE_NAME = x["PlanID"],
+                ManPower = x["EndHour"]
+            }).ToList();
+
+
+            var queryTest = "SELECT * FROM LINE WHERE ID = @ID";
+
+            var parameters = new Dictionary<string, object>
+                {
+                    { "@ID", 1 }
+                };
+
+            var result = _dbService.GetDataFromQueryWithParam(queryTest, parameters).Tables[0].AsEnumerable().Select(x => new
+            {
+                ID = x["ID"],
+                LINE_ID = x["LINE_ID"],
+                LINE_NAME = x["LINE_NAME"],
+                ManPower = x["ManPower"]
+            }).FirstOrDefault();
+
+            return Json(new { lines, tasks , result }, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+
+        public ActionResult Error()
+        {
+            return View();
+        }
+
+
+     }
 }

@@ -325,6 +325,7 @@
         font-weight: 300;
         line-height: 1.2;
     }
+
     html, body {
         height: 100%;
         margin: 0;
@@ -380,10 +381,6 @@
         height: 100%;
         width: 100%;
     }
-
-
-
-
 </style>
 <div style="margin-bottom:15px;">
 
@@ -446,6 +443,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
 const WORKING_HOURS = @workingHours;
@@ -664,7 +662,7 @@ function dayDiff(a,b){
             };
         }
 
-        
+
         let dayWidth = 0;
         let hourWidth = 0;
         let lineWidth = 180;
@@ -681,11 +679,11 @@ function dayDiff(a,b){
         }
 
         function renderTasks(calendarStart, calendarEnd) {
-         
+
             // Remove old tasks (cheap)
             document.querySelectorAll('.task').forEach(t => t.remove());
 
-      
+
 
             if (!dayWidth || !hourWidth || !lineWidth) {
                 getLayout();
@@ -699,9 +697,10 @@ function dayDiff(a,b){
 
             /* ================= FRAGMENTS ================= */
             const fragmentMap = new Map();
-
+            console.clear();
+            console.log("task", tasks);
             tasks.forEach(task => {
-               
+
                 const row = rowMap.get(String(task.line_id));
                 if (!row) return;
 
@@ -729,7 +728,7 @@ function dayDiff(a,b){
 
 
 
-               
+
 
                 const left =
                     lineWidth +
@@ -790,7 +789,7 @@ function dayDiff(a,b){
                 fragment.appendChild(taskDiv);
             });
 
-         
+
             fragmentMap.forEach((fragment, lineId) => {
                 const row = rowMap.get(String(lineId));
                 if (row) row.appendChild(fragment);
@@ -860,7 +859,7 @@ function dayDiff(a,b){
             previewTask.style.left = "0";
             previewTask.style.willChange = "transform";
             previewTask.style.zIndex = "9999";
-           
+
             document.body.appendChild(previewTask);
         }
 
@@ -1060,7 +1059,7 @@ function dayDiff(a,b){
             endHour: endHour,
             duration: durationHours
         };
-        
+
     }
 
     // -------------------- MOUSE EVENTS --------------------
@@ -1082,9 +1081,9 @@ function dayDiff(a,b){
 
         showPreviewOptimized(draggedTask, draggedTask.dataset.duration);
 
-        
 
-      
+
+
         document.body.style.userSelect = "none";
     });
 
@@ -1157,7 +1156,7 @@ function dayDiff(a,b){
  // DRAG START for orders
  $(document).on('dragstart', '.draggable-order', function (e) {
      draggedOrder = $(this);
-   
+
  });
 
  // DRAG END
@@ -1169,16 +1168,16 @@ function dayDiff(a,b){
  $(document).on('dragover', '.cell', function (e) {
      e.preventDefault();
      $(this).addClass('cell-hover');
-   
+
      const row = e.target.closest(".calendar-row");
      if (!row) return;
-  
+
      const hover = getHoverInfo(e, row);
      if (!hover) return;
-   
+
      dragOrderhover = hover;
-   
-    
+
+
  });
 
  $(document).on('dragleave', '.cell', function () {
@@ -1216,9 +1215,9 @@ function dayDiff(a,b){
 
 
 
-     
-    
-     
+
+
+
 
      const newTask = createPlanFromOrder(order, orderHover);
 
@@ -1308,7 +1307,7 @@ function dayDiff(a,b){
         };
 
         console.log("newTask:", task);
-       
+
         tasks.push(task);
         console.log("total task:", tasks);
         //moveTaskToRow(task, orderHover.row, orderHover.cell, orderHover.hour, durationForOrder.duration);
@@ -1326,15 +1325,47 @@ function dayDiff(a,b){
         }
 
 
+        function exportTasksToExcel() {
+  
+    const tasks = @Html.Raw(tasksJson);
+    const worksheet = XLSX.utils.json_to_sheet(tasks);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+    XLSX.writeFile(workbook, "Production_Tasks.xlsx");
+    }
+
+    function exportLineToExcel() {
+    const AllLine = @Html.Raw(linesJson);
+        const worksheetLine = XLSX.utils.json_to_sheet(AllLine);
+        const workbookLine = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbookLine, worksheetLine, "Lines");
+        XLSX.writeFile(workbookLine, "Production_Line.xlsx");
+    }
+
+    function LoadDBPlan() {
+        $.ajax({
+            url: '/Home/GetTotalLines',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                console.log("db data:", data);
+            },
+            error: function (e) {
+                console.log("error", e);
+            }
+        });
+    }
 
 // --- Init ---
 $(document).ready(()=>{
     renderCalendar();
+    LoadDBPlan();
     LoadOrders();
     //getAllPlansfromApi()
     $('#btn-tasks').click(() => renderCalendar());
 
-
+    //exportTasksToExcel();
+    //exportLineToExcel();
     const sidebar = document.getElementById("orderSidebar");
     const openBtn = document.getElementById("openSidebar");
     const closeBtn = document.getElementById("closeSidebar");
