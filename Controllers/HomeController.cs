@@ -277,50 +277,6 @@ namespace WebApplication1.Controllers
         public ActionResult MouseCalenderDrag(DateTime? FromDate = null, DateTime? ToDate = null)
         {
 
-            var lines = new List<SewingLine>
-    {
-        new SewingLine { LINE_ID = 1, LINE_NAME="Sewing-L6",MAN_POWER = 13,ManWorkLimite=7000},
-        new SewingLine { LINE_ID = 2, LINE_NAME="Sewing-L7",MAN_POWER = 19,ManWorkLimite=1200},
-        new SewingLine { LINE_ID = 3, LINE_NAME="Sewing-L8",MAN_POWER = 23 ,ManWorkLimite=800},
-        new SewingLine { LINE_ID = 4, LINE_NAME="Parking 1",MAN_POWER = 53 ,ManWorkLimite=900},
-        new SewingLine { LINE_ID = 5, LINE_NAME="Parking 2",MAN_POWER = 630,ManWorkLimite=10000},
-        new SewingLine { LINE_ID = 6, LINE_NAME="Sewing-L6",MAN_POWER = 13,ManWorkLimite=7000},
-        new SewingLine { LINE_ID = 7, LINE_NAME="Sewing-L7",MAN_POWER = 19,ManWorkLimite=1200},
-        new SewingLine { LINE_ID = 8, LINE_NAME="Sewing-L8",MAN_POWER = 23 ,ManWorkLimite=800},
-        new SewingLine { LINE_ID = 9, LINE_NAME="Parking 1",MAN_POWER = 53 ,ManWorkLimite=900},
-        new SewingLine { LINE_ID = 10, LINE_NAME="Parking 2",MAN_POWER = 630,ManWorkLimite=10000},
-    };
-
-
-            var taskForMains = new List<TaskIteMForDragAndDROP>
-    {
-        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=49000000, ColorCode="red", Quantity = 20000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=70300000, ColorCode="black" , Quantity = 40000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=48400000, ColorCode="blue",Quantity=90000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=60400000, ColorCode="black",Quantity=80000,EndHour=1,StartHour=3},
-        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=51600000, ColorCode="blue",Quantity=60000,EndHour=1,StartHour=3}
-            };
-
-
-            var tasks = new List<TaskIteMForDragAndDROP>
-    {
-        new TaskIteMForDragAndDROP {Id = 1,TaskName="RpC-25-00421", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=1, ColorCode="red", Quantity = 20000,EndHour=3,StartHour=1},
-        new TaskIteMForDragAndDROP {Id = 2,TaskName="RpC-25-00222", FromDate=DateTime.Parse("2025-02-03"), ToDate=DateTime.Parse("2025-02-05"), SewingLineId=2, ColorCode="black" , Quantity = 40000,EndHour=3,StartHour=1},
-        new TaskIteMForDragAndDROP {Id = 3,TaskName="RpC-25-00398", FromDate=DateTime.Parse("2025-02-02"), ToDate=DateTime.Parse("2025-02-06"), SewingLineId=3, ColorCode="blue",Quantity=90000,EndHour=3,StartHour=1},
-        new TaskIteMForDragAndDROP {Id = 4,TaskName="RpC-25-00220", FromDate=DateTime.Parse("2025-02-17"), ToDate=DateTime.Parse("2025-02-23"), SewingLineId=4, ColorCode="black",Quantity=80000,EndHour=3,StartHour=1},
-        new TaskIteMForDragAndDROP {Id = 5,  TaskName="RpC-25-00397", FromDate=DateTime.Parse("2025-02-12"), ToDate=DateTime.Parse("2025-02-16"), SewingLineId=5, ColorCode="blue",Quantity=60000,EndHour=3,StartHour=1}
-            };
-
-            string filePath = Server.MapPath("~/Content/File/LineJson.json");
-            string jsonData = System.IO.File.ReadAllText(filePath);
-            var data = JsonConvert.DeserializeObject<List<SewingLineDto>>(jsonData);
-
-            string taskFilePath = Server.MapPath("~/Content/File/taskJson.json");
-            string taskJsonData = System.IO.File.ReadAllText(taskFilePath);
-
-            var taskData = JsonConvert.DeserializeObject<List<PlanProductionModel>>(taskJsonData);
-
-
             string query = "SELECT * FROM LINE;SELECT * FROM [PLAN];";
 
             var ds = _dbService.GetDataFromQueryWithOutParam(query);
@@ -349,6 +305,9 @@ namespace WebApplication1.Controllers
                 StartHour = x.Field<int>("StartHour"),
                 EndHour = x.Field<int>("EndHour"),
                 LineId = x.Field<int>("LINE_ID"),
+                PlanQuantity = x.Field<int>("PLAN_QUANTITY"),
+                StyleRefNo = x.Field<string>("STYLE_REF_NO"),
+                Duration = x.Field<double>("DURATION"),
             }).ToList();
 
 

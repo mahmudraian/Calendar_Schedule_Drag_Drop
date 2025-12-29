@@ -518,6 +518,7 @@ function dayDiff(a,b){
         body.innerHTML = '';
 
 
+
         lines.forEach(line => {
             const row = document.createElement('div');
             row.className = 'calendar-row';
@@ -678,91 +679,197 @@ function dayDiff(a,b){
             lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
         }
 
-        function renderTasks(calendarStart, calendarEnd) {
+        //function renderTasks(calendarStart, calendarEnd) {
 
-            // Remove old tasks (cheap)
-            document.querySelectorAll('.task').forEach(t => t.remove());
+        //    // Remove old tasks (cheap)
+        //    document.querySelectorAll('.task').forEach(t => t.remove());
 
 
 
-            if (!dayWidth || !hourWidth || !lineWidth) {
-                getLayout();
+        //    if (!dayWidth || !hourWidth || !lineWidth) {
+        //        getLayout();
+        //    }
+
+        //    /* ================= CACHE ROWS ================= */
+        //    const rowMap = new Map();
+        //    document.querySelectorAll('.calendar-row').forEach(row => {
+        //        rowMap.set(row.dataset.line, row);
+        //    });
+
+        //    /* ================= FRAGMENTS ================= */
+        //    const fragmentMap = new Map();
+
+        //    console.log("task", tasks);
+        //    tasks.forEach(task => {
+
+        //        const row = rowMap.get(String(task.line_id));
+        //        if (!row) return;
+
+
+
+        //        const start = parseDMY(task.start_date);
+        //        const end = parseDMY(task.end_date);
+
+
+        //        const calStartDate = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), calendarStart.getDate());
+        //        const calEndDate = new Date(calendarEnd.getFullYear(), calendarEnd.getMonth(), calendarEnd.getDate());
+
+        //        console.log("start date", start);
+        //        console.log("end date", end);
+
+        //        console.log("calStartDate date", calStartDate);
+        //        console.log("calEndDate date", calEndDate);
+
+        //        if (!start || !end || formatYMD(end) < calStartDate || formatYMD(start) > calEndDate) return;
+
+        //        const startDayIndex = Math.max(0, dayDiff(calendarStart, start));
+
+
+        //        const left =
+        //            lineWidth +
+        //            (startDayIndex * dayWidth) +
+        //            (task.start_hour * hourWidth);
+
+        //        const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
+        //        const remainingDays = totalDays - startDayIndex;
+
+        //        const maxVisibleHours =
+        //            (remainingDays * WORKING_HOURS) - task.start_hour;
+
+        //        const visibleHours = Math.min(
+        //            durationToHours(task.duration),
+        //            maxVisibleHours
+        //        );
+
+        //        if (visibleHours <= 0) return;
+
+        //        const width = visibleHours * hourWidth;
+
+        //        /* ================= TASK ================= */
+        //        const taskDiv = document.createElement('div');
+        //        taskDiv.className = 'task';
+        //        taskDiv.draggable = true;
+
+        //        // GPU-friendly movement
+        //        taskDiv.style.transform = `translateX(${left}px)`;
+        //        taskDiv.style.width = `${Math.max(width, 6)}px`;
+
+        //        /* ONE COLOR */
+        //        const taskColor = getRandomTaskColor();
+
+        //        taskDiv.innerHTML = `
+        //    <div class="task-first" style="background:#00BCD4;"></div>
+        //    <div class="task-second" style="background:#2ECC71;">
+        //        <p>Plan-${task.plan_id}</p>
+        //    </div>
+        //    <div class="task-third" style="background:#607D8B;"></div>
+        //`;
+
+        //        /* DATA */
+        //        taskDiv.dataset.id = task.plan_id;
+        //        taskDiv.dataset.startDate = task.start_date;
+        //        taskDiv.dataset.endDate = task.end_date;
+        //        taskDiv.dataset.startHour = task.start_hour;
+        //        taskDiv.dataset.endHour = task.end_hour;
+        //        taskDiv.dataset.duration = task.duration;
+        //        taskDiv.dataset.quantity = task.plan_qnty;
+
+        //        /* FRAGMENT */
+        //        let fragment = fragmentMap.get(task.line_id);
+        //        if (!fragment) {
+        //            fragment = document.createDocumentFragment();
+        //            fragmentMap.set(task.line_id, fragment);
+        //        }
+
+        //        fragment.appendChild(taskDiv);
+        //    });
+
+
+        //    fragmentMap.forEach((fragment, lineId) => {
+        //        console.log("fragment", fragment);
+        //        const row = rowMap.get(String(lineId));
+        //        if (row) row.appendChild(fragment);
+        //    });
+    //}
+
+    function renderTasks(calendarStart, calendarEnd) {
+
+        // Remove old tasks
+        document.querySelectorAll('.task').forEach(t => t.remove());
+
+        if (!dayWidth || !hourWidth || !lineWidth) {
+            getLayout();
+        }
+
+        const WORKING_HOURS = 10;
+
+        /* ================= ROW CACHE ================= */
+        const rowMap = new Map();
+        document.querySelectorAll('.calendar-row').forEach(row => {
+            rowMap.set(row.dataset.line, row);
+        });
+
+        /* ================= NORMALIZE CALENDAR DATES ================= */
+        const calStart = new Date(calendarStart);
+        calStart.setHours(0, 0, 0, 0);
+
+        const calEnd = new Date(calendarEnd);
+        calEnd.setHours(0, 0, 0, 0);
+
+        const fragmentMap = new Map();
+
+        /* ================= LOOP TASKS ================= */
+        tasks.forEach(task => {
+
+            const row = rowMap.get(String(task.line_id));
+            if (!row) return;
+
+            const start = parseDMY(task.start_date);
+            const end = parseDMY(task.end_date);
+            if (!start || !end) return;
+
+            const taskStart = new Date(start);
+            const taskEnd = new Date(end);
+            taskStart.setHours(0, 0, 0, 0);
+            taskEnd.setHours(0, 0, 0, 0);
+
+            // Skip if fully outside calendar
+            if (taskEnd < calStart || taskStart > calEnd) return;
+
+            /* ================= CLIP TO CALENDAR ================= */
+            const visibleStartDate = taskStart < calStart ? calStart : taskStart;
+            const visibleEndDate = taskEnd > calEnd ? calEnd : taskEnd;
+
+            // Days between visible start and end
+            const visibleDays = dayDiff(visibleStartDate, visibleEndDate) + 1;
+
+            // Hours to render
+            let totalHours = durationToHours(task.duration);
+
+            // Remove hours before calendar
+            if (taskStart < calStart) {
+                totalHours -= dayDiff(taskStart, calStart) * WORKING_HOURS;
             }
 
-            /* ================= CACHE ROWS ================= */
-            const rowMap = new Map();
-            document.querySelectorAll('.calendar-row').forEach(row => {
-                rowMap.set(row.dataset.line, row);
-            });
+            // Clamp to calendar end
+            const maxVisibleHours = visibleDays * WORKING_HOURS - (taskStart >= calStart ? task.start_hour : 0);
+            const visibleHours = Math.min(totalHours, maxVisibleHours);
+            if (visibleHours <= 0) return;
 
-            /* ================= FRAGMENTS ================= */
-            const fragmentMap = new Map();
-            console.clear();
-            console.log("task", tasks);
-            tasks.forEach(task => {
+            /* ================= POSITION ================= */
+            const dayIndex = dayDiff(calendarStart, visibleStartDate);
+            const left = lineWidth + (dayIndex * dayWidth) + (taskStart >= calStart ? task.start_hour * hourWidth : 0);
+            const width = visibleHours * hourWidth;
 
-                const row = rowMap.get(String(task.line_id));
-                if (!row) return;
+            /* ================= CREATE TASK ================= */
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task';
+            taskDiv.draggable = true;
 
-                //const start = parseDMY(task.start_date);
-                //const calStart = formatYMD(calendarStart);
-                //const calEnd = formatYMD(calendarEnd);
+            taskDiv.style.transform = `translateX(${left}px)`;
+            taskDiv.style.width = `${width}px`;
 
-                //if (!start || formatYMD(start) < calStart || formatYMD(start) > calEnd) return;
-                //const startDayIndex = dayDiff(calendarStart, start);
-
-                const start = parseDMY(task.start_date);
-                const end = parseDMY(task.end_date);
-
-                const calStartDate = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), calendarStart.getDate());
-                const calEndDate = new Date(calendarEnd.getFullYear(), calendarEnd.getMonth(), calendarEnd.getDate());
-
-                if (!start || !end || formatYMD(end) < calStartDate || formatYMD(start) > calEndDate) return;
-
-                const startDayIndex = Math.max(0, dayDiff(calendarStart, start));
-
-
-
-
-
-
-
-
-
-
-                const left =
-                    lineWidth +
-                    (startDayIndex * dayWidth) +
-                    (task.start_hour * hourWidth);
-
-                const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
-                const remainingDays = totalDays - startDayIndex;
-
-                const maxVisibleHours =
-                    (remainingDays * WORKING_HOURS) - task.start_hour;
-
-                const visibleHours = Math.min(
-                    durationToHours(task.duration),
-                    maxVisibleHours
-                );
-
-                if (visibleHours <= 0) return;
-
-                const width = visibleHours * hourWidth;
-
-                /* ================= TASK ================= */
-                const taskDiv = document.createElement('div');
-                taskDiv.className = 'task';
-                taskDiv.draggable = true;
-
-                // GPU-friendly movement
-                taskDiv.style.transform = `translateX(${left}px)`;
-                taskDiv.style.width = `${Math.max(width, 6)}px`;
-
-                /* ONE COLOR */
-                const taskColor = getRandomTaskColor();
-
-                taskDiv.innerHTML = `
+            taskDiv.innerHTML = `
             <div class="task-first" style="background:#00BCD4;"></div>
             <div class="task-second" style="background:#2ECC71;">
                 <p>Plan-${task.plan_id}</p>
@@ -770,31 +877,34 @@ function dayDiff(a,b){
             <div class="task-third" style="background:#607D8B;"></div>
         `;
 
-                /* DATA */
-                taskDiv.dataset.id = task.plan_id;
-                taskDiv.dataset.startDate = task.start_date;
-                taskDiv.dataset.endDate = task.end_date;
-                taskDiv.dataset.startHour = task.start_hour;
-                taskDiv.dataset.endHour = task.end_hour;
-                taskDiv.dataset.duration = task.duration;
-                taskDiv.dataset.quantity = task.plan_qnty;
+            /* ================= DATASET ================= */
+                    taskDiv.dataset.id = task.plan_id;
+                    taskDiv.dataset.startDate = task.start_date;
+                    taskDiv.dataset.endDate = task.end_date;
+                    taskDiv.dataset.startHour = task.start_hour;
+                    taskDiv.dataset.endHour = task.end_hour;
+                    taskDiv.dataset.duration = task.duration;
+                    taskDiv.dataset.quantity = task.plan_qnty;
 
-                /* FRAGMENT */
-                let fragment = fragmentMap.get(task.line_id);
-                if (!fragment) {
-                    fragment = document.createDocumentFragment();
-                    fragmentMap.set(task.line_id, fragment);
-                }
+            /* ================= FRAGMENT ================= */
+            let fragment = fragmentMap.get(task.line_id);
+            if (!fragment) {
+                fragment = document.createDocumentFragment();
+                fragmentMap.set(task.line_id, fragment);
+            }
 
-                fragment.appendChild(taskDiv);
-            });
+            fragment.appendChild(taskDiv);
+        });
+
+        /* ================= APPEND ALL ================= */
+        fragmentMap.forEach((fragment, lineId) => {
+            const row = rowMap.get(String(lineId));
+            if (row) row.appendChild(fragment);
+        });
+    }
 
 
-            fragmentMap.forEach((fragment, lineId) => {
-                const row = rowMap.get(String(lineId));
-                if (row) row.appendChild(fragment);
-            });
-        }
+
 
     let draggedTask = null;
     let previewTask = null;
@@ -942,6 +1052,8 @@ function dayDiff(a,b){
         const dayWidth = cell.offsetWidth;
         const hourWidth = dayWidth / WORKING_HOURS;
         const lineWidth = newRow.querySelector(".line-name")?.offsetWidth || 180;
+       
+        console.log("duration Hours from moveTaskToRow", durationHours);
 
         const cells = [...newRow.querySelectorAll(".cell")];
         const dayIndex = cells.indexOf(cell);
@@ -954,15 +1066,23 @@ function dayDiff(a,b){
         // Remove from old row
         taskDiv.remove();
         newRow.appendChild(taskDiv);
-
+        console.log("___________________taskDiv____________________")
+        console.log("taskDiv", taskDiv);
+        console.log("___________________taskDiv____________________")
         // Width based on duration (hours)
-        if (!durationHours) {
-            const width = durationHours * hourWidth;
+        let TemptotalHours = 0;
+        if (durationHours) {
+            console.log("durationHours", durationHours);
+            console.log("hourWidth", hourWidth);
+             TemptotalHours = durationHours * WORKING_HOURS;
+            const width = TemptotalHours * hourWidth;
             taskDiv.style.width = `${width}px`;
+           
         }
 
         // GPU-accelerated move
         taskDiv.style.transform = `translate3d(${left}px, 0, 0)`;
+
 
         // 🔹 Update dataset AFTER moving
         taskDiv.dataset.startDate = cell.dataset.date;
@@ -970,17 +1090,42 @@ function dayDiff(a,b){
         taskDiv.dataset.duration = durationHours;
 
         // Calculate end hour / date if needed
-        const totalHours = hour + durationHours;
+        const totalHours = hour + TemptotalHours;
         taskDiv.dataset.endHour = totalHours % WORKING_HOURS;
 
+        // End date
         const endDayOffset = Math.floor(totalHours / WORKING_HOURS);
-        const endCell = cells[dayIndex + endDayOffset];
-
+        const maxDayIndex = cells.length - 1;
+        const safeDayIndex = Math.min(dayIndex + endDayOffset, maxDayIndex);
+        console.log("day Index", dayIndex);
+        console.log("day Index", endDayOffset);
+        console.log("max Index", maxDayIndex);
+        console.log("safe Day Index", safeDayIndex);
+        const endCell = cells[safeDayIndex];
         if (endCell) {
-            taskDiv.dataset.endDate = endCell.dataset.date;
+            taskDiv.dataset.endDate = convertToDMY(endCell.dataset.date);
+            console.log("convertToDMY(endCell.dataset.date);", convertToDMY(endCell.dataset.date))
+            console.log("convertToDMY(endCell.dataset.date);", endCell.dataset.date)
         }
 
         taskDiv.dataset.line = newRow.dataset.line;
+
+        // Update task data
+
+        const taskId = parseInt(draggedTask.dataset.id);
+        const task = tasks.find(t => t.plan_id === taskId);
+        if (!task) return;
+
+        task.start_date = convertToDMY(cell.dataset.date);
+
+        console.log("date for task", convertToDMY(cell.dataset.date));
+        task.start_hour = hour;
+        task.line_id = parseInt(newRow.dataset.line);
+        task.end_date = convertToDMY(endCell.dataset.date);
+        task.end_hour = taskDiv.dataset.endHour
+        task.duration = durationHours;
+        console.log("task after update", task)
+
     }
 
     // -------------------- GET DURATION --------------------
@@ -1001,19 +1146,21 @@ function dayDiff(a,b){
 
     function getDuration(hover, totalQuantity) {
         const { row, cell, hour: startHour } = hover;
-        totalQuantity = 100000;
+        
         //convert dataset values to numbers
-        const manpower = Number(row.dataset.manpower) || Math.floor(Math.random() * 10) + 1;
+        const manpower = Number(row.dataset.manpower);
         const efficiency = row.dataset.efficiency || 0;
         const hourlyQty = Number(row.dataset.manpowercapacity) || 0;
 
-        //const manpower = 1000;
-        //const efficiency = "100%";
-        //const hourlyQty = 800;
+       
 
+        console.log("------------Duartion calculation------------------ ");
+        console.log("totalQuantity   ", totalQuantity);
         console.log("manpower", manpower);
         console.log("efficiency", parseFloat(efficiency));
         console.log("hourlyQty", hourlyQty);
+        console.log("------------Duartion calculation------------------ ");
+       
 
         if (!hourlyQty || !efficiency) return 0;
 
@@ -1133,17 +1280,14 @@ function dayDiff(a,b){
             return;
         }
 
-        const taskId = parseInt(draggedTask.dataset.id);
-        const task = tasks.find(t => t.plan_id === taskId);
-        if (!task) return;
+       
 
-        // Update task data
-        task.start_date = convertToDMY(cell.dataset.date);
-        console.log("date", convertToDMY(cell.dataset.date));
-        task.start_hour = hour;
-        task.line_id = parseInt(row.dataset.line);
+      
+        //moveTaskToRow(draggedTask, row, cell, hour, duration || draggedTask.dataset.duration);
 
-        moveTaskToRow(draggedTask, row, cell, hour, duration || draggedTask.dataset.duration);
+        if (duration) {
+            moveTaskToRow(draggedTask, row, cell, hour, duration);
+        }
 
         cleanupDrag();
     });
@@ -1252,15 +1396,15 @@ function dayDiff(a,b){
                     data.forEach(order => {
                         // Make li draggable
                         let li = $(`
-             <li class="list-group-item bg-dark text-white border-secondary draggable-order"
-                 draggable="true"
-                 data-orderid="${order.OrderId}"
-                 data-quantity="${order.Quantity}">
-                 <strong>Order #${order.OrderId}</strong><br>
-                 Company: ${order.OrderCompany || ''}<br>
-                 Qty: ${order.Quantity} pcs
-             </li>
-         `);
+                        <li class="list-group-item bg-dark text-white border-secondary draggable-order"
+                            draggable="true"
+                            data-orderid="${order.OrderId}"
+                            data-quantity="${order.Quantity}">
+                            <strong>Order #${order.OrderId}</strong><br>
+                            Company: ${order.OrderCompany || ''}<br>
+                            Qty: ${order.Quantity} pcs
+                        </li>
+                    `);
 
 
 
@@ -1326,40 +1470,29 @@ function dayDiff(a,b){
 
 
         function exportTasksToExcel() {
-  
-    const tasks = @Html.Raw(tasksJson);
-    const worksheet = XLSX.utils.json_to_sheet(tasks);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
-    XLSX.writeFile(workbook, "Production_Tasks.xlsx");
-    }
+        const tasks = @Html.Raw(tasksJson);
+        const worksheet = XLSX.utils.json_to_sheet(tasks);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+        XLSX.writeFile(workbook, "Production_Tasks.xlsx");
+        }
 
     function exportLineToExcel() {
-    const AllLine = @Html.Raw(linesJson);
+        const AllLine = @Html.Raw(linesJson);
         const worksheetLine = XLSX.utils.json_to_sheet(AllLine);
         const workbookLine = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbookLine, worksheetLine, "Lines");
         XLSX.writeFile(workbookLine, "Production_Line.xlsx");
     }
 
-    function LoadDBPlan() {
-        $.ajax({
-            url: '/Home/GetTotalLines',
-            type: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                console.log("db data:", data);
-            },
-            error: function (e) {
-                console.log("error", e);
-            }
-        });
+    function updatePlan() {
+
     }
 
 // --- Init ---
 $(document).ready(()=>{
     renderCalendar();
-    LoadDBPlan();
+   
     LoadOrders();
     //getAllPlansfromApi()
     $('#btn-tasks').click(() => renderCalendar());
