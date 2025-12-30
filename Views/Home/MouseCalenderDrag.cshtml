@@ -268,6 +268,7 @@
     /* Disabled day (Sunday) */
     .disabled-day {
         background: #f3f3f3;
+/*        z-index:22222222222;*/
     }
 
     /* Task block */
@@ -1063,6 +1064,10 @@ function dayDiff(a,b){
             (dayIndex * dayWidth) +
             (hour * hourWidth);
 
+        // total hours available in calendar from this day
+        const calendarRemainingHours =
+            (cells.length - dayIndex) * WORKING_HOURS;
+
         // Remove from old row
         taskDiv.remove();
         newRow.appendChild(taskDiv);
@@ -1074,8 +1079,10 @@ function dayDiff(a,b){
         if (durationHours) {
             console.log("durationHours", durationHours);
             console.log("hourWidth", hourWidth);
-             TemptotalHours = durationHours * WORKING_HOURS;
-            const width = TemptotalHours * hourWidth;
+            TemptotalHours = durationHours * WORKING_HOURS;
+            // clamp duration so it doesn't exceed calendar
+            const visibleHours = Math.min(TemptotalHours, calendarRemainingHours);
+            const width = visibleHours * hourWidth;
             taskDiv.style.width = `${width}px`;
            
         }
@@ -1112,20 +1119,17 @@ function dayDiff(a,b){
 
         // Update task data
 
-        const taskId = parseInt(draggedTask.dataset.id);
-        const task = tasks.find(t => t.plan_id === taskId);
-        if (!task) return;
+      
 
-        task.start_date = convertToDMY(cell.dataset.date);
-
-        console.log("date for task", convertToDMY(cell.dataset.date));
-        task.start_hour = hour;
-        task.line_id = parseInt(newRow.dataset.line);
-        task.end_date = convertToDMY(endCell.dataset.date);
-        task.end_hour = taskDiv.dataset.endHour
-        task.duration = durationHours;
-        console.log("task after update", task)
-
+        const planID = parseInt(draggedTask.dataset.id);
+        const start_date = convertToDMY(cell.dataset.date);
+        const startHour = hour;
+        const LineId = parseInt(newRow.dataset.line);
+        const EndDate = convertToDMY(endCell.dataset.date);
+        const EndHour = taskDiv.dataset.endHour
+        const duration = durationHours;
+        
+        updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId,duration);
     }
 
     // -------------------- GET DURATION --------------------
@@ -1485,9 +1489,119 @@ function dayDiff(a,b){
         XLSX.writeFile(workbookLine, "Production_Line.xlsx");
     }
 
-    function updatePlan() {
+    function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration)
+    {
 
+        const task = tasks.find(t => t.plan_id === planID);
+        if (!task) return;
+
+        task.start_date = startdate;
+        task.start_hour = startHour;
+        task.line_id = LineId;
+        task.end_date = EndDate;
+        task.end_hour = EndHour;
+        task.duration = duration;
+        console.log("task after update in update method", task)
+        AllPlansByLineId(LineId, task)
     }
+
+    function AllPlansByLineId(lineId, updatedTask) {
+        // Get tasks on the same line (exclude updated task itself)
+        const lineTasks = tasks
+            .filter(t => t.line_id === lineId)
+            .sort((a, b) => {
+                const dateA = new Date(a.start_date);
+                const dateB = new Date(b.start_date);
+
+                // First sort by date
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                }
+
+                // If same date, sort by hour
+                return a.start_hour - b.start_hour;
+            });
+
+        
+        const results = [];
+
+        let currentStartDate = updatedTask.start_date;
+        let currentStartHour = updatedTask.start_hour;
+        let currentEndDate = updatedTask.end_date;
+        let currentEndHour = updatedTask.end_hour;
+
+        console.log("updated task Start", currentStartDate);
+        console.log("updated task Start Hour", currentStartHour);
+        console.log("updated task End Date", currentEndDate);
+        console.log("updated task Start End Hour", currentEndHour);
+
+        const updatedStart = toDateTime(
+            updatedTask.start_date,
+            updatedTask.start_hour
+        );
+
+        const updatedEnd = toDateTime(
+            updatedTask.end_date,
+            updatedTask.end_hour
+        );
+
+        let cursorStart = updatedStart;
+        console.clear();
+        console.log(" updatedTask end_date", updatedTask.end_date);
+        console.log("endhour", updatedTask.end_hour)
+        console.log("updatedStart", updatedStart);
+        console.log("updatedEnd", updatedEnd);
+        console.log("lineTasks", updatedTask);
+
+        console.log("updated task Start", currentStartDate);
+        console.log("updated task Start Hour", currentStartHour);
+        console.log("updated task End Date", currentEndDate);
+        console.log("updated task End Hour", currentEndHour);
+        for (const task of lineTasks) {
+            const taskStartDate = task.start_date;
+            const taskStartHour = task.start_hour;
+            const taskEndHour = task.end_hour;
+            const taskEndDate = task.end_date;
+          
+
+            if (currentStartDate < taskStartDate && currentEndDate < taskEndDate) {
+                console.log("===============task Start date==============", task.plan_id);
+                console.log(" task Start date", taskStartDate);
+                console.log(" task Start Hour", taskStartHour);
+                console.log(" task End Date", taskEndDate);
+                console.log(" task  End Hour", taskEndHour);
+            }
+           
+
+        }
+
+        // Remaining segment after last overlap
+        if (cursorStart < updatedEnd) {
+            results.push({
+                ...updatedTask,
+                start_date: formatDate(cursorStart),
+                start_hour: cursorStart.getHours(),
+                end_date: updatedTask.end_date,
+                end_hour: updatedTask.end_hour
+            });
+        }
+        console.log("all line sorted");
+        console.log("result", results);
+        return results;
+    }
+
+    function toDateTime(dateStr, hour) {
+        const d = new Date(dateStr);
+        d.setHours(hour, 0, 0, 0);
+        return d;
+    }
+
+    function formatDate(date) {
+        return date.toISOString().split("T")[0];
+    }
+
+
+
 
 // --- Init ---
 $(document).ready(()=>{
