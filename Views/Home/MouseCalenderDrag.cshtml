@@ -817,11 +817,17 @@ function dayDiff(a,b){
         const calEnd = new Date(calendarEnd);
         calEnd.setHours(0, 0, 0, 0);
 
+        console.log("calEnd", calEnd);
+
         const fragmentMap = new Map();
 
         /* ================= LOOP TASKS ================= */
-        tasks.forEach(task => {
 
+        let i = 0;
+        console.log("task total", tasks.length);
+        tasks.forEach(task => {
+            i++;
+            console.log("console", i);
             const row = rowMap.get(String(task.line_id));
             if (!row) return;
 
@@ -833,6 +839,8 @@ function dayDiff(a,b){
             const taskEnd = new Date(end);
             taskStart.setHours(0, 0, 0, 0);
             taskEnd.setHours(0, 0, 0, 0);
+
+           
 
             // Skip if fully outside calendar
             if (taskEnd < calStart || taskStart > calEnd) return;
@@ -846,6 +854,8 @@ function dayDiff(a,b){
 
             // Hours to render
             let totalHours = durationToHours(task.duration);
+            console.log("totalHours ===", totalHours);
+            console.log("plan id ===", task.plan_id);
 
             // Remove hours before calendar
             if (taskStart < calStart) {
@@ -1563,13 +1573,33 @@ function dayDiff(a,b){
             const taskEndHour = task.end_hour;
             const taskEndDate = task.end_date;
           
+            const isOverlap =
+                (
+                    
+                    (
+                        currentStartDate < taskEndDate ||
+                        (currentStartDate === taskEndDate && currentStartHour < taskEndHour)
+                    )
+                    &&
+                   
+                    (
+                        currentEndDate > taskStartDate ||
+                        (currentEndDate === taskStartDate && currentEndHour > taskStartHour)
+                    )
+                );
 
-            if (currentStartDate < taskStartDate && currentEndDate < taskEndDate) {
+
+
+            if (isOverlap) {
                 console.log("===============task Start date==============", task.plan_id);
                 console.log(" task Start date", taskStartDate);
                 console.log(" task Start Hour", taskStartHour);
                 console.log(" task End Date", taskEndDate);
                 console.log(" task  End Hour", taskEndHour);
+                console.log(" task line id", task.line_id);
+                console.log(" task line duration", task.duration);
+
+               
             }
            
 
