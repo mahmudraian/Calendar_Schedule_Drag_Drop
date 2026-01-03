@@ -1059,10 +1059,14 @@ function dayDiff(a,b){
     //    taskDiv.dataset.line = newRow.dataset.line;
     //}
 
-    function moveTaskToRow(taskDiv, newRow, cell, hour, durationHours) {
+    function moveTaskToRow(taskDiv, lastHover, durationHours) {
+        const { row, cell, hour } = lastHover;
+        const newRow = row;
+        console.log("newRow", newRow);
         const dayWidth = cell.offsetWidth;
         const hourWidth = dayWidth / WORKING_HOURS;
         const lineWidth = newRow.querySelector(".line-name")?.offsetWidth || 180;
+
        
         console.log("duration Hours from moveTaskToRow", durationHours);
 
@@ -1139,7 +1143,7 @@ function dayDiff(a,b){
         const EndHour = taskDiv.dataset.endHour
         const duration = durationHours;
         
-        updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId,duration);
+        updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId, duration, lastHover);
     }
 
     // -------------------- GET DURATION --------------------
@@ -1300,7 +1304,8 @@ function dayDiff(a,b){
         //moveTaskToRow(draggedTask, row, cell, hour, duration || draggedTask.dataset.duration);
 
         if (duration) {
-            moveTaskToRow(draggedTask, row, cell, hour, duration);
+            //moveTaskToRow(draggedTask, row, cell, hour, duration);
+            moveTaskToRow(draggedTask, lastHover, duration);
         }
 
         cleanupDrag();
@@ -1499,7 +1504,7 @@ function dayDiff(a,b){
         XLSX.writeFile(workbookLine, "Production_Line.xlsx");
     }
 
-    function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration)
+    function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration, lastHover)
     {
 
         const task = tasks.find(t => t.plan_id === planID);
@@ -1512,113 +1517,223 @@ function dayDiff(a,b){
         task.end_hour = EndHour;
         task.duration = duration;
         console.log("task after update in update method", task)
-        AllPlansByLineId(LineId, task)
+        AllPlansByLineId(LineId, task, lastHover)
     }
 
-    function AllPlansByLineId(lineId, updatedTask) {
-        // Get tasks on the same line (exclude updated task itself)
-        const lineTasks = tasks
-            .filter(t => t.line_id === lineId)
-            .sort((a, b) => {
-                const dateA = new Date(a.start_date);
-                const dateB = new Date(b.start_date);
+    //function AllPlansByLineId(lineId, updatedTask) {
+    //    // Get tasks on the same line (exclude updated task itself)
+    //    const lineTasks = tasks
+    //        .filter(t => t.line_id === lineId)
+    //        .sort((a, b) => {
+    //            const dateA = new Date(a.start_date);
+    //            const dateB = new Date(b.start_date);
 
-                // First sort by date
-                if (dateA.getTime() !== dateB.getTime()) {
-                    return dateA - dateB;
-                }
+    //            // First sort by date
+    //            if (dateA.getTime() !== dateB.getTime()) {
+    //                return dateA - dateB;
+    //            }
 
-                // If same date, sort by hour
-                return a.start_hour - b.start_hour;
-            });
+    //            // If same date, sort by hour
+    //            return a.start_hour - b.start_hour;
+    //        });
 
-        
-        const results = [];
 
-        let currentStartDate = updatedTask.start_date;
-        let currentStartHour = updatedTask.start_hour;
-        let currentEndDate = updatedTask.end_date;
-        let currentEndHour = updatedTask.end_hour;
+    //    const results = [];
 
-        console.log("updated task Start", currentStartDate);
-        console.log("updated task Start Hour", currentStartHour);
-        console.log("updated task End Date", currentEndDate);
-        console.log("updated task Start End Hour", currentEndHour);
+    //    let currentStartDate = updatedTask.start_date;
+    //    let currentStartHour = updatedTask.start_hour;
+    //    let currentEndDate = updatedTask.end_date;
+    //    let currentEndHour = updatedTask.end_hour;
 
-        const updatedStart = toDateTime(
+    //    console.log("updated task Start", currentStartDate);
+    //    console.log("updated task Start Hour", currentStartHour);
+    //    console.log("updated task End Date", currentEndDate);
+    //    console.log("updated task Start End Hour", currentEndHour);
+
+    //    const updatedStart = toDateTime(
+    //        updatedTask.start_date,
+    //        updatedTask.start_hour
+    //    );
+
+    //    const updatedEnd = toDateTime(
+    //        updatedTask.end_date,
+    //        updatedTask.end_hour
+    //    );
+
+    //    let cursorStart = updatedEnd;
+    //    console.clear();
+    //    console.log(" updatedTask end_date", updatedTask.end_date);
+    //    console.log("endhour", updatedTask.end_hour)
+    //    console.log("updatedStart", updatedStart);
+    //    console.log("updatedEnd", updatedEnd);
+    //    console.log("lineTasks", updatedTask);
+
+    //    console.log("updated task Start", currentStartDate);
+    //    console.log("updated task Start Hour", currentStartHour);
+    //    console.log("updated task End Date", currentEndDate);
+    //    console.log("updated task End Hour", currentEndHour);
+    //    for (const task of lineTasks) {
+    //        const taskStartDate = task.start_date;
+    //        const taskStartHour = task.start_hour;
+    //        const taskEndHour = task.end_hour;
+    //        const taskEndDate = task.end_date;
+
+    //        const isOverlap =
+    //            (
+
+    //                (
+    //                    currentStartDate < taskStartDate ||
+    //                    (currentStartDate === taskStartDate && (currentStartHour < taskStartHour || currentStartHour > taskStartHour ))
+    //                )
+    //                &&
+
+    //                (
+    //                    currentEndDate > taskEndDate ||
+    //                        (currentEndDate === taskEndDate && (currentEndHour > taskEndHour || currentEndHour < taskEndHour))
+    //                )
+    //            );
+
+
+
+    //        if (isOverlap) {
+    //            console.log("===============task Start date==============", task.plan_id);
+    //            console.log(" task Start date", taskStartDate);
+    //            console.log(" task Start Hour", taskStartHour);
+    //            console.log(" task End Date", taskEndDate);
+    //            console.log(" task  End Hour", taskEndHour);
+    //            console.log(" task line id", task.line_id);
+    //            console.log(" task line duration", task.duration);
+
+
+    //        }
+
+
+    //    }
+
+    //    // Remaining segment after last overlap
+    //    if (cursorStart < updatedEnd) {
+    //        results.push({
+    //            ...updatedTask,
+    //            start_date: formatDate(cursorStart),
+    //            start_hour: cursorStart.getHours(),
+    //            end_date: updatedTask.end_date,
+    //            end_hour: updatedTask.end_hour
+    //        });
+    //    }
+    //    console.log("all line sorted");
+    //    console.log("result", results);
+    //    return results;
+    //}
+
+    function AllPlansByLineId(lineId, updatedTask, lastHover) {
+
+        const lineTasks = tasks.filter(t =>
+            t.line_id === lineId &&
+            t.plan_id !== updatedTask.plan_id
+        );
+
+        console.clear();
+        console.log(
+            "🔍 Checking conflicts for updated plan:",
+            updatedTask.plan_id,
+            "plan start date:", updatedTask.start_date,
+            "plan end date:", updatedTask.end_date
+        );
+
+        const updatedStart = toTimelineValue(
             updatedTask.start_date,
             updatedTask.start_hour
         );
 
-        const updatedEnd = toDateTime(
+        const updatedEnd = toTimelineValue(
             updatedTask.end_date,
             updatedTask.end_hour
         );
 
-        let cursorStart = updatedStart;
-        console.clear();
-        console.log(" updatedTask end_date", updatedTask.end_date);
-        console.log("endhour", updatedTask.end_hour)
-        console.log("updatedStart", updatedStart);
-        console.log("updatedEnd", updatedEnd);
-        console.log("lineTasks", updatedTask);
+        let hasConflict = false;
 
-        console.log("updated task Start", currentStartDate);
-        console.log("updated task Start Hour", currentStartHour);
-        console.log("updated task End Date", currentEndDate);
-        console.log("updated task End Hour", currentEndHour);
         for (const task of lineTasks) {
-            const taskStartDate = task.start_date;
-            const taskStartHour = task.start_hour;
-            const taskEndHour = task.end_hour;
-            const taskEndDate = task.end_date;
-          
-            const isOverlap =
-                (
-                    
-                    (
-                        currentStartDate < taskEndDate ||
-                        (currentStartDate === taskEndDate && currentStartHour < taskEndHour)
-                    )
-                    &&
-                   
-                    (
-                        currentEndDate > taskStartDate ||
-                        (currentEndDate === taskStartDate && currentEndHour > taskStartHour)
-                    )
+
+            const taskStart = toTimelineValue(
+                task.start_date,
+                task.start_hour
+            );
+
+            const taskEnd = toTimelineValue(
+                task.end_date,
+                task.end_hour
+            );
+
+            // ✅ ONLY correct overlap rule
+            const isConflict =
+                updatedStart < taskEnd &&
+                updatedEnd > taskStart;
+
+            if (isConflict) {
+                hasConflict = true;
+
+                console.log("❌ DIRECT CONFLICT DETECTED");
+                console.log("Updated Plan ID:", updatedTask.plan_id);
+                console.log("Conflicting Plan ID:", task.plan_id);
+                console.log(
+                    "Task Range:",
+                    `${task.start_date} ${task.start_hour} → ${task.end_date} ${task.end_hour}`
                 );
+                console.log("-----------------------------------");
+                console.log("------------------------- lastHover----------", task);
+
+                const hover = lastHover;
+                const durationForOrder = getDuration(hover, task.Quantity);
+
+                task.end_date = convertToDMY(formatYMD(durationForOrder.endDate));
+                task.end_hour = durationForOrder.endHour,
+                task.start_date = updatedTask.end_date;
+                task.start_hour = updatedTask.end_hour;
 
 
-
-            if (isOverlap) {
-                console.log("===============task Start date==============", task.plan_id);
-                console.log(" task Start date", taskStartDate);
-                console.log(" task Start Hour", taskStartHour);
-                console.log(" task End Date", taskEndDate);
-                console.log(" task  End Hour", taskEndHour);
-                console.log(" task line id", task.line_id);
-                console.log(" task line duration", task.duration);
-
-               
             }
-           
-
         }
 
-        // Remaining segment after last overlap
-        if (cursorStart < updatedEnd) {
-            results.push({
-                ...updatedTask,
-                start_date: formatDate(cursorStart),
-                start_hour: cursorStart.getHours(),
-                end_date: updatedTask.end_date,
-                end_hour: updatedTask.end_hour
-            });
+        if (!hasConflict) {
+            console.log("✅ No conflicts detected");
         }
-        console.log("all line sorted");
-        console.log("result", results);
-        return results;
+
+        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+        const toDate = parseDateSafe($('input[name="ToDate"]').val());
+        //requestAnimationFrame(() => {
+        //    renderTasks(fromDate, toDate)
+        //});
+       
     }
+
+
+
+    function toTimelineValue(dateStr, hour) {
+        const [dd, mm, yyyy] = dateStr.split("-").map(Number);
+
+        // Create real date safely
+        const date = new Date(Date.UTC(yyyy, mm - 1, dd));
+
+        // Convert working hour to milliseconds
+        return date.getTime() + hour * 60 * 60 * 1000;
+    }
+
+
+
+
+    function isBefore(d1, h1, d2, h2) {
+        return d1 < d2 || (d1 === d2 && h1 < h2);
+    }
+
+    function isAfter(d1, h1, d2, h2) {
+        return d1 > d2 || (d1 === d2 && h1 > h2);
+    }
+
+
+
+
+
+
 
     function toDateTime(dateStr, hour) {
         const d = new Date(dateStr);
@@ -1629,6 +1744,10 @@ function dayDiff(a,b){
     function formatDate(date) {
         return date.toISOString().split("T")[0];
     }
+
+   
+
+
 
 
 
