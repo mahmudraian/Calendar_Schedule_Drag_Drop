@@ -161,7 +161,6 @@
         --cell-width: 80px;
         --row-height: 55px;
     }
-
     /* Scrollable calendar body */
     .calendar-wrapper {
         overflow: auto;
@@ -302,6 +301,15 @@
         cursor: grab;
         will-change: transform;
     }
+
+        .task.dragging {
+            opacity: 0.8;
+            cursor: grabbing;
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none; 
+        }
+
 
     .task-first {
         height: 5px;
@@ -527,7 +535,7 @@ function dayDiff(a,b){
             row.dataset.manpower = line.MAN_POWER;
             row.dataset.manpowercapacity = line.ManWorkLimite;
             row.dataset.efficiency = line.EFFICIENCY;
-            console.log("line", line);
+       
             const lineDiv = document.createElement('div');
             lineDiv.className = 'line-name';
             lineDiv.textContent = line.LINE_NAME;
@@ -824,10 +832,9 @@ function dayDiff(a,b){
         /* ================= LOOP TASKS ================= */
 
         let i = 0;
-        console.log("task total", tasks.length);
+        console.log("task total all render", tasks);
         tasks.forEach(task => {
             i++;
-            console.log("console", i);
             const row = rowMap.get(String(task.line_id));
             if (!row) return;
 
@@ -854,9 +861,7 @@ function dayDiff(a,b){
 
             // Hours to render
             let totalHours = durationToHours(task.duration);
-            console.log("totalHours ===", totalHours);
-            console.log("plan id ===", task.plan_id);
-
+          
             // Remove hours before calendar
             if (taskStart < calStart) {
                 totalHours -= dayDiff(taskStart, calStart) * WORKING_HOURS;
@@ -1147,87 +1152,314 @@ function dayDiff(a,b){
     }
 
     // -------------------- GET DURATION --------------------
+
+
     //function getDuration(hover, totalQuantity) {
     //    const { row, cell, hour: startHour } = hover;
-    //    totalQuantity = 100000;
 
-    //    const manpower = Number(row.dataset.manpower) || 1;
-    //    const efficiency = parseFloat(row.dataset.efficiency) || 1;
-    //    const hourlyQty = Number(row.dataset.manpowercapacity) || 1;
+    //    //convert dataset values to numbers
+    //    const manpower = Number(row.dataset.manpower);
 
+    //    const hourlyQty = Number(row.dataset.manpowercapacity) || 0;
+
+    //    let efficiencyRaw = row?.dataset.efficiency || 0;
+    //    const efficiency = efficiencyRaw.toString().includes("%")
+    //        ? parseFloat(efficiencyRaw) / 100
+    //        : parseFloat(efficiencyRaw);
+
+
+
+    //    console.log("------------Duartion calculation------------------ ");
+    //    console.log("totalQuantity   ", totalQuantity);
+    //    console.log("manpower", manpower);
+    //    console.log("efficiency", efficiency);
+    //    console.log("hourlyQty", hourlyQty);
+    //    console.log("------------Duartion calculation------------------ ");
+
+
+    //    if (!hourlyQty || !efficiency) return 0;
+
+    //    // effective hourly output
     //    const effectiveHourlyOutput = efficiency * hourlyQty;
-    //    if (effectiveHourlyOutput <= 0) return 1;
-
+    //    console.log("effectiveHourlyOutput", effectiveHourlyOutput);
+    //    // total hours (DOUBLE)
     //    const totalHours = totalQuantity / effectiveHourlyOutput;
-    //    return Number(totalHours.toFixed(1));
+
+    //    console.log("Number(totalHours.toFixed(1))", Number(totalHours.toFixed(1)));
+
+    //    // return double with 1 decimal (e.g. 30.2)
+
+    //    if (effectiveHourlyOutput <= 0) return null;
+
+    //    // Total hours (double)
+    //    const durationHours = Number(totalHours.toFixed(1));
+
+    //    /* ---------------- END TIME CALCULATION ---------------- */
+    //    const totalStartHours = startHour + durationHours;
+
+    //    const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
+    //    const endHour = Number(Math.floor(totalStartHours % WORKING_HOURS));
+
+
+
+    //    // Calculate end date
+    //    const startDate = new Date(cell.dataset.date);
+
+    //    const endDate = new Date(startDate);
+    //    console.log("end Day before only update ", endDate);
+    //    endDate.setDate(startDate.getDate() + endDayOffset);
+
+    //    console.log("manpower", manpower)
+    //    console.log("startDate", startDate);
+    //    console.log("durationHours", durationHours);
+    //    console.log("endDate", endDate);
+    //    console.log("endDayOffset", endDayOffset);
+    //    console.log("totalStartHours", totalStartHours);
+    //    console.log("endHour", endHour)
+
+    //    return {
+    //        endDate: endDate,
+    //        endHour: endHour,
+    //        duration: durationHours
+    //    };
+
     //}
 
-    function getDuration(hover, totalQuantity) {
-        const { row, cell, hour: startHour } = hover;
-        
-        //convert dataset values to numbers
-        const manpower = Number(row.dataset.manpower);
-        const efficiency = row.dataset.efficiency || 0;
-        const hourlyQty = Number(row.dataset.manpowercapacity) || 0;
+    //function getDurationForBalance(startDate, startHour, hover, totalQuantity) {
 
+    //    const { row } = hover;
+
+    //    const manpower = Number(row?.dataset.manpower) || 0;
+    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+
+    //    // ✅ FIX efficiency
+    //    let efficiencyRaw = row?.dataset.efficiency || 0;
+    //    const efficiency = efficiencyRaw.toString().includes("%")
+    //        ? parseFloat(efficiencyRaw) / 100
+    //        : parseFloat(efficiencyRaw);
+
+    //    console.log("------------ Duration calculation ------------------");
+    //    console.log("efficiency (decimal):", efficiency);
+
+    //    // ❌ Validation
+    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
+    //        return null;
+    //    }
+
+    //    /* ---------- DURATION CALCULATION ---------- */
+
+    //    const effectiveHourlyOutput = hourlyQty * efficiency;
+
+    //    const durationHours = Number(
+    //        (totalQuantity / effectiveHourlyOutput).toFixed(1)
+    //    );
+
+    //    /* ---------- END TIME CALCULATION ---------- */
+
+    //    const totalStartHours = startHour + durationHours;
+    //    const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
+
+    //    const endHour = Number(Math.floor(totalStartHours % WORKING_HOURS));
+    //    console.log("+++++++++   ===   +++++++++++");
+    //    console.log("manpower", manpower);
+    //    console.log("hourlyQty", hourlyQty);
+    //    console.log("end Day Offset", endDayOffset);
+    //    console.log("total Start Hours Offset", totalStartHours);
+    //    console.log("durationHours Hours Offset", durationHours);
+    //    console.log("startHour ", startHour);
+    //    console.log("effectiveHourlyOutput", effectiveHourlyOutput);
+    //    console.log("totalQuantity", totalQuantity);
+    //    console.log("endHour", endHour);
+    //    /* ---------- END DATE CALCULATION ---------- */
+
+    //    const endDate = parseDMY(startDate);
+    //    console.log("end Day before update ", endDate);
+    //    endDate.setDate(endDate.getDate() + endDayOffset);
+
+    //    return {
+    //        endDate,
+    //        endHour,
+    //        duration: durationHours
+    //    };
+    //}
+
+
+    // new duration start //
+    //function calculateDuration({
+    //    startDate,
+    //    startHour,
+    //    row,
+    //    totalQuantity
+    //}) {
+
+    //    console.log("===============startDate=============");
+    //    console.log("startDate", startDate);
+    //    console.log("startHour", startHour);
+    //    console.log("row", row);
+    //    console.log("totalQuantity", totalQuantity);
+    //    console.log("===========================");
+    //    const manpower = Number(row?.dataset.manpower) || 0;
+    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+
+
+    //    let efficiencyRaw = row?.dataset.efficiency || 0;
+    //    const efficiency = efficiencyRaw.toString().includes("%")
+    //        ? parseFloat(efficiencyRaw) / 100
+    //        : parseFloat(efficiencyRaw);
+
+    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
+    //        return null;
+    //    }
+
+    //    /* ---------- DURATION ---------- */
+
+    //    const effectiveHourlyOutput = hourlyQty * efficiency;
+    //    const durationHours = Math.floor( Number(
+    //        (totalQuantity / effectiveHourlyOutput).toFixed(1))
+    //    );
+
+    //    const duration = getDurationInDaysHours(durationHours);
+
+    //    /* ---------- END TIME ---------- */
+
+    //    const totalStartHours = startHour + durationHours;
+    //    const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
+    //    const endHour = Math.floor(totalStartHours % WORKING_HOURS);
+
+    //    /* ---------- END DATE ---------- */
+    //    //startDate 03 - 12 - 2025
+    //    const endDate = new Date(startDate);
+    //    console.log("startDate", startDate);
+    //    console.log("============endDate before", endDate);
+    //    if (!endDate || isNaN(endDate)) return null;
+
+    //    endDate.setDate(endDate.getDate() + endDayOffset);
+    //    console.log("==================   calculation time  =====================");
+    //    console.log("startDate", startDate);
+    //    console.log("endDate", convertToDMY(formatYMD(endDate)));
+    //    console.log("endHour", endHour);
+    //    console.log("durationHours", durationHours);
+    //    console.log("duration", duration);
+    //    console.log("hourlyQty", hourlyQty);
+    //    console.log("manpower", manpower);
+    //    console.log("endDayOffset", endDayOffset);
+    //    console.log("========================================================");
+    //    return {
+    //        startDate: startDate,
+    //        endDate: endDate,
+    //        endHour,
+    //        duration: duration
+    //    };
+    //}
+
+    function calculateDuration({
+        startDate,
+        startHour,
+        row,
+        totalQuantity
+    }) {
+      
+        const manpower = Number(row?.dataset.manpower) || 0;
+        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+
+        let efficiencyRaw = row?.dataset.efficiency || 0;
+        const efficiency = efficiencyRaw.toString().includes("%")
+            ? parseFloat(efficiencyRaw) / 100
+            : parseFloat(efficiencyRaw);
+        console.log("===============  calculateDuration END =============");
+        if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
+            return null;
+        }
        
+        /* ---------- TOTAL HOURS ---------- */
+        const effectiveHourlyOutput = hourlyQty * efficiency;
 
-        console.log("------------Duartion calculation------------------ ");
-        console.log("totalQuantity   ", totalQuantity);
-        console.log("manpower", manpower);
-        console.log("efficiency", parseFloat(efficiency));
-        console.log("hourlyQty", hourlyQty);
-        console.log("------------Duartion calculation------------------ ");
-       
+        // KEEP decimal precision
+        const totalHours = Number(
+            (totalQuantity / effectiveHourlyOutput).toFixed(1)
+        );
 
-        if (!hourlyQty || !efficiency) return 0;
+        /* ---------- DURATION (1.1 format) ---------- */
+        const days = Math.floor(totalHours / WORKING_HOURS);
+        const hours = Math.round(totalHours % WORKING_HOURS);
 
-        // effective hourly output
-        const effectiveHourlyOutput = parseFloat(efficiency) * hourlyQty;
-        console.log("effectiveHourlyOutput", effectiveHourlyOutput);
-        // total hours (DOUBLE)
-        const totalHours = totalQuantity / effectiveHourlyOutput;
+        const duration = Number(`${days}.${hours}`);
 
-        console.log("Number(totalHours.toFixed(1))", Number(totalHours.toFixed(1)));
+        /* ---------- END HOUR & DAY OFFSET ---------- */
+        let endHour = startHour + hours;
+        let endDayOffset = days;
 
-        // return double with 1 decimal (e.g. 30.2)
+        if (endHour >= WORKING_HOURS) {
+            endDayOffset += Math.floor(endHour / WORKING_HOURS);
+            endHour = endHour % WORKING_HOURS;
+        }
 
-        if (effectiveHourlyOutput <= 0) return null;
-
-        // Total hours (double)
-        const durationHours = Number(totalHours.toFixed(1));
-
-        /* ---------------- END TIME CALCULATION ---------------- */
-        const totalStartHours = startHour + durationHours;
-
-        const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
-        const endHour = Number(Math.floor(totalStartHours % WORKING_HOURS));
-
-
-
-        // Calculate end date
-        const startDate = new Date(cell.dataset.date);
-
+        /* ---------- END DATE ---------- */
         const endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + endDayOffset);
+        console.log("============================endDate Before Before", endDate);
+        if (isNaN(endDate)) return null;
+        console.log("============================endDate Before", endDate);
+        endDate.setDate(endDate.getDate() + endDayOffset);
 
-        console.log("manpower", manpower)
-        console.log("startDate", startDate);
-        console.log("durationHours", durationHours);
-        console.log("endDate", endDate);
-        console.log("endDayOffset", endDayOffset);
-        console.log("totalStartHours", totalStartHours);
-        console.log("endHour", endHour)
+            console.log("==================   calculation time  =====================");
+            console.log("startDate", startDate);
+            console.log("endDate", convertToDMY(formatYMD(endDate)));
+            console.log("endHour", endHour);
+            console.log("duration", duration);
+            console.log("hourlyQty", hourlyQty);
+            console.log("Total Quantity", totalQuantity);
+            console.log("manpower", manpower);
+            console.log("endDayOffset", endDayOffset);
+            console.log("========================================================");
+
+
 
         return {
-            endDate: endDate,
-            endHour: endHour,
-            duration: durationHours
+            startDate,
+            endDate,
+            endHour,
+            duration // 👉 1.1 format
         };
-
     }
 
-    // -------------------- MOUSE EVENTS --------------------
+
+    function getDuration(hover, totalQuantity) {
+
+        const { row, cell, hour: startHour } = hover;
+
+        return calculateDuration({
+            startDate: cell.dataset.date, // from cell
+            startHour,
+            row,
+            totalQuantity
+        });
+    }
+
+    function getDurationForBalance(startDate, startHour, hover, totalQuantity) {
+
+        const { row } = hover;
+        console.log("================================================================================getDurationForBalance");
+        console.log("================================================================================startDate", startDate);
+        console.log("================================================================================startDate", startHour);
+        return calculateDuration({
+            startDate,        
+            startHour,
+            row,
+            totalQuantity
+        });
+    }
+
+    function getDurationInDaysHours(totalHours) {
+        const days = Math.floor(totalHours / WORKING_HOURS);
+        const hours = Math.round(totalHours % WORKING_HOURS);
+
+        return Number(`${days}.${hours}`);
+    }    
+
+    //end new duration //
+
+
+   // drag and drop 
     document.addEventListener("mousedown", e => {
         console.log("mouse down");
         const taskEl = e.target.closest(".task");
@@ -1245,9 +1477,6 @@ function dayDiff(a,b){
         mouseY = e.clientY;
 
         showPreviewOptimized(draggedTask, draggedTask.dataset.duration);
-
-
-
 
         document.body.style.userSelect = "none";
     });
@@ -1279,7 +1508,7 @@ function dayDiff(a,b){
                 durationsData = getDuration(hover, quantity);
                 duration = durationsData.duration;
                 showPreviewOptimized(draggedTask, duration);
-            }, 300);
+            }, 700);
         }
     });
 
@@ -1298,9 +1527,6 @@ function dayDiff(a,b){
             return;
         }
 
-       
-
-      
         //moveTaskToRow(draggedTask, row, cell, hour, duration || draggedTask.dataset.duration);
 
         if (duration) {
@@ -1453,7 +1679,7 @@ function dayDiff(a,b){
             console.error("Duration calculation failed:", durationForOrder);
             return null;
         }
-        console.log("durationForOrder", durationForOrder);
+        console.log("==============================durationFor Order", durationForOrder);
         // Create the task object
         const task = {
             plan_id: tasks.length + 1,                   // unique id
@@ -1516,207 +1742,345 @@ function dayDiff(a,b){
         task.end_date = EndDate;
         task.end_hour = EndHour;
         task.duration = duration;
+        //console.clear();
         console.log("task after update in update method", task)
         AllPlansByLineId(LineId, task, lastHover)
     }
 
-    //function AllPlansByLineId(lineId, updatedTask) {
-    //    // Get tasks on the same line (exclude updated task itself)
-    //    const lineTasks = tasks
-    //        .filter(t => t.line_id === lineId)
-    //        .sort((a, b) => {
-    //            const dateA = new Date(a.start_date);
-    //            const dateB = new Date(b.start_date);
 
-    //            // First sort by date
-    //            if (dateA.getTime() !== dateB.getTime()) {
-    //                return dateA - dateB;
-    //            }
+    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
 
-    //            // If same date, sort by hour
-    //            return a.start_hour - b.start_hour;
-    //        });
+    //    const lineTasks = tasks.filter(t =>
+    //        t.line_id === lineId &&
+    //        t.plan_id !== updatedTask.plan_id
+    //    );
 
 
-    //    const results = [];
+    //    console.log(
+    //        "🔍 Checking conflicts for updated plan:",
+    //        updatedTask.plan_id,
+    //        "plan start date:", updatedTask.start_date,
+    //        "plan end date:", updatedTask.end_date
+    //    );
 
-    //    let currentStartDate = updatedTask.start_date;
-    //    let currentStartHour = updatedTask.start_hour;
-    //    let currentEndDate = updatedTask.end_date;
-    //    let currentEndHour = updatedTask.end_hour;
-
-    //    console.log("updated task Start", currentStartDate);
-    //    console.log("updated task Start Hour", currentStartHour);
-    //    console.log("updated task End Date", currentEndDate);
-    //    console.log("updated task Start End Hour", currentEndHour);
-
-    //    const updatedStart = toDateTime(
+    //    const updatedStart = toTimelineValue(
     //        updatedTask.start_date,
     //        updatedTask.start_hour
     //    );
 
-    //    const updatedEnd = toDateTime(
+    //    const updatedEnd = toTimelineValue(
     //        updatedTask.end_date,
     //        updatedTask.end_hour
     //    );
 
-    //    let cursorStart = updatedEnd;
-    //    console.clear();
-    //    console.log(" updatedTask end_date", updatedTask.end_date);
-    //    console.log("endhour", updatedTask.end_hour)
-    //    console.log("updatedStart", updatedStart);
-    //    console.log("updatedEnd", updatedEnd);
-    //    console.log("lineTasks", updatedTask);
-
-    //    console.log("updated task Start", currentStartDate);
-    //    console.log("updated task Start Hour", currentStartHour);
-    //    console.log("updated task End Date", currentEndDate);
-    //    console.log("updated task End Hour", currentEndHour);
+    //    let hasConflict = false;
+    //    let count = 1;
+    //    let startDate = updatedTask.start_date;
     //    for (const task of lineTasks) {
-    //        const taskStartDate = task.start_date;
-    //        const taskStartHour = task.start_hour;
-    //        const taskEndHour = task.end_hour;
-    //        const taskEndDate = task.end_date;
+    //        console.log("count", count);
+    //        count++;
+    //        const taskStart = toTimelineValue(
+    //            task.start_date,
+    //            task.start_hour
+    //        );
 
-    //        const isOverlap =
-    //            (
+    //        const taskEnd = toTimelineValue(
+    //            task.end_date,
+    //            task.end_hour
+    //        );
 
-    //                (
-    //                    currentStartDate < taskStartDate ||
-    //                    (currentStartDate === taskStartDate && (currentStartHour < taskStartHour || currentStartHour > taskStartHour ))
-    //                )
-    //                &&
+    //        // ✅ ONLY correct overlap rule
+    //        const isConflict =
+    //            updatedStart < taskEnd &&
+    //            updatedEnd > taskStart;
 
-    //                (
-    //                    currentEndDate > taskEndDate ||
-    //                        (currentEndDate === taskEndDate && (currentEndHour > taskEndHour || currentEndHour < taskEndHour))
-    //                )
+    //        if (isConflict) {
+    //            hasConflict = true;
+
+    //            console.log("❌ DIRECT CONFLICT DETECTED");
+    //            console.log("Updated Plan ID:", updatedTask.plan_id);
+    //            console.log("Conflicting Plan ID:", task.plan_id);
+    //            console.log(
+    //                "Task Range:",
+    //                `${task.start_date} ${task.start_hour} → ${task.end_date} ${task.end_hour}`
     //            );
+    //            console.log("-----------------++++++++------------------");
+    //            console.log("------------------------- lasttask----------", task);
+
+    //            const hover = lastHover;
+    //            console.log("------------------------- lasthover----------", hover);
+
+    //            if (task.start_date < startDate) {
+
+    //                console.log("draged plan update")
+    //                const drgTask = tasks.find(t => t.plan_id === updatedTask.plan_id);
+    //                if (!drgTask) return;
+    //                console.log("drgTask", drgTask);
+    //                const durationForPlan = getDurationForBalance(task.end_date, parseInt(task.end_hour, 10), hover, drgTask.plan_qnty);
+    //                console.log("durationForPlan draged:", durationForPlan);
+    //                drgTask.end_date = convertToDMY(formatYMD(durationForPlan.endDate));
+    //                drgTask.end_hour = durationForPlan.endHour,
+    //                    drgTask.start_date = task.end_date;
+    //                drgTask.start_hour = parseInt(task.end_hour, 10);
+    //                drgTask.duration = durationForPlan.duration;
+    //                startDate = task.end_date;
+    //                console.log("drgTask", drgTask);
+    //            } else {
+    //                console.log("loop plan update")
+    //                const durationForOrder = getDurationForBalance(updatedTask.end_date, parseInt(updatedTask.end_hour, 10), hover, updatedTask.plan_qnty);
+    //                console.log("durationForPlan loop:", durationForOrder);
+    //                task.end_date = convertToDMY(formatYMD(durationForOrder.endDate));
+    //                task.end_hour = durationForOrder.endHour,
+    //                task.start_date = updatedTask.end_date;
+    //                task.start_hour =parseInt(updatedTask.end_hour, 10);
+    //                console.log("update loop drg Task", task);
+    //                startDate = updatedTask.end_date;
+    //            }
 
 
 
-    //        if (isOverlap) {
-    //            console.log("===============task Start date==============", task.plan_id);
-    //            console.log(" task Start date", taskStartDate);
-    //            console.log(" task Start Hour", taskStartHour);
-    //            console.log(" task End Date", taskEndDate);
-    //            console.log(" task  End Hour", taskEndHour);
-    //            console.log(" task line id", task.line_id);
-    //            console.log(" task line duration", task.duration);
 
 
     //        }
-
-
     //    }
 
-    //    // Remaining segment after last overlap
-    //    if (cursorStart < updatedEnd) {
-    //        results.push({
-    //            ...updatedTask,
-    //            start_date: formatDate(cursorStart),
-    //            start_hour: cursorStart.getHours(),
-    //            end_date: updatedTask.end_date,
-    //            end_hour: updatedTask.end_hour
+    //    if (!hasConflict) {
+    //        console.log("✅ No conflicts detected");
+    //    } else {
+    //        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+    //        const toDate = parseDateSafe($('input[name="ToDate"]').val());
+    //        requestAnimationFrame(() => {
+    //            renderTasks(fromDate, toDate)
     //        });
     //    }
-    //    console.log("all line sorted");
-    //    console.log("result", results);
-    //    return results;
+
+
+
     //}
 
+    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
+
+    //    const lineTasks = tasks
+    //        .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
+    //        .sort((a, b) =>
+    //            toTimelineValue(a.start_date, a.start_hour) -
+    //            toTimelineValue(b.start_date, b.start_hour)
+    //        );
+
+    //    let hasConflict = false;
+
+    //    // 🔒 Anchor = updated task END
+    //    let chainEndDate = updatedTask.end_date;
+    //    let chainEndHour = updatedTask.end_hour;
+    //    let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+
+    //    for (const task of lineTasks) {
+
+    //        const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
+
+    //        // ✅ ONLY correct conflict rule
+    //        if (taskStartTimeline >= chainEndTimeline) continue;
+
+    //        console.log("❌ CONFLICT:", task.plan_id);
+    //        hasConflict = true;
+
+    //        const pushed = pushTaskAfter(
+    //            task,
+    //            chainEndDate,
+    //            chainEndHour,
+    //            lastHover
+    //        );
+
+    //        if (!pushed) continue;
+
+    //        // ⏩ advance chain using RETURNED values
+    //        chainEndDate = pushed.endDateDMY;
+    //        chainEndHour = pushed.endHour;
+    //        chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+    //        console.clear();
+    //        console.log("taskStartTimeline", taskStartTimeline);
+    //        console.log("chainEndTimeline", chainEndTimeline);
+    //    }
+
+
+
+    //    if (hasConflict) {
+    //        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+    //        const toDate = parseDateSafe($('input[name="ToDate"]').val());
+
+    //        requestAnimationFrame(() => {
+    //            renderTasks(fromDate, toDate);
+    //        });
+    //    } else {
+    //        console.log("✅ No conflicts detected");
+    //    }
+    //}
+
+
+ 
+
+
     function AllPlansByLineId(lineId, updatedTask, lastHover) {
-
-        const lineTasks = tasks.filter(t =>
-            t.line_id === lineId &&
-            t.plan_id !== updatedTask.plan_id
-        );
-
-        console.clear();
-        console.log(
-            "🔍 Checking conflicts for updated plan:",
-            updatedTask.plan_id,
-            "plan start date:", updatedTask.start_date,
-            "plan end date:", updatedTask.end_date
-        );
-
-        const updatedStart = toTimelineValue(
-            updatedTask.start_date,
-            updatedTask.start_hour
-        );
-
-        const updatedEnd = toTimelineValue(
-            updatedTask.end_date,
-            updatedTask.end_hour
-        );
+        // Get all tasks in the line, excluding the updated task
+        const lineTasks = tasks
+            .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
+            .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
 
         let hasConflict = false;
 
+        // Chain starts from the updated task's END
+        let chainEndDate = updatedTask.end_date;
+        let chainEndHour = updatedTask.end_hour;
+        let chainStartDate = updatedTask.start_date;
+        let chainStartHour = updatedTask.start_hour;
+        let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+        let chainStartTimeline = toTimelineValue(chainStartDate, chainStartHour);
+
+        console.log("🟢 Chain start:", chainEndDate, chainEndHour);
+
         for (const task of lineTasks) {
+            const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
+            const taskEndTimeline = toTimelineValue(task.end_date, task.end_hour);
 
-            const taskStart = toTimelineValue(
-                task.start_date,
-                task.start_hour
+            console.log(`🔍 Checking task ${task.plan_id} | Start: ${taskStartTimeline} | End: ${taskEndTimeline} | ChainEnd: ${chainEndTimeline}`);
+
+            // Task is fully before the chain → ignore
+            //if (taskEndTimeline <= chainEndTimeline) continue;
+
+            //// Task starts after chain → safe, chain remains
+            //if (taskStartTimeline >= ChainStartTime) continue;
+
+            const noOverlap =
+                taskStartTimeline >= chainEndTimeline ||
+                taskEndTimeline <= chainStartTimeline;
+            console.log("no Over lap", noOverlap);
+            console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
+            console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
+            if (noOverlap) continue;
+
+            // REAL overlap → push task
+            console.log("❌ CONFLICT → pushing", task.plan_id);
+            hasConflict = true;
+
+            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
+
+            // If push fails, skip but continue chain
+            if (!pushed) continue;
+
+            // Extend chain to new task end
+            chainEndDate = pushed.endDateDMY;
+            chainEndHour = pushed.endHour;
+            chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+
+            console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
+        }
+
+        // If conflicts occurred, re-render tasks
+        if (hasConflict) {
+            const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+            const toDate = parseDateSafe($('input[name="ToDate"]').val());
+
+            requestAnimationFrame(() => renderTasks(fromDate, toDate));
+        } else {
+            console.log("✅ No conflicts detected");
+        }
+    }
+
+
+
+
+
+    function pushTaskAfter(task, startDate, startHour, hover) {
+
+        const result = getDurationForBalance(
+            convertToDMY(startDate),
+            parseInt(startHour, 10),
+            hover,
+            task.plan_qnty
+        );
+        console.log("=======================================result", result);
+        if (!result) return null;
+
+        const endDateDMY = convertToDMY(formatYMD(result.endDate));
+        console.log("=======================================endDateDMY", endDateDMY, "================plan", task.plan_id);
+        task.start_date = startDate;
+        task.start_hour = parseInt(startHour, 10);
+        task.end_date = endDateDMY;
+        task.end_hour = result.endHour;
+        task.duration = result.duration;
+
+        // ✅ return normalized values for chaining
+        return {
+            endDateDMY,
+            endHour: result.endHour,
+            duration: result.duration
+        };
+    }
+
+
+
+
+
+    //    //console.clear();
+    //    //const d = new Date(1772064000000);
+
+    //    //console.log("UTC:", d.toISOString());
+    //    //console.log("Local:", d.toString());
+    //    //console.log("Date only:", d.toISOString().split("T")[0]);
+    //    //console.log("Hour (local):", d.getHours());
+    //    //console.log("Hour (UTC):", d.getUTCHours());
+
+
+
+    function normalizeDate(dateVal) {
+        if (!dateVal) return null;
+
+        // Already Date
+        if (dateVal instanceof Date) {
+            return new Date(
+                dateVal.getFullYear(),
+                dateVal.getMonth(),
+                dateVal.getDate()
             );
+        }
 
-            const taskEnd = toTimelineValue(
-                task.end_date,
-                task.end_hour
-            );
-
-            // ✅ ONLY correct overlap rule
-            const isConflict =
-                updatedStart < taskEnd &&
-                updatedEnd > taskStart;
-
-            if (isConflict) {
-                hasConflict = true;
-
-                console.log("❌ DIRECT CONFLICT DETECTED");
-                console.log("Updated Plan ID:", updatedTask.plan_id);
-                console.log("Conflicting Plan ID:", task.plan_id);
-                console.log(
-                    "Task Range:",
-                    `${task.start_date} ${task.start_hour} → ${task.end_date} ${task.end_hour}`
-                );
-                console.log("-----------------------------------");
-                console.log("------------------------- lastHover----------", task);
-
-                const hover = lastHover;
-                const durationForOrder = getDuration(hover, task.Quantity);
-
-                task.end_date = convertToDMY(formatYMD(durationForOrder.endDate));
-                task.end_hour = durationForOrder.endHour,
-                task.start_date = updatedTask.end_date;
-                task.start_hour = updatedTask.end_hour;
-
-
+        // DD-MM-YYYY
+        if (typeof dateVal === "string" && dateVal.includes("-")) {
+            const parts = dateVal.split("-");
+            if (parts[0].length === 2) {
+                const [dd, mm, yyyy] = parts.map(Number);
+                return new Date(yyyy, mm - 1, dd);
             }
         }
 
-        if (!hasConflict) {
-            console.log("✅ No conflicts detected");
+        // ISO fallback
+        const d = new Date(dateVal);
+        if (!isNaN(d)) {
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
         }
 
-        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-        const toDate = parseDateSafe($('input[name="ToDate"]').val());
-        //requestAnimationFrame(() => {
-        //    renderTasks(fromDate, toDate)
-        //});
-       
+        return null;
     }
 
 
+    function toTimelineValue(dateVal, workingHourIndex) {
 
-    function toTimelineValue(dateStr, hour) {
-        const [dd, mm, yyyy] = dateStr.split("-").map(Number);
+        const hour = Number(workingHourIndex);
+        if (Number.isNaN(hour)) {
+            console.error("❌ Invalid hour:", workingHourIndex);
+            return NaN;
+        }
 
-        // Create real date safely
-        const date = new Date(Date.UTC(yyyy, mm - 1, dd));
+        const d = normalizeDate(dateVal);
+        if (!d) {
+            console.error("❌ Invalid date:", dateVal);
+            return NaN;
+        }
 
-        // Convert working hour to milliseconds
-        return date.getTime() + hour * 60 * 60 * 1000;
+        return d.getTime() + hour * 60 * 60 * 1000;
     }
+
+
 
 
 
