@@ -1916,78 +1916,229 @@ function dayDiff(a,b){
     //    }
     //}
 
-
+    let renderTimeout = null;
+    let rafId = null;
  
 
 
+    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
+    //    // Get all tasks in the line, excluding the updated task
+    //    const lineTasks = tasks
+    //        .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
+    //        .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
+
+    //    let hasConflict = false;
+
+    //    // Chain starts from the updated task's END
+    //    let chainEndDate = updatedTask.end_date;
+    //    let chainEndHour = updatedTask.end_hour;
+    //    let chainStartDate = updatedTask.start_date;
+    //    let chainStartHour = updatedTask.start_hour;
+    //    let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+    //    let chainStartTimeline = toTimelineValue(chainStartDate, chainStartHour);
+    //    const updatedStartTimeline = toTimelineValue(
+    //        updatedTask.start_date,
+    //        updatedTask.start_hour
+    //    );
+
+
+    //    console.log("🟢 Chain start:", chainEndDate, chainEndHour);
+
+    //    for (const task of lineTasks) {
+    //        const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
+    //        const taskEndTimeline = toTimelineValue(task.end_date, task.end_hour);
+
+    //        console.log(`🔍 Checking task ${task.plan_id} | Start: ${taskStartTimeline} | End: ${taskEndTimeline} | ChainEnd: ${chainEndTimeline}`);
+
+    //        // Task is fully before the chain → ignore
+    //        //if (taskEndTimeline <= chainEndTimeline) continue;
+
+    //        //// Task starts after chain → safe, chain remains
+    //        //if (taskStartTimeline >= ChainStartTime) continue;
+
+    //        const noOverlap =
+    //            taskStartTimeline >= chainEndTimeline ||
+    //            taskEndTimeline <= chainStartTimeline;
+    //        console.clear();
+    //        console.log("no Over lap", noOverlap);
+    //        console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
+    //        console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
+    //        if (noOverlap) continue;
+
+    //        // REAL overlap → push task
+    //        console.log("❌ CONFLICT → pushing", task.plan_id);
+    //        hasConflict = true;
+    //        // ✅ UPDATED task placed AFTER current chain → STOP
+    //        if (taskStartTimeline <= chainStartTimeline) {
+    //            console.log("================================================================================");
+    //            console.log("✅ Updated task overlaps chain start");
+    //            console.log("➡ Moving updated task to after chain end");
+
+    //            // Move updated task to chain end
+    //            updatedTask.start_date = chainEndDate;
+    //            updatedTask.start_hour = chainEndHour;
+
+    //            // Recalculate end date/hour if duration exists
+    //            const result = getDurationForBalance(
+    //                convertToDMY(updatedTask.start_date),
+    //                parseInt(updatedTask.start_hour, 10),
+    //                lastHover,
+    //                updatedTask.plan_qnty
+    //            );
+    //             updatedTask.duration_hours = result.duration;
+
+
+    //            updatedTask.end_date = result.endDateDMY;
+    //            updatedTask.end_hour = result.endHour;
+
+    //            console.log("✅ Updated task pushed to:");
+    //            console.log("Start:", updatedTask.start_date, updatedTask.start_hour);
+    //            console.log("End:", updatedTask.end_date, updatedTask.end_hour);
+
+    //            renderAfterChangeDebounced();
+    //            return;
+    //        }
+    //            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
+
+
+
+    //        // If push fails, skip but continue chain
+    //        if (!pushed) continue;
+
+    //        // Extend chain to new task end
+    //        chainEndDate = pushed.endDateDMY;
+    //        chainEndHour = pushed.endHour;
+    //        chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+
+    //        console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
+    //    }
+
+    //    // If conflicts occurred, re-render tasks
+    //    if (hasConflict) {
+    //        //const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+    //        //const toDate = parseDateSafe($('input[name="ToDate"]').val());
+
+    //        //requestAnimationFrame(() => renderTasks(fromDate, toDate));
+    //        renderAfterChangeDebounced();
+    //    } else {
+    //        console.log("✅ No conflicts detected");
+    //    }
+    //}
+
+
+
+
+
+    //function pushTaskAfter(task, startDate, startHour, hover) {
+
+    //    const result = getDurationForBalance(
+    //        convertToDMY(startDate),
+    //        parseInt(startHour, 10),
+    //        hover,
+    //        task.plan_qnty
+    //    );
+    //    console.log("=======================================result", result);
+    //    if (!result) return null;
+
+    //    const endDateDMY = convertToDMY(formatYMD(result.endDate));
+    //    console.log("=======================================endDateDMY", endDateDMY, "================plan", task.plan_id);
+    //    task.start_date = startDate;
+    //    task.start_hour = parseInt(startHour, 10);
+    //    task.end_date = endDateDMY;
+    //    task.end_hour = result.endHour;
+    //    task.duration = result.duration;
+
+    //    // ✅ return normalized values for chaining
+    //    return {
+    //        endDateDMY,
+    //        endHour: result.endHour,
+    //        duration: result.duration
+    //    };
+    //}
+
+
     function AllPlansByLineId(lineId, updatedTask, lastHover) {
-        // Get all tasks in the line, excluding the updated task
+
         const lineTasks = tasks
             .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
-            .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
+            .sort((a, b) =>
+                toTimelineValue(a.start_date, a.start_hour) -
+                toTimelineValue(b.start_date, b.start_hour)
+            );
 
         let hasConflict = false;
 
-        // Chain starts from the updated task's END
-        let chainEndDate = updatedTask.end_date;
-        let chainEndHour = updatedTask.end_hour;
-        let chainStartDate = updatedTask.start_date;
-        let chainStartHour = updatedTask.start_hour;
-        let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-        let chainStartTimeline = toTimelineValue(chainStartDate, chainStartHour);
+        const updatedStartTimeline = toTimelineValue(
+            updatedTask.start_date,
+            updatedTask.start_hour
+        );
 
-        console.log("🟢 Chain start:", chainEndDate, chainEndHour);
+        const updatedEndTimeline = toTimelineValue(
+            updatedTask.end_date,
+            updatedTask.end_hour
+        );
+
+        // ⛓️ Chain starts empty
+        let chainEndDate = null;
+        let chainEndHour = null;
+        let chainEndTimeline = null;
 
         for (const task of lineTasks) {
+
             const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
             const taskEndTimeline = toTimelineValue(task.end_date, task.end_hour);
 
-            console.log(`🔍 Checking task ${task.plan_id} | Start: ${taskStartTimeline} | End: ${taskEndTimeline} | ChainEnd: ${chainEndTimeline}`);
+            const overlap =
+                updatedStartTimeline < taskEndTimeline &&
+                updatedEndTimeline > taskStartTimeline;
 
-            // Task is fully before the chain → ignore
-            //if (taskEndTimeline <= chainEndTimeline) continue;
+            if (!overlap) continue;
 
-            //// Task starts after chain → safe, chain remains
-            //if (taskStartTimeline >= ChainStartTime) continue;
-
-            const noOverlap =
-                taskStartTimeline >= chainEndTimeline ||
-                taskEndTimeline <= chainStartTimeline;
-            console.log("no Over lap", noOverlap);
-            console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
-            console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
-            if (noOverlap) continue;
-
-            // REAL overlap → push task
-            console.log("❌ CONFLICT → pushing", task.plan_id);
+            console.log("❌ Conflict with task", task.plan_id);
             hasConflict = true;
 
-            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
+            // 🟢 Initialize chain from FIRST conflicting task
+            if (!chainEndTimeline) {
+                chainEndDate = task.end_date;
+                chainEndHour = task.end_hour;
+                chainEndTimeline = taskEndTimeline;
+                continue;
+            }
 
-            // If push fails, skip but continue chain
+            // ⛓️ Cascade existing task
+            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
             if (!pushed) continue;
 
-            // Extend chain to new task end
             chainEndDate = pushed.endDateDMY;
             chainEndHour = pushed.endHour;
             chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-
-            console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
         }
 
-        // If conflicts occurred, re-render tasks
-        if (hasConflict) {
-            const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-            const toDate = parseDateSafe($('input[name="ToDate"]').val());
+        // 🚀 Move UPDATED task AFTER chain
+        if (hasConflict && chainEndTimeline) {
 
-            requestAnimationFrame(() => renderTasks(fromDate, toDate));
-        } else {
-            console.log("✅ No conflicts detected");
+            console.log("➡ Moving updated task after chain end");
+
+            updatedTask.start_date = chainEndDate;
+            updatedTask.start_hour = chainEndHour;
+
+            const result = getDurationForBalance(
+                convertToDMY(updatedTask.start_date),
+                parseInt(updatedTask.start_hour, 10),
+                lastHover,
+                updatedTask.plan_qnty
+            );
+
+            updatedTask.duration_hours = result.duration;
+            updatedTask.end_date = result.endDateDMY;
+            updatedTask.end_hour = result.endHour;
+
+            renderAfterChangeDebounced();
+            return;
         }
+
+        console.log("✅ No conflicts detected");
     }
-
-
-
 
 
     function pushTaskAfter(task, startDate, startHour, hover) {
@@ -1998,18 +2149,17 @@ function dayDiff(a,b){
             hover,
             task.plan_qnty
         );
-        console.log("=======================================result", result);
+
         if (!result) return null;
 
         const endDateDMY = convertToDMY(formatYMD(result.endDate));
-        console.log("=======================================endDateDMY", endDateDMY, "================plan", task.plan_id);
+
         task.start_date = startDate;
         task.start_hour = parseInt(startHour, 10);
         task.end_date = endDateDMY;
         task.end_hour = result.endHour;
-        task.duration = result.duration;
+        task.duration_hours = result.duration;
 
-        // ✅ return normalized values for chaining
         return {
             endDateDMY,
             endHour: result.endHour,
@@ -2017,6 +2167,24 @@ function dayDiff(a,b){
         };
     }
 
+
+
+    function renderAfterChangeDebounced(delay = 50) {
+
+        if (renderTimeout) clearTimeout(renderTimeout);
+        if (rafId) cancelAnimationFrame(rafId);
+       
+        console.log("renderAfterChangeDebounced");
+        renderTimeout = setTimeout(() => {
+            rafId = requestAnimationFrame(() => {
+                const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+                const toDate = parseDateSafe($('input[name="ToDate"]').val());
+
+                renderTasks(fromDate, toDate);
+                rafId = null;
+            });
+        }, delay);
+    }
 
 
 
