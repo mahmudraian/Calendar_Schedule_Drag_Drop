@@ -390,6 +390,26 @@
         height: 100%;
         width: 100%;
     }
+
+    #contextMenu {
+        position: fixed; /* 🔥 prevents clipping */
+        display: none;
+        z-index: 999999;
+        background: #fff;
+        border: 1px solid #ccc;
+        min-width: 130px;
+        box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    }
+
+        #contextMenu li {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+            #contextMenu li:hover {
+                background: #f0f0f0;
+            }
+
 </style>
 <div style="margin-bottom:15px;">
 
@@ -420,32 +440,40 @@
                 </div>
             </div>
         </div>*@
-    <div class="calendar-page">
+<div class="calendar-page">
 
-        <!-- SIDEBAR -->
-        <div id="orderSidebar" class="sidebar">
-            <div class="sidebar-header">
-                <h4>Order List</h4>
-                <button id="closeSidebar">❮</button>
-            </div>
-
-            <ul id="sidebar-orders">
-                <li>Loading...</li>
-            </ul>
+    <!-- SIDEBAR -->
+    <div id="orderSidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h4>Order List</h4>
+            <button id="closeSidebar">❮</button>
         </div>
 
-        <!-- OPEN HANDLE -->
-        <div id="openSidebar" class="sidebar-handle">❯</div>
-
-        <!-- CALENDAR -->
-        <div class="calendar-area">
-            <div class="calendar-wrapper">
-                <div id="calendar-header" class="calendar-header"></div>
-                <div id="calendar-body" class="calendar-body"></div>
-            </div>
-        </div>
-
+        <ul id="sidebar-orders">
+            <li>Loading...</li>
+        </ul>
     </div>
+
+    <!-- OPEN HANDLE -->
+    <div id="openSidebar" class="sidebar-handle">❯</div>
+
+    <!-- CALENDAR -->
+    <div class="calendar-area">
+        <div class="calendar-wrapper">
+            <div id="calendar-header" class="calendar-header"></div>
+            <div id="calendar-body" class="calendar-body">
+
+
+            </div>
+        </div>
+    </div>
+
+    <ul id="contextMenu">
+        <li data-action="edit">Edit</li>
+        <li data-action="delete">Delete</li>
+    </ul>
+
+</div>
 
 
 
@@ -1462,8 +1490,12 @@ function dayDiff(a,b){
    // drag and drop 
     document.addEventListener("mousedown", e => {
         console.log("mouse down");
+        if (e.button !== 0) return;
         const taskEl = e.target.closest(".task");
         if (!taskEl) return;
+       
+       
+
 
         draggedTask = taskEl;
         isDragging = true;
@@ -1921,224 +1953,112 @@ function dayDiff(a,b){
  
 
 
-    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
-    //    // Get all tasks in the line, excluding the updated task
-    //    const lineTasks = tasks
-    //        .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
-    //        .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
-
-    //    let hasConflict = false;
-
-    //    // Chain starts from the updated task's END
-    //    let chainEndDate = updatedTask.end_date;
-    //    let chainEndHour = updatedTask.end_hour;
-    //    let chainStartDate = updatedTask.start_date;
-    //    let chainStartHour = updatedTask.start_hour;
-    //    let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-    //    let chainStartTimeline = toTimelineValue(chainStartDate, chainStartHour);
-    //    const updatedStartTimeline = toTimelineValue(
-    //        updatedTask.start_date,
-    //        updatedTask.start_hour
-    //    );
-
-
-    //    console.log("🟢 Chain start:", chainEndDate, chainEndHour);
-
-    //    for (const task of lineTasks) {
-    //        const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
-    //        const taskEndTimeline = toTimelineValue(task.end_date, task.end_hour);
-
-    //        console.log(`🔍 Checking task ${task.plan_id} | Start: ${taskStartTimeline} | End: ${taskEndTimeline} | ChainEnd: ${chainEndTimeline}`);
-
-    //        // Task is fully before the chain → ignore
-    //        //if (taskEndTimeline <= chainEndTimeline) continue;
-
-    //        //// Task starts after chain → safe, chain remains
-    //        //if (taskStartTimeline >= ChainStartTime) continue;
-
-    //        const noOverlap =
-    //            taskStartTimeline >= chainEndTimeline ||
-    //            taskEndTimeline <= chainStartTimeline;
-    //        console.clear();
-    //        console.log("no Over lap", noOverlap);
-    //        console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
-    //        console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
-    //        if (noOverlap) continue;
-
-    //        // REAL overlap → push task
-    //        console.log("❌ CONFLICT → pushing", task.plan_id);
-    //        hasConflict = true;
-    //        // ✅ UPDATED task placed AFTER current chain → STOP
-    //        if (taskStartTimeline <= chainStartTimeline) {
-    //            console.log("================================================================================");
-    //            console.log("✅ Updated task overlaps chain start");
-    //            console.log("➡ Moving updated task to after chain end");
-
-    //            // Move updated task to chain end
-    //            updatedTask.start_date = chainEndDate;
-    //            updatedTask.start_hour = chainEndHour;
-
-    //            // Recalculate end date/hour if duration exists
-    //            const result = getDurationForBalance(
-    //                convertToDMY(updatedTask.start_date),
-    //                parseInt(updatedTask.start_hour, 10),
-    //                lastHover,
-    //                updatedTask.plan_qnty
-    //            );
-    //             updatedTask.duration_hours = result.duration;
-
-
-    //            updatedTask.end_date = result.endDateDMY;
-    //            updatedTask.end_hour = result.endHour;
-
-    //            console.log("✅ Updated task pushed to:");
-    //            console.log("Start:", updatedTask.start_date, updatedTask.start_hour);
-    //            console.log("End:", updatedTask.end_date, updatedTask.end_hour);
-
-    //            renderAfterChangeDebounced();
-    //            return;
-    //        }
-    //            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
-
-
-
-    //        // If push fails, skip but continue chain
-    //        if (!pushed) continue;
-
-    //        // Extend chain to new task end
-    //        chainEndDate = pushed.endDateDMY;
-    //        chainEndHour = pushed.endHour;
-    //        chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-
-    //        console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
-    //    }
-
-    //    // If conflicts occurred, re-render tasks
-    //    if (hasConflict) {
-    //        //const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-    //        //const toDate = parseDateSafe($('input[name="ToDate"]').val());
-
-    //        //requestAnimationFrame(() => renderTasks(fromDate, toDate));
-    //        renderAfterChangeDebounced();
-    //    } else {
-    //        console.log("✅ No conflicts detected");
-    //    }
-    //}
-
-
-
-
-
-    //function pushTaskAfter(task, startDate, startHour, hover) {
-
-    //    const result = getDurationForBalance(
-    //        convertToDMY(startDate),
-    //        parseInt(startHour, 10),
-    //        hover,
-    //        task.plan_qnty
-    //    );
-    //    console.log("=======================================result", result);
-    //    if (!result) return null;
-
-    //    const endDateDMY = convertToDMY(formatYMD(result.endDate));
-    //    console.log("=======================================endDateDMY", endDateDMY, "================plan", task.plan_id);
-    //    task.start_date = startDate;
-    //    task.start_hour = parseInt(startHour, 10);
-    //    task.end_date = endDateDMY;
-    //    task.end_hour = result.endHour;
-    //    task.duration = result.duration;
-
-    //    // ✅ return normalized values for chaining
-    //    return {
-    //        endDateDMY,
-    //        endHour: result.endHour,
-    //        duration: result.duration
-    //    };
-    //}
-
-
     function AllPlansByLineId(lineId, updatedTask, lastHover) {
-
+        // Get all tasks in the line, excluding the updated task
         const lineTasks = tasks
             .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
-            .sort((a, b) =>
-                toTimelineValue(a.start_date, a.start_hour) -
-                toTimelineValue(b.start_date, b.start_hour)
-            );
+            .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
 
         let hasConflict = false;
+        let IsUpdateMain = false;
 
+        // Chain starts from the updated task's END
+        let chainEndDate = updatedTask.end_date;
+        let chainEndHour = updatedTask.end_hour;
+        let chainStartDate = updatedTask.start_date;
+        let chainStartHour = updatedTask.start_hour;
+        let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+        let chainStartTimeline = toTimelineValue(chainStartDate, chainStartHour);
         const updatedStartTimeline = toTimelineValue(
             updatedTask.start_date,
             updatedTask.start_hour
         );
 
-        const updatedEndTimeline = toTimelineValue(
-            updatedTask.end_date,
-            updatedTask.end_hour
-        );
 
-        // ⛓️ Chain starts empty
-        let chainEndDate = null;
-        let chainEndHour = null;
-        let chainEndTimeline = null;
+        console.log("🟢 Chain start:", chainEndDate, chainEndHour);
 
         for (const task of lineTasks) {
-
             const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
             const taskEndTimeline = toTimelineValue(task.end_date, task.end_hour);
 
-            const overlap =
-                updatedStartTimeline < taskEndTimeline &&
-                updatedEndTimeline > taskStartTimeline;
+            console.log(`🔍 Checking task ${task.plan_id} | Start: ${taskStartTimeline} | End: ${taskEndTimeline} | ChainEnd: ${chainEndTimeline}`);
 
-            if (!overlap) continue;
+            // Task is fully before the chain → ignore
+            //if (taskEndTimeline <= chainEndTimeline) continue;
 
-            console.log("❌ Conflict with task", task.plan_id);
+            //// Task starts after chain → safe, chain remains
+            //if (taskStartTimeline >= ChainStartTime) continue;
+
+            const noOverlap =
+                taskStartTimeline >= chainEndTimeline ||
+                taskEndTimeline <= chainStartTimeline;
+           
+            console.log("no Over lap", noOverlap);
+            console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
+            console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
+            if (noOverlap) continue;
+
+            // REAL overlap → push task
+            console.log("❌ CONFLICT → pushing", task.plan_id);
             hasConflict = true;
-
-            // 🟢 Initialize chain from FIRST conflicting task
-            if (!chainEndTimeline) {
+            // ✅ UPDATED task placed AFTER current chain → STOP
+            if (taskStartTimeline <= chainStartTimeline) {
+                console.log("================================================================================");
+                console.log("✅ Updated task overlaps chain start");
+                IsUpdateMain = true;
                 chainEndDate = task.end_date;
                 chainEndHour = task.end_hour;
-                chainEndTimeline = taskEndTimeline;
-                continue;
+                break;
+
+            } else {
+                const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
+
+
+
+                // If push fails, skip but continue chain
+                if (!pushed) continue;
+
+                // Extend chain to new task end
+                chainEndDate = pushed.endDateDMY;
+                chainEndHour = pushed.endHour;
+                chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+
+                console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
             }
-
-            // ⛓️ Cascade existing task
-            const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
-            if (!pushed) continue;
-
-            chainEndDate = pushed.endDateDMY;
-            chainEndHour = pushed.endHour;
-            chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
+            
         }
-
-        // 🚀 Move UPDATED task AFTER chain
-        if (hasConflict && chainEndTimeline) {
-
-            console.log("➡ Moving updated task after chain end");
-
-            updatedTask.start_date = chainEndDate;
-            updatedTask.start_hour = chainEndHour;
-
+        if (IsUpdateMain) {
+            const updatedNewTask = tasks
+                .find(t => t.plan_id == updatedTask.plan_id);
+            updatedNewTask.start_date = chainEndDate;
+            updatedNewTask.start_hour = chainEndHour;
             const result = getDurationForBalance(
-                convertToDMY(updatedTask.start_date),
-                parseInt(updatedTask.start_hour, 10),
+                convertToDMY(chainEndDate),
+                parseInt(chainEndHour, 10),
                 lastHover,
-                updatedTask.plan_qnty
+                updatedNewTask.plan_qnty
             );
-
-            updatedTask.duration_hours = result.duration;
-            updatedTask.end_date = result.endDateDMY;
-            updatedTask.end_hour = result.endHour;
-
-            renderAfterChangeDebounced();
-            return;
+            console.log("updatedNewTask result", result);
+            updatedNewTask.end_date = convertToDMY(formatYMD(result.endDate));
+            updatedNewTask.end_hour = result.endHour;
+            updatedNewTask.duration = result.duration; 
+            console.log("➡ Moving updated task to after chain end", chainEndDate, chainEndHour);
+            console.log("updatedNewTask", updatedNewTask);
+           
+            AllPlansByLineId(updatedNewTask.line_id, updatedNewTask, lastHover);
+          
         }
-
-        console.log("✅ No conflicts detected");
+        // If conflicts occurred, re-render tasks
+        if (hasConflict) {
+           
+            renderAfterChangeDebounced();
+        } else {
+            console.log("✅ No conflicts detected");
+        }
     }
+
+
+
 
 
     function pushTaskAfter(task, startDate, startHour, hover) {
@@ -2149,24 +2069,24 @@ function dayDiff(a,b){
             hover,
             task.plan_qnty
         );
-
+        console.log("=======================================result", result);
         if (!result) return null;
 
         const endDateDMY = convertToDMY(formatYMD(result.endDate));
-
+        console.log("=======================================endDateDMY", endDateDMY, "================plan", task.plan_id);
         task.start_date = startDate;
         task.start_hour = parseInt(startHour, 10);
         task.end_date = endDateDMY;
         task.end_hour = result.endHour;
-        task.duration_hours = result.duration;
+        task.duration = result.duration;
 
+        // ✅ return normalized values for chaining
         return {
             endDateDMY,
             endHour: result.endHour,
             duration: result.duration
         };
     }
-
 
 
     function renderAfterChangeDebounced(delay = 50) {
@@ -2309,5 +2229,84 @@ $(document).ready(()=>{
     };
 
     console.log("date", formatYMD("Mon Dec 01 2025 06:00:00 GMT+0600 (Bangladesh Standard Time)"))
+
+    let calendarContext = null;
+    let selectedTask = null;
+
+    $(document).on("contextmenu", "#calendar-body", function (e) {
+        e.preventDefault();
+        if (window.isDragging) return;
+
+        const taskEl = e.target.closest(".task");
+        selectedTask = taskEl ? $(taskEl) : null;
+
+        let taskInfo = null;
+
+        if (selectedTask) {
+            const rect = selectedTask[0].getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+
+            taskInfo = {
+                id: selectedTask.data("id"),
+                totalWidth: rect.width,
+                clickX: clickX,
+                clickPercent: Number(((clickX / rect.width) * 100).toFixed(2))
+            };
+        }
+
+        calendarContext = {
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+            task: taskInfo
+        };
+
+        $("#contextMenu")
+            .css({
+                top: e.clientY,
+                left: e.clientX
+            })
+            .show();
+    });
+
+
+
+    $("#contextMenu").on("click", "li", function () {
+        const action = $(this).data("action");
+
+        if (calendarContext.task) {
+            console.log("Task ID:", calendarContext.task.id);
+            console.log("Task Width:", calendarContext.task.totalWidth);
+            console.log("Click %:", calendarContext.task.clickPercent);
+
+           alert(`
+                Action: ${action}
+                Task: ${calendarContext.task ? calendarContext.task.id : "None"}
+                Task Width: ${calendarContext.task.totalWidth}
+                Click %: ${calendarContext.task.clickPercent}
+            `);
+
+
+        } else {
+            console.log("Clicked on empty calendar area");
+        }
+
+        $("#contextMenu").hide();
+    });
+
+
+
+    // Hide menu
+    $(document).on("click scroll", function () {
+        $("#contextMenu").hide();
+    });
+
+    // ESC key
+    $(document).on("keydown", function (e) {
+        if (e.key === "Escape") {
+            $("#contextMenu").hide();
+        }
+    });
+
+
 });
 </script>
