@@ -716,118 +716,7 @@ function dayDiff(a,b){
             lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
         }
 
-        //function renderTasks(calendarStart, calendarEnd) {
-
-        //    // Remove old tasks (cheap)
-        //    document.querySelectorAll('.task').forEach(t => t.remove());
-
-
-
-        //    if (!dayWidth || !hourWidth || !lineWidth) {
-        //        getLayout();
-        //    }
-
-        //    /* ================= CACHE ROWS ================= */
-        //    const rowMap = new Map();
-        //    document.querySelectorAll('.calendar-row').forEach(row => {
-        //        rowMap.set(row.dataset.line, row);
-        //    });
-
-        //    /* ================= FRAGMENTS ================= */
-        //    const fragmentMap = new Map();
-
-        //    console.log("task", tasks);
-        //    tasks.forEach(task => {
-
-        //        const row = rowMap.get(String(task.line_id));
-        //        if (!row) return;
-
-
-
-        //        const start = parseDMY(task.start_date);
-        //        const end = parseDMY(task.end_date);
-
-
-        //        const calStartDate = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), calendarStart.getDate());
-        //        const calEndDate = new Date(calendarEnd.getFullYear(), calendarEnd.getMonth(), calendarEnd.getDate());
-
-        //        console.log("start date", start);
-        //        console.log("end date", end);
-
-        //        console.log("calStartDate date", calStartDate);
-        //        console.log("calEndDate date", calEndDate);
-
-        //        if (!start || !end || formatYMD(end) < calStartDate || formatYMD(start) > calEndDate) return;
-
-        //        const startDayIndex = Math.max(0, dayDiff(calendarStart, start));
-
-
-        //        const left =
-        //            lineWidth +
-        //            (startDayIndex * dayWidth) +
-        //            (task.start_hour * hourWidth);
-
-        //        const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
-        //        const remainingDays = totalDays - startDayIndex;
-
-        //        const maxVisibleHours =
-        //            (remainingDays * WORKING_HOURS) - task.start_hour;
-
-        //        const visibleHours = Math.min(
-        //            durationToHours(task.duration),
-        //            maxVisibleHours
-        //        );
-
-        //        if (visibleHours <= 0) return;
-
-        //        const width = visibleHours * hourWidth;
-
-        //        /* ================= TASK ================= */
-        //        const taskDiv = document.createElement('div');
-        //        taskDiv.className = 'task';
-        //        taskDiv.draggable = true;
-
-        //        // GPU-friendly movement
-        //        taskDiv.style.transform = `translateX(${left}px)`;
-        //        taskDiv.style.width = `${Math.max(width, 6)}px`;
-
-        //        /* ONE COLOR */
-        //        const taskColor = getRandomTaskColor();
-
-        //        taskDiv.innerHTML = `
-        //    <div class="task-first" style="background:#00BCD4;"></div>
-        //    <div class="task-second" style="background:#2ECC71;">
-        //        <p>Plan-${task.plan_id}</p>
-        //    </div>
-        //    <div class="task-third" style="background:#607D8B;"></div>
-        //`;
-
-        //        /* DATA */
-        //        taskDiv.dataset.id = task.plan_id;
-        //        taskDiv.dataset.startDate = task.start_date;
-        //        taskDiv.dataset.endDate = task.end_date;
-        //        taskDiv.dataset.startHour = task.start_hour;
-        //        taskDiv.dataset.endHour = task.end_hour;
-        //        taskDiv.dataset.duration = task.duration;
-        //        taskDiv.dataset.quantity = task.plan_qnty;
-
-        //        /* FRAGMENT */
-        //        let fragment = fragmentMap.get(task.line_id);
-        //        if (!fragment) {
-        //            fragment = document.createDocumentFragment();
-        //            fragmentMap.set(task.line_id, fragment);
-        //        }
-
-        //        fragment.appendChild(taskDiv);
-        //    });
-
-
-        //    fragmentMap.forEach((fragment, lineId) => {
-        //        console.log("fragment", fragment);
-        //        const row = rowMap.get(String(lineId));
-        //        if (row) row.appendChild(fragment);
-        //    });
-    //}
+     
 
     function renderTasks(calendarStart, calendarEnd) {
 
@@ -840,13 +729,13 @@ function dayDiff(a,b){
 
         const WORKING_HOURS = 10;
 
-        /* ================= ROW CACHE ================= */
+      
         const rowMap = new Map();
         document.querySelectorAll('.calendar-row').forEach(row => {
             rowMap.set(row.dataset.line, row);
         });
 
-        /* ================= NORMALIZE CALENDAR DATES ================= */
+     
         const calStart = new Date(calendarStart);
         calStart.setHours(0, 0, 0, 0);
 
@@ -857,7 +746,7 @@ function dayDiff(a,b){
 
         const fragmentMap = new Map();
 
-        /* ================= LOOP TASKS ================= */
+      
 
         let i = 0;
         console.log("task total all render", tasks);
@@ -894,7 +783,7 @@ function dayDiff(a,b){
             if (taskStart < calStart) {
                 totalHours -= dayDiff(taskStart, calStart) * WORKING_HOURS;
             }
-
+           
             // Clamp to calendar end
             const maxVisibleHours = visibleDays * WORKING_HOURS - (taskStart >= calStart ? task.start_hour : 0);
             const visibleHours = Math.min(totalHours, maxVisibleHours);
