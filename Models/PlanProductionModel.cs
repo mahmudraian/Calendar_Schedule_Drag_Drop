@@ -65,5 +65,7 @@ namespace WebApplication1.Models
         [JsonProperty("line_id")]
         public int LineId { get; set; }
 
+        public int IsIncludedHoliday { get; set; }
+
     }
 }

@@ -308,6 +308,10 @@ namespace WebApplication1.Controllers
                 PlanQuantity = x.Field<int>("PLAN_QUANTITY"),
                 StyleRefNo = x.Field<string>("STYLE_REF_NO"),
                 Duration = x.Field<double>("DURATION"),
+                LeftColor = x.Field<string>("LeftColor"),
+                RightColor = x.Field<string>("RightColor"),
+                TopBorderColor = x.Field<string>("TopBorderColor"),
+                IsIncludedHoliday = x.Field<int>("IsIncludedHoliday"),
             }).ToList();
 
 

@@ -164,9 +164,9 @@
     /* Scrollable calendar body */
     .calendar-wrapper {
         overflow: auto;
-        border: 1px solid #ccc;
-        position: relative;
-        height: 100vh;
+        bordtion: relative;
+        heiger: 1px solid #ccc;
+        posiht: 100vh;
     }
 
     /* Header (sticky top inside wrapper) */
@@ -201,7 +201,7 @@
         border-bottom: 1px solid #e9d7d7;
         position: sticky;
         left: 0;
-        z-index: 900;
+        z-index: 9999999;
     }
 
     /* Header cell */
@@ -222,6 +222,9 @@
         line-height: 1.2;
     }
 
+    .container{
+        
+    }
     /* Calendar cell */
     .cell {
         width: var(--cell-width);
@@ -229,6 +232,7 @@
         flex-shrink: 0;
         position: relative;
         border-bottom: 1px solid #e9d7d7;
+        
     }
 
         /* Vertical grid line */
@@ -267,7 +271,7 @@
     /* Disabled day (Sunday) */
     .disabled-day {
         background: #f3f3f3;
-/*        z-index:22222222222;*/
+        z-index:900000;
     }
 
     /* Task block */
@@ -333,6 +337,7 @@
         font-size: 12px;
         font-weight: 300;
         line-height: 1.2;
+       
     }
 
     html, body {
@@ -459,7 +464,7 @@
 
     <!-- CALENDAR -->
     <div class="calendar-area">
-        <div class="calendar-wrapper">
+        <div id="calendar-wrapper"  class="calendar-wrapper">
             <div id="calendar-header" class="calendar-header"></div>
             <div id="calendar-body" class="calendar-body">
 
@@ -526,6 +531,7 @@ function dayDiff(a,b){
 
         /* ================= HEADER ================= */
         const header = document.getElementById('calendar-header');
+        header.style.zIndex = 9999999;
         header.innerHTML = '';
 
         const headerLine = document.createElement('div');
@@ -571,13 +577,13 @@ function dayDiff(a,b){
 
             for (let i = 0; i <= totalDays; i++) {
                 const currentDate = addDays(fromDate, i);
-                const isSunday = currentDate.getDay() === 0;
+                const isFriday = currentDate.getDay() === 5;
 
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.date = formatYMD(currentDate);
 
-                if (isSunday) {
+                if (isFriday) {
                     cell.classList.add('disabled-day');
                 }
 
@@ -716,118 +722,7 @@ function dayDiff(a,b){
             lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
         }
 
-        //function renderTasks(calendarStart, calendarEnd) {
-
-        //    // Remove old tasks (cheap)
-        //    document.querySelectorAll('.task').forEach(t => t.remove());
-
-
-
-        //    if (!dayWidth || !hourWidth || !lineWidth) {
-        //        getLayout();
-        //    }
-
-        //    /* ================= CACHE ROWS ================= */
-        //    const rowMap = new Map();
-        //    document.querySelectorAll('.calendar-row').forEach(row => {
-        //        rowMap.set(row.dataset.line, row);
-        //    });
-
-        //    /* ================= FRAGMENTS ================= */
-        //    const fragmentMap = new Map();
-
-        //    console.log("task", tasks);
-        //    tasks.forEach(task => {
-
-        //        const row = rowMap.get(String(task.line_id));
-        //        if (!row) return;
-
-
-
-        //        const start = parseDMY(task.start_date);
-        //        const end = parseDMY(task.end_date);
-
-
-        //        const calStartDate = new Date(calendarStart.getFullYear(), calendarStart.getMonth(), calendarStart.getDate());
-        //        const calEndDate = new Date(calendarEnd.getFullYear(), calendarEnd.getMonth(), calendarEnd.getDate());
-
-        //        console.log("start date", start);
-        //        console.log("end date", end);
-
-        //        console.log("calStartDate date", calStartDate);
-        //        console.log("calEndDate date", calEndDate);
-
-        //        if (!start || !end || formatYMD(end) < calStartDate || formatYMD(start) > calEndDate) return;
-
-        //        const startDayIndex = Math.max(0, dayDiff(calendarStart, start));
-
-
-        //        const left =
-        //            lineWidth +
-        //            (startDayIndex * dayWidth) +
-        //            (task.start_hour * hourWidth);
-
-        //        const totalDays = dayDiff(calendarStart, calendarEnd) + 1;
-        //        const remainingDays = totalDays - startDayIndex;
-
-        //        const maxVisibleHours =
-        //            (remainingDays * WORKING_HOURS) - task.start_hour;
-
-        //        const visibleHours = Math.min(
-        //            durationToHours(task.duration),
-        //            maxVisibleHours
-        //        );
-
-        //        if (visibleHours <= 0) return;
-
-        //        const width = visibleHours * hourWidth;
-
-        //        /* ================= TASK ================= */
-        //        const taskDiv = document.createElement('div');
-        //        taskDiv.className = 'task';
-        //        taskDiv.draggable = true;
-
-        //        // GPU-friendly movement
-        //        taskDiv.style.transform = `translateX(${left}px)`;
-        //        taskDiv.style.width = `${Math.max(width, 6)}px`;
-
-        //        /* ONE COLOR */
-        //        const taskColor = getRandomTaskColor();
-
-        //        taskDiv.innerHTML = `
-        //    <div class="task-first" style="background:#00BCD4;"></div>
-        //    <div class="task-second" style="background:#2ECC71;">
-        //        <p>Plan-${task.plan_id}</p>
-        //    </div>
-        //    <div class="task-third" style="background:#607D8B;"></div>
-        //`;
-
-        //        /* DATA */
-        //        taskDiv.dataset.id = task.plan_id;
-        //        taskDiv.dataset.startDate = task.start_date;
-        //        taskDiv.dataset.endDate = task.end_date;
-        //        taskDiv.dataset.startHour = task.start_hour;
-        //        taskDiv.dataset.endHour = task.end_hour;
-        //        taskDiv.dataset.duration = task.duration;
-        //        taskDiv.dataset.quantity = task.plan_qnty;
-
-        //        /* FRAGMENT */
-        //        let fragment = fragmentMap.get(task.line_id);
-        //        if (!fragment) {
-        //            fragment = document.createDocumentFragment();
-        //            fragmentMap.set(task.line_id, fragment);
-        //        }
-
-        //        fragment.appendChild(taskDiv);
-        //    });
-
-
-        //    fragmentMap.forEach((fragment, lineId) => {
-        //        console.log("fragment", fragment);
-        //        const row = rowMap.get(String(lineId));
-        //        if (row) row.appendChild(fragment);
-        //    });
-    //}
+       
 
     function renderTasks(calendarStart, calendarEnd) {
 
@@ -909,17 +804,28 @@ function dayDiff(a,b){
             const taskDiv = document.createElement('div');
             taskDiv.className = 'task';
             taskDiv.draggable = true;
-
+            if (task.IsIncludedHoliday == 1) {
+                taskDiv.style.zIndex = '999999';
+            }
+         
             taskDiv.style.transform = `translateX(${left}px)`;
             taskDiv.style.width = `${width}px`;
 
+        //    taskDiv.innerHTML = `
+        //    <div class="task-first" style="background:#00BCD4;"></div>
+        //    <div class="task-second" style="background:#2ECC71;">
+        //        <p>Plan-${task.plan_id}</p>
+        //    </div>
+        //    <div class="task-third" style="background:#607D8B;"></div>
+            //`;
+
             taskDiv.innerHTML = `
-            <div class="task-first" style="background:#00BCD4;"></div>
-            <div class="task-second" style="background:#2ECC71;">
-                <p>Plan-${task.plan_id}</p>
-            </div>
-            <div class="task-third" style="background:#607D8B;"></div>
-        `;
+                <div class="task-first" style="background:${task.TOP_BORDER_COLOR};"></div>
+                    <div class="task-second" style="background:${task.RIGHT_COLOR};">
+                        <p>Plan-${task.plan_id}</p>
+                    </div>
+                    <div class="task-third" style="background:${task.LEFT_COLOR};"></div>
+                `;
 
             /* ================= DATASET ================= */
                     taskDiv.dataset.id = task.plan_id;
@@ -929,6 +835,7 @@ function dayDiff(a,b){
                     taskDiv.dataset.endHour = task.end_hour;
                     taskDiv.dataset.duration = task.duration;
                     taskDiv.dataset.quantity = task.plan_qnty;
+                    taskDiv.dataset.isincludedholiday = task.IsIncludedHoliday;
 
             /* ================= FRAGMENT ================= */
             let fragment = fragmentMap.get(task.line_id);
@@ -1012,7 +919,7 @@ function dayDiff(a,b){
             previewTask.style.top = "0";
             previewTask.style.left = "0";
             previewTask.style.willChange = "transform";
-            previewTask.style.zIndex = "9999";
+            previewTask.style.zIndex = "999999";
 
             document.body.appendChild(previewTask);
         }
@@ -1145,7 +1052,7 @@ function dayDiff(a,b){
 
         // Calculate end hour / date if needed
         const totalHours = hour + TemptotalHours;
-        taskDiv.dataset.endHour = totalHours % WORKING_HOURS;
+        taskDiv.dataset.endHour = Math.floor(totalHours % WORKING_HOURS);
 
         // End date
         const endDayOffset = Math.floor(totalHours / WORKING_HOURS);
@@ -1380,11 +1287,20 @@ function dayDiff(a,b){
     //    };
     //}
 
+
+
+    function isDisabledDay(date) {
+        const day = date.getDay();
+        return day === 5; // Sunday & Friday
+    }
+
+
     function calculateDuration({
         startDate,
         startHour,
         row,
-        totalQuantity
+        totalQuantity,
+        isIncludedHoliday
     }) {
       
         const manpower = Number(row?.dataset.manpower) || 0;
@@ -1411,7 +1327,10 @@ function dayDiff(a,b){
         const days = Math.floor(totalHours / WORKING_HOURS);
         const hours = Math.round(totalHours % WORKING_HOURS);
 
-        const duration = Number(`${days}.${hours}`);
+    
+
+
+        let duration = Number(`${days}.${hours}`);
 
         /* ---------- END HOUR & DAY OFFSET ---------- */
         let endHour = startHour + hours;
@@ -1427,7 +1346,32 @@ function dayDiff(a,b){
         console.log("============================endDate Before Before", endDate);
         if (isNaN(endDate)) return null;
         console.log("============================endDate Before", endDate);
-        endDate.setDate(endDate.getDate() + endDayOffset);
+        let addedWorkingDays = 0;
+        let disabledDayCount = 0;
+        if (isIncludedHoliday == 1) {
+            endDate.setDate(endDate.getDate() + endDayOffset);
+        } else {
+           
+
+            while (addedWorkingDays < endDayOffset) {
+                endDate.setDate(endDate.getDate() + 1);
+
+                if (isDisabledDay(endDate)) {
+                    disabledDayCount++;
+                    continue;
+                }
+
+                addedWorkingDays++;
+            }
+            if (disabledDayCount > 0) {
+                endDate.setDate(endDate.getDate() + disabledDayCount);
+                duration = duration + disabledDayCount;
+            }
+        }
+      
+
+       
+       
 
             console.log("==================   calculation time  =====================");
             console.log("startDate", startDate);
@@ -1437,6 +1381,7 @@ function dayDiff(a,b){
             console.log("hourlyQty", hourlyQty);
             console.log("Total Quantity", totalQuantity);
             console.log("manpower", manpower);
+            console.log("disabledDayCount", disabledDayCount);
             console.log("endDayOffset", endDayOffset);
             console.log("========================================================");
 
@@ -1451,7 +1396,7 @@ function dayDiff(a,b){
     }
 
 
-    function getDuration(hover, totalQuantity) {
+    function getDuration(hover, totalQuantity,isIncludedHoliday = 0) {
 
         const { row, cell, hour: startHour } = hover;
 
@@ -1459,11 +1404,12 @@ function dayDiff(a,b){
             startDate: cell.dataset.date, // from cell
             startHour,
             row,
-            totalQuantity
+            totalQuantity,
+            isIncludedHoliday
         });
     }
 
-    function getDurationForBalance(startDate, startHour, hover, totalQuantity) {
+    function getDurationForBalance(startDate, startHour, hover, totalQuantity, isIncludedHoliday = 0) {
 
         const { row } = hover;
         console.log("================================================================================getDurationForBalance");
@@ -1473,7 +1419,8 @@ function dayDiff(a,b){
             startDate,        
             startHour,
             row,
-            totalQuantity
+            totalQuantity,
+            isIncludedHoliday
         });
     }
 
@@ -1482,7 +1429,69 @@ function dayDiff(a,b){
         const hours = Math.round(totalHours % WORKING_HOURS);
 
         return Number(`${days}.${hours}`);
-    }    
+    }  
+
+    const SCROLL_EDGE_SIZE = 40;
+    const SCROLL_SPEED = 15;
+
+    let scrollRAF = null;
+    let scrollX = 0;
+    let scrollY = 0;
+
+    function autoScrollCalendar(mouseX, mouseY) {
+        const cal = document.getElementById("calendar-wrapper");
+        if (!cal) return;
+
+        const rect = cal.getBoundingClientRect();
+
+        scrollX = 0;
+        scrollY = 0;
+
+        // Vertical
+        if (mouseY < rect.top + SCROLL_EDGE_SIZE) {
+            scrollY = -SCROLL_SPEED;
+        } else if (mouseY > rect.bottom - SCROLL_EDGE_SIZE) {
+            scrollY = SCROLL_SPEED;
+        }
+
+        // Horizontal
+        if (mouseX < rect.left + SCROLL_EDGE_SIZE) {
+            scrollX = -SCROLL_SPEED;
+        } else if (mouseX > rect.right - SCROLL_EDGE_SIZE) {
+            scrollX = SCROLL_SPEED;
+        }
+
+        if (scrollX || scrollY) startScroll(cal);
+        else stopScroll();
+    }
+
+    function startScroll(cal) {
+        if (scrollRAF) return;
+
+        function step() {
+            if (!isDragging) {
+                stopScroll();
+                return;
+            }
+
+            cal.scrollTop += scrollY;
+            cal.scrollLeft += scrollX;
+
+            scrollRAF = requestAnimationFrame(step);
+        }
+
+        scrollRAF = requestAnimationFrame(step);
+    }
+
+    function stopScroll() {
+        if (scrollRAF) {
+            cancelAnimationFrame(scrollRAF);
+            scrollRAF = null;
+        }
+    }
+
+
+
 
     //end new duration //
 
@@ -1510,11 +1519,16 @@ function dayDiff(a,b){
     //    document.body.style.userSelect = "none";
     //});
 
+    const calendarArea = document.querySelector(".calendar-body");
+
     document.addEventListener("mousedown", e => {
         if (e.button !== 0) return;
 
         const taskEl = e.target.closest(".task");
         if (!taskEl) return;
+
+      
+        if (!calendarArea.contains(e.target)) return;
 
         draggedTask = taskEl;
         isDragging = true;
@@ -1533,9 +1547,13 @@ function dayDiff(a,b){
 
     document.addEventListener("mousemove", e => {
         if (!isDragging) return;
+        // ❌ ignore movement outside calendar
+        if (!calendarArea.contains(e.target)) return;
 
         mouseX = e.clientX;
         mouseY = e.clientY;
+
+        autoScrollCalendar(e.clientX, e.clientY);
 
         showPreviewOptimized(draggedTask, duration);
 
@@ -1553,9 +1571,11 @@ function dayDiff(a,b){
             if (dragTimeout) clearTimeout(dragTimeout);
 
             const quantity = Number(draggedTask.dataset.quantity) || 1;
+            const isIncludedHoliday = Number(draggedTask.dataset.isincludedholiday);
             dragTimeout = setTimeout(() => {
                 console.log("Drag pulse 1 sec", duration);
-                durationsData = getDuration(hover, quantity);
+               
+                durationsData = getDuration(hover, quantity, isIncludedHoliday);
                 duration = durationsData.duration;
                 showPreviewOptimized(draggedTask, duration);
             }, 700);
@@ -1564,7 +1584,14 @@ function dayDiff(a,b){
 
     document.addEventListener("mouseup", e => {
         if (!isDragging) return;
+        stopScroll();
         isDragging = false;
+       
+
+        if (!calendarArea.contains(e.target)) {
+            cleanupDrag();
+            return;
+        }
 
         if (!draggedTask || !lastHover) {
             cleanupDrag();
@@ -1573,6 +1600,11 @@ function dayDiff(a,b){
 
         const { row, cell, hour } = lastHover;
         if (!row || !cell) {
+            cleanupDrag();
+            return;
+        }
+
+        if (cell.classList.contains("disabled-day")) {
             cleanupDrag();
             return;
         }
@@ -1722,9 +1754,9 @@ function dayDiff(a,b){
         const lineId = parseInt(orderHover.row.dataset.line);
         const startDate = convertToDMY(orderHover.cell.dataset.date); // make sure this returns valid 'yyyy-mm-dd'
         const startHour = orderHover.hour || 0;
-
+        const isIncludedHoliday = 1;
         // Calculate duration for this order
-        const durationForOrder = getDuration(orderHover, order.Quantity);
+        const durationForOrder = getDuration(orderHover, order.Quantity, isIncludedHoliday);
         if (!durationForOrder || !durationForOrder.endDate || !durationForOrder.endHour || !durationForOrder.duration === undefined) {
             console.error("Duration calculation failed:", durationForOrder);
             return null;
@@ -1742,7 +1774,11 @@ function dayDiff(a,b){
             start_hour: startHour,
             end_hour: durationForOrder.endHour,
             ColorCode: 'blue',
-            duration: durationForOrder.duration
+            duration: durationForOrder.duration,
+            LEFT_COLOR: "#FF6600",
+            RIGHT_COLOR: "#FF6600",
+            TOP_BORDER_COLOR: "#33cc33",
+            IsIncludedHoliday: isIncludedHoliday
         };
 
         console.log("newTask:", task);
@@ -1798,173 +1834,7 @@ function dayDiff(a,b){
     }
 
 
-    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
-
-    //    const lineTasks = tasks.filter(t =>
-    //        t.line_id === lineId &&
-    //        t.plan_id !== updatedTask.plan_id
-    //    );
-
-
-    //    console.log(
-    //        "🔍 Checking conflicts for updated plan:",
-    //        updatedTask.plan_id,
-    //        "plan start date:", updatedTask.start_date,
-    //        "plan end date:", updatedTask.end_date
-    //    );
-
-    //    const updatedStart = toTimelineValue(
-    //        updatedTask.start_date,
-    //        updatedTask.start_hour
-    //    );
-
-    //    const updatedEnd = toTimelineValue(
-    //        updatedTask.end_date,
-    //        updatedTask.end_hour
-    //    );
-
-    //    let hasConflict = false;
-    //    let count = 1;
-    //    let startDate = updatedTask.start_date;
-    //    for (const task of lineTasks) {
-    //        console.log("count", count);
-    //        count++;
-    //        const taskStart = toTimelineValue(
-    //            task.start_date,
-    //            task.start_hour
-    //        );
-
-    //        const taskEnd = toTimelineValue(
-    //            task.end_date,
-    //            task.end_hour
-    //        );
-
-    //        // ✅ ONLY correct overlap rule
-    //        const isConflict =
-    //            updatedStart < taskEnd &&
-    //            updatedEnd > taskStart;
-
-    //        if (isConflict) {
-    //            hasConflict = true;
-
-    //            console.log("❌ DIRECT CONFLICT DETECTED");
-    //            console.log("Updated Plan ID:", updatedTask.plan_id);
-    //            console.log("Conflicting Plan ID:", task.plan_id);
-    //            console.log(
-    //                "Task Range:",
-    //                `${task.start_date} ${task.start_hour} → ${task.end_date} ${task.end_hour}`
-    //            );
-    //            console.log("-----------------++++++++------------------");
-    //            console.log("------------------------- lasttask----------", task);
-
-    //            const hover = lastHover;
-    //            console.log("------------------------- lasthover----------", hover);
-
-    //            if (task.start_date < startDate) {
-
-    //                console.log("draged plan update")
-    //                const drgTask = tasks.find(t => t.plan_id === updatedTask.plan_id);
-    //                if (!drgTask) return;
-    //                console.log("drgTask", drgTask);
-    //                const durationForPlan = getDurationForBalance(task.end_date, parseInt(task.end_hour, 10), hover, drgTask.plan_qnty);
-    //                console.log("durationForPlan draged:", durationForPlan);
-    //                drgTask.end_date = convertToDMY(formatYMD(durationForPlan.endDate));
-    //                drgTask.end_hour = durationForPlan.endHour,
-    //                    drgTask.start_date = task.end_date;
-    //                drgTask.start_hour = parseInt(task.end_hour, 10);
-    //                drgTask.duration = durationForPlan.duration;
-    //                startDate = task.end_date;
-    //                console.log("drgTask", drgTask);
-    //            } else {
-    //                console.log("loop plan update")
-    //                const durationForOrder = getDurationForBalance(updatedTask.end_date, parseInt(updatedTask.end_hour, 10), hover, updatedTask.plan_qnty);
-    //                console.log("durationForPlan loop:", durationForOrder);
-    //                task.end_date = convertToDMY(formatYMD(durationForOrder.endDate));
-    //                task.end_hour = durationForOrder.endHour,
-    //                task.start_date = updatedTask.end_date;
-    //                task.start_hour =parseInt(updatedTask.end_hour, 10);
-    //                console.log("update loop drg Task", task);
-    //                startDate = updatedTask.end_date;
-    //            }
-
-
-
-
-
-    //        }
-    //    }
-
-    //    if (!hasConflict) {
-    //        console.log("✅ No conflicts detected");
-    //    } else {
-    //        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-    //        const toDate = parseDateSafe($('input[name="ToDate"]').val());
-    //        requestAnimationFrame(() => {
-    //            renderTasks(fromDate, toDate)
-    //        });
-    //    }
-
-
-
-    //}
-
-    //function AllPlansByLineId(lineId, updatedTask, lastHover) {
-
-    //    const lineTasks = tasks
-    //        .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
-    //        .sort((a, b) =>
-    //            toTimelineValue(a.start_date, a.start_hour) -
-    //            toTimelineValue(b.start_date, b.start_hour)
-    //        );
-
-    //    let hasConflict = false;
-
-    //    // 🔒 Anchor = updated task END
-    //    let chainEndDate = updatedTask.end_date;
-    //    let chainEndHour = updatedTask.end_hour;
-    //    let chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-
-    //    for (const task of lineTasks) {
-
-    //        const taskStartTimeline = toTimelineValue(task.start_date, task.start_hour);
-
-    //        // ✅ ONLY correct conflict rule
-    //        if (taskStartTimeline >= chainEndTimeline) continue;
-
-    //        console.log("❌ CONFLICT:", task.plan_id);
-    //        hasConflict = true;
-
-    //        const pushed = pushTaskAfter(
-    //            task,
-    //            chainEndDate,
-    //            chainEndHour,
-    //            lastHover
-    //        );
-
-    //        if (!pushed) continue;
-
-    //        // ⏩ advance chain using RETURNED values
-    //        chainEndDate = pushed.endDateDMY;
-    //        chainEndHour = pushed.endHour;
-    //        chainEndTimeline = toTimelineValue(chainEndDate, chainEndHour);
-    //        console.clear();
-    //        console.log("taskStartTimeline", taskStartTimeline);
-    //        console.log("chainEndTimeline", chainEndTimeline);
-    //    }
-
-
-
-    //    if (hasConflict) {
-    //        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-    //        const toDate = parseDateSafe($('input[name="ToDate"]').val());
-
-    //        requestAnimationFrame(() => {
-    //            renderTasks(fromDate, toDate);
-    //        });
-    //    } else {
-    //        console.log("✅ No conflicts detected");
-    //    }
-    //}
+   
 
     let renderTimeout = null;
     let rafId = null;
@@ -2026,7 +1896,7 @@ function dayDiff(a,b){
                 IsUpdateMain = true;
                 chainEndDate = task.end_date;
                 chainEndHour = task.end_hour;
-                break;
+            
 
             } else {
                 const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
@@ -2054,7 +1924,8 @@ function dayDiff(a,b){
                 convertToDMY(chainEndDate),
                 parseInt(chainEndHour, 10),
                 lastHover,
-                updatedNewTask.plan_qnty
+                updatedNewTask.plan_qnty,
+                updatedNewTask.IsIncludedHoliday
             );
             console.log("updatedNewTask result", result);
             updatedNewTask.end_date = convertToDMY(formatYMD(result.endDate));
@@ -2085,7 +1956,8 @@ function dayDiff(a,b){
             convertToDMY(startDate),
             parseInt(startHour, 10),
             hover,
-            task.plan_qnty
+            task.plan_qnty,
+            task.IsIncludedHoliday
         );
         console.log("=======================================result", result);
         if (!result) return null;
@@ -2303,7 +2175,7 @@ $(document).ready(()=>{
                 Click %: ${calendarContext.task.clickPercent}
             `);
 
-
+            $("#contextMenu").hide();
         } else {
             console.log("Clicked on empty calendar area");
         }
