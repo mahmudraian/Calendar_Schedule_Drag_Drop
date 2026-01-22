@@ -157,7 +157,7 @@
 
 <style>
     :root {
-        --line-width: 180px;
+        --line-width: 80px;
         --cell-width: 80px;
         --row-height: 55px;
     }
@@ -201,7 +201,7 @@
         border-bottom: 1px solid #e9d7d7;
         position: sticky;
         left: 0;
-        z-index: 9999999;
+        z-index: 999999;
     }
 
     /* Header cell */
@@ -271,7 +271,7 @@
     /* Disabled day (Sunday) */
     .disabled-day {
         background: #f3f3f3;
-        z-index:900000;
+        z-index:60;
     }
 
     /* Task block */
@@ -293,7 +293,7 @@
     .task-preview {
         /*        opacity: 0.5;*/
         /*        border: 2px dashed #333;*/
-        z-index: 9999;
+        z-index: 100;
         cursor: grabbing;
     }
 
@@ -310,7 +310,7 @@
             opacity: 0.8;
             cursor: grabbing;
             position: absolute;
-            z-index: 1000;
+            z-index: 10;
             pointer-events: none; 
         }
 
@@ -414,21 +414,203 @@
             #contextMenu li:hover {
                 background: #f0f0f0;
             }
+/*    ------------------*/
+    .dateForm {
+        background: #fff;
+        padding: 20px 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+        margin: 20px auto;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+        .dateForm h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+    .calendar-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+        .calendar-form label {
+            font-weight: 500;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .calendar-form input[type="date"] {
+            padding: 7px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            transition: border 0.2s ease;
+        }
+
+            .calendar-form input[type="date"]:focus {
+                border-color: #2ECC71;
+                outline: none;
+            }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-load {
+        background-color: #2ECC71;
+        color: #fff;
+    }
+
+        .btn-load:hover {
+            background-color: #27ae60;
+        }
+
+    .btn-tasks {
+        background-color: #3498db;
+        color: #fff;
+    }
+
+        .btn-tasks:hover {
+            background-color: #2980b9;
+        }
+
+
+    /* Sidebar container */
+    #sidebarOrders {
+        background: #111827;
+        padding: 10px;
+    }
+
+    /* Order card */
+    .order-card {
+        background: linear-gradient(145deg, #1f2933, #111827);
+        border: 1px solid #374151;
+        border-radius: 10px;
+        padding: 5px 8px;
+        margin-bottom: 10px;
+        color: #e5e7eb;
+        cursor: grab;
+        transition: all 0.2s ease;
+        list-style: none;
+    }
+
+        /* Hover effect */
+        .order-card:hover {
+            background: #1f2937;
+            border-color: #4f46e5;
+            transform: translateX(3px);
+        }
+
+        /* While dragging */
+        .order-card:active {
+            cursor: grabbing;
+            opacity: 0.8;
+        }
+
+    /* Header row */
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+
+    /* Hover popup */
+    .order-info-popup {
+        display: none;
+        position: absolute;
+        top: 110%; /* below the header */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.12); /* semi-transparent */
+        backdrop-filter: blur(10px); /* blur effect */
+        color: #fff;
+        border-radius: 10px;
+        padding: 12px 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        min-width: 220px;
+        z-index: 100;
+        font-size: 14px;
+        line-height: 1.5;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 0;
+        pointer-events: none; /* prevents flickering */
+    }
+
+    /* Show popup on hover */
+    .order-header:hover .order-info-popup {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* Optional: spacing for the text */
+    .order-info-popup p {
+        margin: 4px 0;
+    }
+
+    /* Order ID */
+    .order-id {
+        font-weight: 600;
+        font-size: 14px;
+        color: #60a5fa;
+    }
+
+    /* Quantity badge */
+    .order-qty {
+        background: #16a34a;
+        color: #fff;
+        font-size: 12px;
+/*        padding: 2px 8px;*/
+        border-radius: 12px;
+    }
+
+    /* Company name */
+    .order-company {
+        font-size: 13px;
+        color: #d1d5db;
+        opacity: 0.9;
+    }
+
 
 </style>
 <div style="margin-bottom:15px;">
 
-    <h3>Sewing Line Calendar</h3>
+    @*<div class="dateForm" style="margin-bottom:15px;">
+            <h3>Sewing Line Calendar</h3>
+            <form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")">
+                From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" />
+                To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" />
+                <button type="submit">Load Calendar</button>
+                <button type="button" id="btn-tasks">Load Tasks</button>
+            </form>
 
-    <div style="margin-bottom:15px;">
-        <form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")">
-            From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" />
-            To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" />
-            <button type="submit">Load Calendar</button>
-            <button type="button" id="btn-tasks">Load Tasks</button>
+        </div>*@
+
+    <div class="dateForm">
+        @*<h3>Sewing Line Calendar</h3>*@
+        <form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")" class="calendar-form">
+            <label>From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" /></label>
+            <label>To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" /></label>
+            <button type="submit" class="btn btn-load">Load Calendar</button>
+            <button type="button" id="btn-tasks" class="btn btn-tasks">Load Tasks</button>
         </form>
-
     </div>
+
+
 
     @*<div class="container-fluid">
             <div class="row">
@@ -445,40 +627,41 @@
                 </div>
             </div>
         </div>*@
-<div class="calendar-page">
+    <div class="calendar-page">
 
-    <!-- SIDEBAR -->
-    <div id="orderSidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h4>Order List</h4>
-            <button id="closeSidebar">❮</button>
+        <!-- SIDEBAR -->
+        <div id="orderSidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h4>Order List</h4>
+                <button id="closeSidebar">❮</button>
+            </div>
+
+            <ul id="sidebar-orders">
+                <li>Loading...</li>
+            </ul>
         </div>
 
-        <ul id="sidebar-orders">
-            <li>Loading...</li>
-        </ul>
-    </div>
+        <!-- OPEN HANDLE -->
+        <div id="openSidebar" class="sidebar-handle">❯</div>
 
-    <!-- OPEN HANDLE -->
-    <div id="openSidebar" class="sidebar-handle">❯</div>
-
-    <!-- CALENDAR -->
-    <div class="calendar-area">
-        <div id="calendar-wrapper"  class="calendar-wrapper">
-            <div id="calendar-header" class="calendar-header"></div>
-            <div id="calendar-body" class="calendar-body">
+        <!-- CALENDAR -->
+        <div class="calendar-area">
+            <div id="calendar-wrapper" class="calendar-wrapper">
+                <div id="calendar-header" class="calendar-header"></div>
+                <div id="calendar-body" class="calendar-body">
 
 
+                </div>
             </div>
         </div>
+
+        <ul id="contextMenu">
+            <li data-action="edit">Edit</li>
+            <li data-action="delete">Delete</li>
+            <li data-action="split">split</li>
+        </ul>
+
     </div>
-
-    <ul id="contextMenu">
-        <li data-action="edit">Edit</li>
-        <li data-action="delete">Delete</li>
-    </ul>
-
-</div>
 
 
 
@@ -516,9 +699,24 @@ function addDays(date,days){
     return d;
 }
 
-function dayDiff(a,b){
-    return Math.floor((b - a)/(1000*60*60*24));
-}
+//function dayDiff(a,b){
+//    return Math.floor((b - a)/(1000*60*60*24));
+    //}
+
+
+    function dayDiff(a, b) {
+        const d1 = new Date(a);
+        const d2 = new Date(b);
+
+        // Normalize to midnight
+        d1.setHours(0, 0, 0, 0);
+        d2.setHours(0, 0, 0, 0);
+
+        const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+        return Math.floor((d2 - d1) / MS_PER_DAY);
+    }
+
 
 // --- Calendar Render ---
     function renderCalendar() {
@@ -536,6 +734,8 @@ function dayDiff(a,b){
 
         const headerLine = document.createElement('div');
         headerLine.className = 'line-name';
+        headerLine.classList.add('line-name-header');
+        headerLine.style.zIndex = 9999999;
         headerLine.textContent = 'Line';
         header.appendChild(headerLine);
 
@@ -710,19 +910,152 @@ function dayDiff(a,b){
         let dayWidth = 0;
         let hourWidth = 0;
         let lineWidth = 180;
+        let calenderDate = '';
+        let hour = 0;
         function getLayout() {
             const firstRow = document.querySelector('.calendar-row');
             if (!firstRow) return null;
-
+            console.log("firstRow", firstRow);
             const firstCell = firstRow.querySelector('.cell');
             if (!firstCell) return null;
-
+            console.log("firstCell", firstCell);
             dayWidth = firstCell.offsetWidth;
             hourWidth = dayWidth / WORKING_HOURS;
             lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
         }
 
        
+
+    //function renderTasks(calendarStart, calendarEnd) {
+
+    //    // Remove old tasks
+    //    document.querySelectorAll('.task').forEach(t => t.remove());
+
+    //    if (!dayWidth || !hourWidth || !lineWidth) {
+    //        getLayout();
+    //    }
+
+    //    const WORKING_HOURS = 10;
+
+    //    /* ================= ROW CACHE ================= */
+    //    const rowMap = new Map();
+    //    document.querySelectorAll('.calendar-row').forEach(row => {
+    //        rowMap.set(row.dataset.line, row);
+    //    });
+
+    //    /* ================= NORMALIZE CALENDAR DATES ================= */
+    //    const calStart = new Date(calendarStart);
+    //    calStart.setHours(0, 0, 0, 0);
+
+    //    const calEnd = new Date(calendarEnd);
+    //    calEnd.setHours(0, 0, 0, 0);
+
+    //    console.log("calEnd", calEnd);
+
+    //    const fragmentMap = new Map();
+
+    //    /* ================= LOOP TASKS ================= */
+
+    //    let i = 0;
+    //    console.log("task total all render", tasks);
+    //    tasks.forEach(task => {
+    //        i++;
+    //        const row = rowMap.get(String(task.line_id));
+    //        if (!row) return;
+
+    //        const start = parseDMY(task.start_date);
+    //        const end = parseDMY(task.end_date);
+    //        if (!start || !end) return;
+
+    //        const taskStart = new Date(start);
+    //        const taskEnd = new Date(end);
+    //        taskStart.setHours(0, 0, 0, 0);
+    //        taskEnd.setHours(0, 0, 0, 0);
+
+
+
+    //        // Skip if fully outside calendar
+    //        if (taskEnd < calStart || taskStart > calEnd) return;
+
+    //        /* ================= CLIP TO CALENDAR ================= */
+    //        const visibleStartDate = taskStart < calStart ? calStart : taskStart;
+    //        const visibleEndDate = taskEnd > calEnd ? calEnd : taskEnd;
+
+    //        // Days between visible start and end
+    //        const visibleDays = dayDiff(visibleStartDate, visibleEndDate) + 1;
+
+    //        // Hours to render
+    //        let totalHours = durationToHours(task.duration);
+
+    //        // Remove hours before calendar
+    //        if (taskStart < calStart) {
+    //            totalHours -= dayDiff(taskStart, calStart) * WORKING_HOURS;
+    //        }
+
+    //        // Clamp to calendar end
+    //        const maxVisibleHours = visibleDays * WORKING_HOURS - (taskStart >= calStart ? task.start_hour : 0);
+    //        const visibleHours = Math.min(totalHours, maxVisibleHours);
+    //        if (visibleHours <= 0) return;
+
+    //        /* ================= POSITION ================= */
+    //        const dayIndex = dayDiff(calendarStart, visibleStartDate);
+    //        const left = lineWidth + (dayIndex * dayWidth) + (taskStart >= calStart ? task.start_hour * hourWidth : 0);
+    //        const width = visibleHours * hourWidth;
+
+    //        /* ================= CREATE TASK ================= */
+    //        const taskDiv = document.createElement('div');
+    //        taskDiv.className = 'task';
+    //        taskDiv.draggable = true;
+    //        if (task.IsIncludedHoliday == 1) {
+    //            taskDiv.style.zIndex = '10';
+    //        }
+
+    //        taskDiv.style.transform = `translateX(${left}px)`;
+    //        taskDiv.style.width = `${width}px`;
+
+    //    //    taskDiv.innerHTML = `
+    //    //    <div class="task-first" style="background:#00BCD4;"></div>
+    //    //    <div class="task-second" style="background:#2ECC71;">
+    //    //        <p>Plan-${task.plan_id}</p>
+    //    //    </div>
+    //    //    <div class="task-third" style="background:#607D8B;"></div>
+    //        //`;
+
+    //        taskDiv.innerHTML = `
+    //            <div class="task-first" style="background:${task.TOP_BORDER_COLOR};"></div>
+    //                <div class="task-second" style="background:${task.RIGHT_COLOR};">
+    //                    <p>Plan-${task.plan_id}</p>
+    //                </div>
+    //                <div class="task-third" style="background:${task.LEFT_COLOR};"></div>
+    //            `;
+
+    //        /* ================= DATASET ================= */
+    //                taskDiv.dataset.id = task.plan_id;
+    //                taskDiv.dataset.startDate = task.start_date;
+    //                taskDiv.dataset.endDate = task.end_date;
+    //                taskDiv.dataset.startHour = task.start_hour;
+    //                taskDiv.dataset.endHour = task.end_hour;
+    //                taskDiv.dataset.duration = task.duration;
+    //                taskDiv.dataset.quantity = task.plan_qnty;
+    //                taskDiv.dataset.isincludedholiday = task.IsIncludedHoliday;
+
+    //        /* ================= FRAGMENT ================= */
+    //        let fragment = fragmentMap.get(task.line_id);
+    //        if (!fragment) {
+    //            fragment = document.createDocumentFragment();
+    //            fragmentMap.set(task.line_id, fragment);
+    //        }
+
+    //        fragment.appendChild(taskDiv);
+    //    });
+
+    //    /* ================= APPEND ALL ================= */
+    //    fragmentMap.forEach((fragment, lineId) => {
+    //        const row = rowMap.get(String(lineId));
+    //        if (row) row.appendChild(fragment);
+    //    });
+    //}
+
 
     function renderTasks(calendarStart, calendarEnd) {
 
@@ -732,8 +1065,6 @@ function dayDiff(a,b){
         if (!dayWidth || !hourWidth || !lineWidth) {
             getLayout();
         }
-
-        const WORKING_HOURS = 10;
 
         /* ================= ROW CACHE ================= */
         const rowMap = new Map();
@@ -748,16 +1079,12 @@ function dayDiff(a,b){
         const calEnd = new Date(calendarEnd);
         calEnd.setHours(0, 0, 0, 0);
 
-        console.log("calEnd", calEnd);
-
         const fragmentMap = new Map();
 
         /* ================= LOOP TASKS ================= */
-
-        let i = 0;
         console.log("task total all render", tasks);
+
         tasks.forEach(task => {
-            i++;
             const row = rowMap.get(String(task.line_id));
             if (!row) return;
 
@@ -770,8 +1097,6 @@ function dayDiff(a,b){
             taskStart.setHours(0, 0, 0, 0);
             taskEnd.setHours(0, 0, 0, 0);
 
-           
-
             // Skip if fully outside calendar
             if (taskEnd < calStart || taskStart > calEnd) return;
 
@@ -779,20 +1104,19 @@ function dayDiff(a,b){
             const visibleStartDate = taskStart < calStart ? calStart : taskStart;
             const visibleEndDate = taskEnd > calEnd ? calEnd : taskEnd;
 
-            // Days between visible start and end
-            const visibleDays = dayDiff(visibleStartDate, visibleEndDate) + 1;
+            /* ================= WIDTH CALCULATION ================= */
+            let visibleHours = 0;
 
-            // Hours to render
-            let totalHours = durationToHours(task.duration);
-          
-            // Remove hours before calendar
-            if (taskStart < calStart) {
-                totalHours -= dayDiff(taskStart, calStart) * WORKING_HOURS;
+            for (let d = new Date(visibleStartDate); d <= visibleEndDate; d.setDate(d.getDate() + 1)) {
+                const isStartDay = d.getTime() === taskStart.getTime();
+                const isEndDay = d.getTime() === taskEnd.getTime();
+
+                let dayStartHour = isStartDay ? task.start_hour : 0;
+                let dayEndHour = isEndDay ? task.end_hour : WORKING_HOURS;
+
+                visibleHours += dayEndHour - dayStartHour;
             }
 
-            // Clamp to calendar end
-            const maxVisibleHours = visibleDays * WORKING_HOURS - (taskStart >= calStart ? task.start_hour : 0);
-            const visibleHours = Math.min(totalHours, maxVisibleHours);
             if (visibleHours <= 0) return;
 
             /* ================= POSITION ================= */
@@ -805,37 +1129,30 @@ function dayDiff(a,b){
             taskDiv.className = 'task';
             taskDiv.draggable = true;
             if (task.IsIncludedHoliday == 1) {
-                taskDiv.style.zIndex = '999999';
+                console.log("IsIncludedHoliday");
+                taskDiv.style.zIndex = '100';
             }
-         
+
             taskDiv.style.transform = `translateX(${left}px)`;
             taskDiv.style.width = `${width}px`;
 
-        //    taskDiv.innerHTML = `
-        //    <div class="task-first" style="background:#00BCD4;"></div>
-        //    <div class="task-second" style="background:#2ECC71;">
-        //        <p>Plan-${task.plan_id}</p>
-        //    </div>
-        //    <div class="task-third" style="background:#607D8B;"></div>
-            //`;
-
             taskDiv.innerHTML = `
-                <div class="task-first" style="background:${task.TOP_BORDER_COLOR};"></div>
-                    <div class="task-second" style="background:${task.RIGHT_COLOR};">
-                        <p>Plan-${task.plan_id}</p>
-                    </div>
-                    <div class="task-third" style="background:${task.LEFT_COLOR};"></div>
-                `;
+            <div class="task-first" style="background:${task.TOP_BORDER_COLOR};"></div>
+            <div class="task-second" style="background:${task.RIGHT_COLOR};">
+                <p>Plan-${task.plan_id}</p>
+            </div>
+            <div class="task-third" style="background:${task.LEFT_COLOR};"></div>
+        `;
 
             /* ================= DATASET ================= */
-                    taskDiv.dataset.id = task.plan_id;
-                    taskDiv.dataset.startDate = task.start_date;
-                    taskDiv.dataset.endDate = task.end_date;
-                    taskDiv.dataset.startHour = task.start_hour;
-                    taskDiv.dataset.endHour = task.end_hour;
-                    taskDiv.dataset.duration = task.duration;
-                    taskDiv.dataset.quantity = task.plan_qnty;
-                    taskDiv.dataset.isincludedholiday = task.IsIncludedHoliday;
+            taskDiv.dataset.id = task.plan_id;
+            taskDiv.dataset.startDate = task.start_date;
+            taskDiv.dataset.endDate = task.end_date;
+            taskDiv.dataset.startHour = task.start_hour;
+            taskDiv.dataset.endHour = task.end_hour;
+            taskDiv.dataset.duration = task.duration;
+            taskDiv.dataset.quantity = task.plan_qnty;
+            taskDiv.dataset.isincludedholiday = task.IsIncludedHoliday;
 
             /* ================= FRAGMENT ================= */
             let fragment = fragmentMap.get(task.line_id);
@@ -853,7 +1170,6 @@ function dayDiff(a,b){
             if (row) row.appendChild(fragment);
         });
     }
-
 
 
 
@@ -1082,8 +1398,9 @@ function dayDiff(a,b){
         const EndDate = convertToDMY(endCell.dataset.date);
         const EndHour = taskDiv.dataset.endHour
         const duration = durationHours;
+        const quantity = parseInt(draggedTask.dataset.quantity);
         
-        updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId, duration, lastHover);
+        updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId, duration, quantity, lastHover);
     }
 
     // -------------------- GET DURATION --------------------
@@ -1291,109 +1608,209 @@ function dayDiff(a,b){
 
     function isDisabledDay(date) {
         const day = date.getDay();
-        return day === 5; // Sunday & Friday
+        return day === 5; // Friday
     }
 
 
+    //function calculateDuration({
+    //    startDate,
+    //    startHour,
+    //    row,
+    //    totalQuantity,
+    //    isIncludedHoliday
+    //}) {
+
+    //    const manpower = Number(row?.dataset.manpower) || 0;
+    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+
+    //    let efficiencyRaw = row?.dataset.efficiency || 0;
+    //    const efficiency = efficiencyRaw.toString().includes("%")
+    //        ? parseFloat(efficiencyRaw) / 100
+    //        : parseFloat(efficiencyRaw);
+    //    console.log("===============  calculateDuration END =============");
+    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
+    //        return null;
+    //    }
+
+    //    /* ---------- TOTAL HOURS ---------- */
+    //    const effectiveHourlyOutput = hourlyQty * efficiency;
+
+    //    // KEEP decimal precision
+    //    const totalHours = Number(
+    //        (totalQuantity / effectiveHourlyOutput).toFixed(1)
+    //    );
+
+    //    /* ---------- DURATION (1.1 format) ---------- */
+    //    const days = Math.floor(totalHours / WORKING_HOURS);
+    //    const hours = Math.round(totalHours % WORKING_HOURS);
+
+
+
+
+    //    let duration = Number(`${days}.${hours}`);
+
+    //    /* ---------- END HOUR & DAY OFFSET ---------- */
+    //    let endHour = startHour + hours;
+    //    let endDayOffset = days;
+
+    //    if (endHour >= WORKING_HOURS) {
+    //        endDayOffset += Math.floor(endHour / WORKING_HOURS);
+    //        endHour = endHour % WORKING_HOURS;
+    //    }
+
+    //    /* ---------- END DATE ---------- */
+    //    console.log("============================startdate Before Before", startDate);
+    //    const endDate = new Date(startDate);
+    //    endDate.setHours(0, 0, 0, 0);
+
+    //    console.log("============================endDate Before Before", endDate.getDate());
+    //    if (isNaN(endDate)) return null;
+    //    console.log("============================endDate Before", endDate);
+    //    let addedWorkingDays = 0;
+    //    let disabledDayCount = 0;
+    //    console.log("============================endDayOffset Before Before", endDayOffset);
+    //    if (isIncludedHoliday == 1) {
+    //        endDate.setDate(endDate.getDate() + endDayOffset);
+
+    //    } else {
+
+
+    //        while (addedWorkingDays <= endDayOffset) {
+    //            endDate.setDate(endDate.getDate() + 1);
+    //            endDate.setHours(0, 0, 0, 0);
+    //            if (isDisabledDay(endDate)) {
+    //                disabledDayCount++;
+    //                continue;
+    //            }
+
+    //            addedWorkingDays++;
+    //        }
+    //        if (disabledDayCount > 0) {
+    //            console.log("============================endDate Before disable day count", endDate);
+    //            console.log("============================duration Before disable day count", duration);
+    //            endDate.setDate(endDate.getDate() + disabledDayCount);
+    //            console.log("============================endDate after disable day count", endDate);
+    //            duration = duration + disabledDayCount;
+    //            console.log("============================duration after disable day count", duration);
+    //        }
+    //    }
+
+
+
+
+
+    //        console.log("==================   calculation time  =====================");
+    //        console.log("startDate", startDate);
+    //        console.log("endDate", convertToDMY(formatYMD(endDate)));
+    //        console.log("endHour", endHour);
+    //        console.log("duration", duration);
+    //        console.log("hourlyQty", hourlyQty);
+    //        console.log("Total Quantity", totalQuantity);
+    //        console.log("manpower", manpower);
+    //        console.log("disabledDayCount", disabledDayCount);
+    //        console.log("endDayOffset", endDayOffset);
+    //        console.log("========================================================");
+
+
+
+    //    return {
+    //        startDate,
+    //        endDate,
+    //        endHour,
+    //        duration // 👉 1.1 format
+    //    };
+    //}
+
     function calculateDuration({
-        startDate,
-        startHour,
-        row,
+        startDate,           
+        startHour,          
+        row,                 
         totalQuantity,
-        isIncludedHoliday
+        isIncludedHoliday  
     }) {
       
-        const manpower = Number(row?.dataset.manpower) || 0;
-        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
 
+        // ---------- READ MANPOWER DATA ----------
+        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
         let efficiencyRaw = row?.dataset.efficiency || 0;
         const efficiency = efficiencyRaw.toString().includes("%")
             ? parseFloat(efficiencyRaw) / 100
             : parseFloat(efficiencyRaw);
-        console.log("===============  calculateDuration END =============");
-        if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
-            return null;
-        }
-       
-        /* ---------- TOTAL HOURS ---------- */
+
+        if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
+
+        // ---------- TOTAL REQUIRED HOURS ----------
         const effectiveHourlyOutput = hourlyQty * efficiency;
+        const totalHours = totalQuantity / effectiveHourlyOutput;
 
-        // KEEP decimal precision
-        const totalHours = Number(
-            (totalQuantity / effectiveHourlyOutput).toFixed(1)
-        );
+        // ---------- SPLIT INTO FULL DAYS + REMAINING HOURS ----------
+        const fullDays = Math.floor(totalHours / WORKING_HOURS);
+        const remainingHours = totalHours % WORKING_HOURS; // exact hours
 
-        /* ---------- DURATION (1.1 format) ---------- */
-        const days = Math.floor(totalHours / WORKING_HOURS);
-        const hours = Math.round(totalHours % WORKING_HOURS);
-
-    
-
-
-        let duration = Number(`${days}.${hours}`);
-
-        /* ---------- END HOUR & DAY OFFSET ---------- */
-        let endHour = startHour + hours;
-        let endDayOffset = days;
+        // ---------- CALCULATE END HOUR & DAY OFFSET ----------
+        let endHour = startHour + remainingHours;
+        let endDayOffset = fullDays;
 
         if (endHour >= WORKING_HOURS) {
             endDayOffset += Math.floor(endHour / WORKING_HOURS);
             endHour = endHour % WORKING_HOURS;
         }
 
-        /* ---------- END DATE ---------- */
+        // ---------- CALCULATE END DATE ----------
         const endDate = new Date(startDate);
-        console.log("============================endDate Before Before", endDate);
+        endDate.setHours(0, 0, 0, 0);
         if (isNaN(endDate)) return null;
-        console.log("============================endDate Before", endDate);
+
         let addedWorkingDays = 0;
         let disabledDayCount = 0;
+
         if (isIncludedHoliday == 1) {
+            // Include holidays → simple offset
             endDate.setDate(endDate.getDate() + endDayOffset);
         } else {
-           
-
+            // Exclude disabled days
             while (addedWorkingDays < endDayOffset) {
                 endDate.setDate(endDate.getDate() + 1);
+                endDate.setHours(0, 0, 0, 0);
 
                 if (isDisabledDay(endDate)) {
                     disabledDayCount++;
                     continue;
                 }
-
                 addedWorkingDays++;
             }
-            if (disabledDayCount > 0) {
-                endDate.setDate(endDate.getDate() + disabledDayCount);
-                duration = duration + disabledDayCount;
-            }
         }
-      
 
-       
-       
+        // ---------- FINAL UI DURATION (days.hours style) ----------
+        const totalDaySpan = endDayOffset + disabledDayCount;
+        const remainingHoursInt = Math.round(remainingHours); // integer hours
+        const duration = Number(`${totalDaySpan}.${remainingHoursInt}`); // 4.3 = 4 days 3 hours
 
-            console.log("==================   calculation time  =====================");
-            console.log("startDate", startDate);
-            console.log("endDate", convertToDMY(formatYMD(endDate)));
-            console.log("endHour", endHour);
-            console.log("duration", duration);
-            console.log("hourlyQty", hourlyQty);
-            console.log("Total Quantity", totalQuantity);
-            console.log("manpower", manpower);
-            console.log("disabledDayCount", disabledDayCount);
-            console.log("endDayOffset", endDayOffset);
-            console.log("========================================================");
+        // ---------- ENSURE END HOUR IS INTEGER ----------
+        endHour = Math.floor(endHour);
 
+        // ---------- DEBUG LOG (OPTIONAL) ----------
+        console.log("========= CALCULATION RESULT =========");
+        console.log("Start Date :", startDate);
+        console.log("End Date   :", endDate.toString());
+        console.log("Start Hour :", startHour);
+        console.log("End Hour   :", endHour);
+        console.log("Total Hours:", totalHours.toFixed(2));
+        console.log("UI Duration (days.hours):", duration);
+        console.log("Disabled Days Skipped:", disabledDayCount);
+        console.log("=====================================");
 
-
+        // ---------- RETURN RESULT ----------
         return {
             startDate,
-            endDate,
-            endHour,
-            duration // 👉 1.1 format
+            endDate,    // 00:00
+            endHour,    // integer working hour
+            duration    // days.hours integer hours format
         };
     }
+
+
+
 
 
     function getDuration(hover, totalQuantity,isIncludedHoliday = 0) {
@@ -1425,13 +1842,126 @@ function dayDiff(a,b){
     }
 
     function getDurationInDaysHours(totalHours) {
+        console.log("getDurationInDaysHours :", totalHours);
         const days = Math.floor(totalHours / WORKING_HOURS);
         const hours = Math.round(totalHours % WORKING_HOURS);
 
         return Number(`${days}.${hours}`);
     }  
 
-    const SCROLL_EDGE_SIZE = 40;
+
+
+
+
+    function getQuantityByDateRenge(hoverInfo,task) {
+
+
+        const row = hoverInfo.row;
+        const startDate = convertToDMY(task.start_date);
+      
+        const enddate = hoverInfo.cell.dataset.date;
+       
+        const totalQuantity = task.plan_qnty;
+        const startHour = Number(task.start_hour);
+        const endhour = Number(hoverInfo.hour);
+
+        const isIncludedHoliday = Number(task.IsIncludedHoliday);
+
+        const totalHours = calculateTotalHours(startDate, startHour, enddate, endhour, isIncludedHoliday);
+      
+        // ---------- READ MANPOWER DATA ----------
+        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+        let efficiencyRaw = row?.dataset.efficiency || 0;
+        const efficiency = efficiencyRaw.toString().includes("%")
+            ? parseFloat(efficiencyRaw) / 100
+            : parseFloat(efficiencyRaw);
+
+        if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
+
+        // ---------- TOTAL REQUIRED HOURS ----------
+        const effectiveHourlyOutput = hourlyQty * efficiency;
+       
+
+        const estimatedQuantity = totalHours * effectiveHourlyOutput;
+        const totalDuration = getDurationInDaysHours(totalHours);
+      
+        // ---------- DEBUG LOG (OPTIONAL) ----------
+        console.log("========= CALCULATION RESULT =========");
+        console.log("Start Date :", startDate);
+        console.log("End Date   :", enddate.toString());
+        console.log("Start Hour :", startHour);
+        console.log("End Hour   :", endhour);
+        console.log("Total Hours:", totalHours);
+        console.log("Total Quantity  :", totalQuantity);
+        console.log("estimatedQuantity  :", estimatedQuantity);
+        
+       
+        console.log("=====================================");
+
+        // ---------- RETURN RESULT ----------
+        return {
+            estimatedQuantity: estimatedQuantity,Duration: totalDuration
+        };
+    }
+
+    function calculateTotalHours(
+        startDate,
+        startHour,
+        endDate,
+        endHour,
+        isIncludedHoliday
+    ) {
+
+        //const start = new Date(startDate);
+        //const end = new Date(endDate);
+
+        if (!startDate || !endDate) {
+            console.error("Missing startDate or endDate", { startDate, endDate });
+            return 0;
+        }
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        if (isNaN(start) || isNaN(end)) {
+            console.error("Invalid date value", { startDate, endDate });
+            return 0;
+        }
+
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+
+        let totalHours = 0;
+        let current = new Date(start);
+
+        while (current <= end) {
+
+            if (!isDisabledDay(current)) {
+
+                // First day
+                if (current.getTime() === start.getTime()) {
+                    totalHours += WORKING_HOURS - startHour;
+                }
+                // Last day
+                else if (current.getTime() === end.getTime()) {
+                    totalHours += endHour;
+                }
+                // Middle day
+                else {
+                    totalHours += WORKING_HOURS;
+                }
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
+        return Math.max(0, totalHours);
+    }
+
+
+
+
+    const SCROLL_EDGE_SIZE = 50; //40
     const SCROLL_SPEED = 15;
 
     let scrollRAF = null;
@@ -1578,7 +2108,7 @@ function dayDiff(a,b){
                 durationsData = getDuration(hover, quantity, isIncludedHoliday);
                 duration = durationsData.duration;
                 showPreviewOptimized(draggedTask, duration);
-            }, 700);
+            }, 600);
         }
     });
 
@@ -1721,22 +2251,33 @@ function dayDiff(a,b){
                     }
 
                     data.forEach(order => {
-                        // Make li draggable
                         let li = $(`
-                        <li class="list-group-item bg-dark text-white border-secondary draggable-order"
+                        <li class="order-card draggable-order"
                             draggable="true"
                             data-orderid="${order.OrderId}"
                             data-quantity="${order.Quantity}">
-                            <strong>Order #${order.OrderId}</strong><br>
-                            Company: ${order.OrderCompany || ''}<br>
-                            Qty: ${order.Quantity} pcs
+
+                            <div class="order-header">
+                                <span class="order-id" title="This is the unique Order ID">#${order.OrderId}</span>
+                                <span class="order-qty" title="Total quantity of items in this order">${order.Quantity} pcs</span>
+                                <span class="order-company" title="Company that placed the order">${order.OrderCompany || '—'}</span>
+
+                                <div class="order-info-popup">
+                                <p><strong>Order ID:</strong> #${order.OrderId}</p>
+                                <p><strong>Quantity:</strong> ${order.Quantity} pcs</p>
+                                <p><strong>Company:</strong> ${order.OrderCompany || '—'}</p>
+                                </div>
+
+
+                            </div>
+
+
                         </li>
                     `);
 
-
-
                         sidebarList.append(li);
                     });
+
                 },
                 error: function () {
                     $('#sidebar-orders').html('<li class="text-white">Error loading orders.</li>');
@@ -1789,6 +2330,54 @@ function dayDiff(a,b){
         return task;
     }
 
+    function createPlanFromSplit(Quantity, SplitHover) {
+        // Validate input
+        if (!Quantity || !SplitHover) {
+            console.error("Missing required parameters to create task");
+            return null;
+        }
+
+        const lineId = parseInt(SplitHover.row.dataset.line);
+        const startDate = convertToDMY(SplitHover.cell.dataset.date); // make sure this returns valid 'yyyy-mm-dd'
+        const startHour = SplitHover.hour || 0;
+        const isIncludedHoliday = 1;
+        // Calculate duration for this order
+        const durationForPlan = getDuration(SplitHover, Quantity, isIncludedHoliday);
+        if (!durationForPlan || !durationForPlan.endDate || !durationForPlan.endHour || !durationForPlan.duration === undefined) {
+            console.error("Duration calculation failed:", durationForPlan);
+            return null;
+        }
+        console.log("==============================durationFor Order", durationForPlan);
+        // Create the task object
+        const task = {
+            plan_id: tasks.length + 1,                   // unique id
+            JOB_NO: `PLAN FROM SPLIT`, // label
+            plan_qnty: Quantity,
+            line_id: lineId,
+            SewingLine: null,                            // optional, can fill later
+            start_date: startDate,
+            end_date: convertToDMY(formatYMD(durationForPlan.endDate)),
+            start_hour: startHour,
+            end_hour: durationForPlan.endHour,
+            ColorCode: 'blue',
+            duration: durationForPlan.duration,
+            LEFT_COLOR: "#FF6600",
+            RIGHT_COLOR: "#FF6600",
+            TOP_BORDER_COLOR: "#33cc33",
+            IsIncludedHoliday: isIncludedHoliday
+        };
+
+        console.log("newTask:", task);
+
+        tasks.push(task);
+        console.log("total task:", tasks);
+        //moveTaskToRow(task, orderHover.row, orderHover.cell, orderHover.hour, durationForOrder.duration);
+        if (task) {
+            AllPlansByLineId(lineId, task, SplitHover)
+        }
+        //return task;
+    }
+
 
         function getAllPlansfromApi() {
             $.get("http://202.4.125.191/platform_erp/logic-api/index.php/api/planning/line_info/company_id/1/location_id/2/floor_id/0/user/1/date/2025-12-21", function (data) {
@@ -1816,10 +2405,12 @@ function dayDiff(a,b){
         XLSX.writeFile(workbookLine, "Production_Line.xlsx");
     }
 
-    function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration, lastHover)
+    function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration,Quantity = 0, lastHover)
     {
 
-        const task = tasks.find(t => t.plan_id === planID);
+        const task = tasks.find(t => t.plan_id == planID);
+        console.log("update task :", task);
+        console.log("update Quantity :", Quantity);
         if (!task) return;
 
         task.start_date = startdate;
@@ -1828,9 +2419,31 @@ function dayDiff(a,b){
         task.end_date = EndDate;
         task.end_hour = EndHour;
         task.duration = duration;
+        
+        task.plan_qnty = Quantity;
         //console.clear();
         console.log("task after update in update method", task)
         AllPlansByLineId(LineId, task, lastHover)
+    }
+
+    function updatePlanForSplit(planID, startdate, startHour, EndDate, EndHour, LineId, duration, Quantity, lastHover) {
+
+        const task = tasks.find(t => t.plan_id == planID);
+        console.log("update task :", task);
+        console.log("update Quantity :", Quantity);
+        if (!task) return;
+
+        task.start_date = startdate;
+        task.start_hour = startHour;
+        task.line_id = LineId;
+        task.end_date = EndDate;
+        task.end_hour = EndHour;
+        task.duration = duration;
+
+        task.plan_qnty = Quantity;
+        //console.clear();
+        console.log("task after update in update method", task)
+       
     }
 
 
@@ -1942,6 +2555,7 @@ function dayDiff(a,b){
            
             renderAfterChangeDebounced();
         } else {
+            renderAfterChangeDebounced();
             console.log("✅ No conflicts detected");
         }
     }
@@ -2122,22 +2736,35 @@ $(document).ready(()=>{
 
     let calendarContext = null;
     let selectedTask = null;
-
+    let hoverInfo = null;
     $(document).on("contextmenu", "#calendar-body", function (e) {
         e.preventDefault();
         if (window.isDragging) return;
 
         const taskEl = e.target.closest(".task");
-        selectedTask = taskEl ? $(taskEl) : null;
-
+        const clickRow = e.target.closest(".calendar-row");
+        hoverInfo = getHoverInfo(e, clickRow);
+      
+        //selectedTask = taskEl ? $(taskEl) : null;
+        selectedTask = taskEl ;
+        console.log("taskEl", taskEl);
         let taskInfo = null;
 
         if (selectedTask) {
-            const rect = selectedTask[0].getBoundingClientRect();
+            const rect = selectedTask.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
-
+            console.log("selectedTask", selectedTask);
+            console.log("selectedTask start-hour", selectedTask.dataset.startHour);
+            console.log("selectedTask start-date", selectedTask.dataset.startDate);
+            console.log("selectedTask end-date", selectedTask.dataset.endDate);
+            console.log("selectedTask end-hour", selectedTask.dataset.endHour);
+            console.log("selectedTask data-duration", selectedTask);
+            console.log("selectedTask data-duration", selectedTask.dataset.duration);
+            console.log("selectedTask data-quantity", selectedTask.dataset.quantity);
+            console.log("selectedTask data-isincludedholiday", selectedTask.dataset.isincludedholiday);
+            
             taskInfo = {
-                id: selectedTask.data("id"),
+                id: selectedTask.dataset.id,
                 totalWidth: rect.width,
                 clickX: clickX,
                 clickPercent: Number(((clickX / rect.width) * 100).toFixed(2))
@@ -2162,18 +2789,103 @@ $(document).ready(()=>{
 
     $("#contextMenu").on("click", "li", function () {
         const action = $(this).data("action");
-
+        let totalQuantity = 0;
+        let estimatedQty = 0;
+        let estimatedDuration = 0;
+        let remainingQuantity = 0;
         if (calendarContext.task) {
             console.log("Task ID:", calendarContext.task.id);
             console.log("Task Width:", calendarContext.task.totalWidth);
             console.log("Click %:", calendarContext.task.clickPercent);
+            const planID = calendarContext.task.id;
+            if (!dayWidth || !hourWidth || !lineWidth) {
+                getLayout();
+            }
 
-           alert(`
-                Action: ${action}
-                Plan: ${calendarContext.task ? calendarContext.task.id : "None"}
-                Plan Width: ${calendarContext.task.totalWidth}
-                Click %: ${calendarContext.task.clickPercent}
-            `);
+            console.log("dayWidth :", dayWidth);
+            console.log("hourWidth :", hourWidth);
+            console.log("lineWidth :", lineWidth);
+
+            if (action == "split") {
+                console.log("split", hoverInfo.hour);
+                console.log("split clickDate", hoverInfo.cell.dataset.date);
+
+                var task = tasks.find(t => t.plan_id == planID);
+                console.log("task", task);
+
+                var estimatedPlan = getQuantityByDateRenge(hoverInfo, task);
+
+                estimatedQty = Math.round(estimatedPlan.estimatedQuantity);
+                estimatedDuration = estimatedPlan.Duration;
+              
+
+                totalQuantity = task.plan_qnty;
+              
+                //const start_date = convertToDMY(task.start_date);
+                const start_date = task.start_date;
+                const startHour = task.start_hour;
+                const LineId = task.line_id;
+                const EndHour = hoverInfo.hour;
+                const EndDate = convertToDMY(hoverInfo.cell.dataset.date);
+
+                console.log("estimatedQuantity", estimatedQty);
+
+                if (totalQuantity < estimatedQty) {
+                    alert(`
+                        The plan calculation seems incorrect.
+                        Please adjust or replan this task.
+                        `);
+                } else {
+                    remainingQuantity = totalQuantity - estimatedQty
+                    const isConfirmed = confirm(
+                        `Do you want to split this plan?\n\n` +
+                        `Plan ID: ${planID}\n` +
+                        `From: ${start_date} ${startHour} W/H\n` +
+                        `To: ${EndDate} ${EndHour} W/H \n` +
+                        `Total Qty: ${task.plan_qnty}\n` +
+                        `Estimated Qty: ${estimatedQty}\n` +
+                        `Estimated Duration: ${estimatedDuration}(DD.HH)`
+                    );
+
+                    if (isConfirmed) {
+
+                        updatePlanForSplit(
+                            planID,
+                            start_date,
+                            startHour,
+                            EndDate,
+                            EndHour,
+                            LineId,
+                            estimatedDuration,
+                            estimatedQty,
+                            hoverInfo
+                        );
+                        if (remainingQuantity > 0) {
+                            createPlanFromSplit(remainingQuantity, hoverInfo)
+                        }
+                       
+                    } else {
+                        console.log("Update cancelled by user");
+                    }
+                }
+                // ✅ CONFIRM BEFORE UPDATE
+                
+            }
+                 else {
+
+                alert(`
+                   Action: ${action}
+                   Plan: ${calendarContext.task ? calendarContext.task.id : "None"}
+                   Plan Width: ${calendarContext.task.totalWidth}
+                   Click %: ${calendarContext.task.clickPercent}
+                   Total Quantity :  ${totalQuantity}
+                   Estimated Quantity :  ${estimatedQty}
+             `);
+            }
+
+           
+
+         
 
             $("#contextMenu").hide();
         } else {
