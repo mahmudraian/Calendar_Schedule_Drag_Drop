@@ -1938,17 +1938,42 @@ function addDays(date,days){
 
             if (!isDisabledDay(current)) {
 
+
+
+
+
+                if (
+                    current.getTime() === start.getTime() &&
+                    current.getTime() === end.getTime()
+                ) {
+                    const workedHours = endHour - startHour;
+                    totalHours += workedHours;
+                    console.log("same day :", totalHours);
+                }
+
                 // First day
-                if (current.getTime() === start.getTime()) {
+                else
+                    if (current.getTime() === start.getTime()) {
+                   
                     totalHours += WORKING_HOURS - startHour;
+                        console.log("first Date : ", totalHours);
+
+                           
+                  
+
+                    
+
                 }
                 // Last day
                 else if (current.getTime() === end.getTime()) {
+                    console.log("last Date : ", totalHours);
                     totalHours += endHour;
+                    console.log("mid Date : ", totalHours);
                 }
                 // Middle day
                 else {
                     totalHours += WORKING_HOURS;
+                    console.log("last Date : ", totalHours);
                 }
             }
 
