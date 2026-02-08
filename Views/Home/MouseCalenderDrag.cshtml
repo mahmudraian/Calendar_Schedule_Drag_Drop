@@ -3,8 +3,8 @@
     var linesJson = Newtonsoft.Json.JsonConvert.SerializeObject(lines);
     var tasks = ViewBag.Tasks as List<WebApplication1.Models.PlanProductionModel>;
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
-    DateTime startDate = ViewBag.StartDate;
-    DateTime endDate = ViewBag.EndDate;
+    string startDate = ViewBag.StartDate;
+    string endDate = ViewBag.EndDate;
     int workingHours = 10; // daily working hours
 }
 @*<style>
@@ -156,459 +156,525 @@
     </style>*@
 
 <style>
-    :root {
-        --line-width: 80px;
-        --cell-width: 80px;
-        --row-height: 55px;
-    }
-    /* Scrollable calendar body */
-    .calendar-wrapper {
-        overflow: auto;
-        bordtion: relative;
-        heiger: 1px solid #ccc;
-        posiht: 100vh;
-    }
+        :root {
+            --line-width: 200px;
+            --cell-width: 70px;
+            --row-height: 55px;
+        }
+        /* Scrollable calendar body */
+        .calendar-wrapper {
+            overflow: auto;
+    /*        bordtion: relative;
+            heiger: 1px solid #ccc;
+            posiht: 100vh;*/
+        }
 
-    /* Header (sticky top inside wrapper) */
-    .calendar-header {
-        display: flex;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: #f8f9fa;
-        border-bottom: 2px solid #ddd;
-        min-width: max-content;
-        height: auto !important;
-    }
+        /* Header (sticky top inside wrapper) */
+        .calendar-header {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+            min-width: max-content;
+            height: auto !important;
+        }
 
-    /* Calendar rows */
-    .calendar-row {
-        display: flex;
-        min-width: max-content;
-        height: auto !important;
-        position: relative;
-    }
+        /* Calendar rows */
+        .calendar-row {
+            display: flex;
+            min-width: max-content;
+            height: auto !important;
+            position: relative;
+        }
 
-    /* Sticky left column (line name) */
-    .line-name {
-        width: var(--line-width);
-        min-width: var(--line-width);
-        flex-shrink: 0;
-        padding: 10px;
-        background: #fafafa;
-        font-weight: 600;
-        border-right: 1px solid #ddd;
-        border-bottom: 1px solid #e9d7d7;
-        position: sticky;
-        left: 0;
-        z-index: 999999;
-    }
+        /* Sticky left column (line name) */
+        .line-name {
+            width: var(--line-width);
+            min-width: var(--line-width);
+            flex-shrink: 0;
+            padding: 10px;
+            background: #fafafa;
+            font-weight: 600;
+            border-right: 1px solid #ddd;
+            border-bottom: 1px solid #e9d7d7;
+            position: sticky;
+            left: 0;
+            z-index: 999999;
+        }
 
-    /* Header cell */
-    /*    .calendar-header .cell {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: 600;
-    }*/
+        /* Header cell */
+        /*    .calendar-header .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+        }*/
 
-    .calendar-header .cell {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 4px;
-        text-align: center;
-        line-height: 1.2;
-    }
+        .calendar-header .cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 4px;
+            text-align: center;
+            line-height: 1.2;
+        }
 
-    .container{
-        
-    }
-    /* Calendar cell */
-    .cell {
-        width: var(--cell-width);
-        min-width: var(--cell-width);
-        flex-shrink: 0;
-        position: relative;
-        border-bottom: 1px solid #e9d7d7;
-        
-    }
+        .container{
 
-        /* Vertical grid line */
-        .cell::after {
+        }
+        /* Calendar cell */
+        .cell {
+            width: var(--cell-width);
+            min-width: var(--cell-width);
+            flex-shrink: 0;
+            position: relative;
+            border-bottom: 1px solid #e9d7d7;
+
+        }
+
+            /* Vertical grid line */
+            .cell::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                width: 1px;
+                background: #e0e0e0;
+                pointer-events: none;
+            }
+
+        /* Header grid line darker */
+        .calendar-header .cell::after {
+            background: #ccc;
+        }
+
+        .calendar-body {
+            height: auto;
+            min-height: unset;
+            height: auto !important;
+        }
+        /* Row bottom border */
+        .calendar-row::after {
             content: "";
             position: absolute;
-            top: 0;
-            bottom: 0;
+            left: 0;
             right: 0;
-            width: 1px;
-            background: #e0e0e0;
-            pointer-events: none;
+            bottom: 0;
+            height: 1px;
+            background: #dcdcdc;
         }
 
-    /* Header grid line darker */
-    .calendar-header .cell::after {
-        background: #ccc;
-    }
+        /* Disabled day (Sunday) */
+        .disabled-day {
+            background: #f3f3f3;
+            z-index:60;
+        }
 
-    .calendar-body {
-        height: auto;
-        min-height: unset;
-        height: auto !important;
-    }
-    /* Row bottom border */
-    .calendar-row::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 1px;
-        background: #dcdcdc;
-    }
-
-    /* Disabled day (Sunday) */
-    .disabled-day {
-        background: #f3f3f3;
-        z-index:60;
-    }
-
-    /* Task block */
-    /*.task {
-        position: absolute;
-        top: 12px;
-        height: 30px;*/
-    /*        background: #ff6600;*/
-    /*color: #fff;
-        font-size: 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        z-index: 10;
-    }*/
-
-
-
-    /* Drag preview */
-    .task-preview {
-        /*        opacity: 0.5;*/
-        /*        border: 2px dashed #333;*/
-        z-index: 100;
-        cursor: grabbing;
-    }
-
-    .task {
-        position: absolute;
-        height: 34px;
-        border-radius: 4px;
-        overflow: hidden;
-        cursor: grab;
-        will-change: transform;
-    }
-
-        .task.dragging {
-            opacity: 0.8;
-            cursor: grabbing;
+        /* Task block */
+        /*.task {
             position: absolute;
-            z-index: 10;
-            pointer-events: none; 
-        }
-
-
-    .task-first {
-        height: 5px;
-    }
-
-    .task-second {
-        height: 24px;
-        display: flex;
-        align-items: center;
-        padding-left: 6px;
-        color: #fff;
-        font-size: 12px;
-        white-space: nowrap;
-    }
-
-    .task-third {
-        height: 5px;
-    }
-
-    #dayText {
-        font-size: 12px;
-        font-weight: 300;
-        line-height: 1.2;
-       
-    }
-
-    html, body {
-        height: 100%;
-        margin: 0;
-    }
-
-    .calendar-page {
-        display: flex;
-        height: calc(100vh - 120px); /* header + form height */
-        width: 100%;
-        overflow: hidden;
-    }
-
-    /* SIDEBAR */
-    .sidebar {
-        width: 280px;
-        background: #212529;
-        color: #fff;
-        overflow-y: auto;
-        transition: width 0.25s ease;
-    }
-
-        .sidebar.collapsed {
-            width: 0;
-        }
-
-    /* SIDEBAR HEADER */
-    .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px;
-    }
-
-    /* HANDLE */
-    .sidebar-handle {
-        width: 18px;
-        background: #343a40;
-        color: white;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        user-select: none;
-    }
-
-    /* CALENDAR */
-    .calendar-area {
-        flex: 1;
-        overflow: hidden;
-    }
-
-    .calendar-wrapper {
-        height: 100%;
-        width: 100%;
-    }
-
-    #contextMenu {
-        position: fixed; /* 🔥 prevents clipping */
-        display: none;
-        z-index: 999999;
-        background: #fff;
-        border: 1px solid #ccc;
-        min-width: 130px;
-        box-shadow: 0 4px 10px rgba(0,0,0,.15);
-    }
-
-        #contextMenu li {
-            padding: 8px 12px;
+            top: 12px;
+            height: 30px;*/
+        /*        background: #ff6600;*/
+        /*color: #fff;
+            font-size: 12px;
+            border-radius: 4px;
             cursor: pointer;
+            z-index: 10;
+        }*/
+
+
+
+        /* Drag preview */
+        .task-preview {
+            /*        opacity: 0.5;*/
+            /*        border: 2px dashed #333;*/
+            z-index: 100;
+            cursor: grabbing;
         }
 
-            #contextMenu li:hover {
-                background: #f0f0f0;
+        .task {
+            position: absolute;
+            height: 34px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: grab;
+            will-change: transform;
+        }
+
+            .task.dragging {
+                opacity: 0.8;
+                cursor: grabbing;
+                position: absolute;
+                z-index: 10;
+                pointer-events: none;
             }
-/*    ------------------*/
-    .dateForm {
-        background: #fff;
-        padding: 20px 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-        margin: 20px auto;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
 
-        .dateForm h3 {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #333;
+
+        .task-first {
+            height: 5px;
         }
 
-    .calendar-form {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-        .calendar-form label {
-            font-weight: 500;
-            color: #555;
+        .task-second {
+            height: 24px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            padding-left: 6px;
+            color: #fff;
+            font-size: 12px;
+            white-space: nowrap;
         }
 
-        .calendar-form input[type="date"] {
-            padding: 7px 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            transition: border 0.2s ease;
+        .task-third {
+            height: 5px;
         }
 
-            .calendar-form input[type="date"]:focus {
-                border-color: #2ECC71;
-                outline: none;
+        #dayText {
+            font-size: 12px;
+            font-weight: 300;
+            line-height: 1.2;
+
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .calendar-page {
+            display: flex;
+            height: calc(100vh - 120px); /* header + form height */
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: #212529;
+            color: #fff;
+            overflow-y: auto;
+            transition: width 0.25s ease;
+        }
+
+            .sidebar.collapsed {
+                width: 0;
             }
 
-    .btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 14px;
-        transition: all 0.2s ease;
-    }
-
-    .btn-load {
-        background-color: #2ECC71;
-        color: #fff;
-    }
-
-        .btn-load:hover {
-            background-color: #27ae60;
+        /* SIDEBAR HEADER */
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
         }
 
-    .btn-tasks {
-        background-color: #3498db;
-        color: #fff;
-    }
+        /* HANDLE */
+        .sidebar-handle {
+            width: 18px;
+            background: #343a40;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
 
-        .btn-tasks:hover {
-            background-color: #2980b9;
+        /* CALENDAR */
+        .calendar-area {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .calendar-wrapper {
+            height: 100%;
+            width: 100%;
+        }
+
+        #contextMenu {
+            position: fixed; /* 🔥 prevents clipping */
+            display: none;
+            z-index: 999999;
+            background: #fff;
+            border: 1px solid #ccc;
+            min-width: 130px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
+            #contextMenu li {
+                padding: 8px 12px;
+                cursor: pointer;
+            }
+
+                #contextMenu li:hover {
+                    background: #f0f0f0;
+                }
+    /*    ------------------*/
+        .dateForm {
+            background: #fff;
+            border-radius: 8px;
+        }
+
+        .calendar-form select {
+            height: 38px;
+        }
+
+        .btn-tasks {
+            min-width: 120px;
+        }
+    /*__________
+    */
+
+        /* Sidebar container */
+        #sidebarOrders {
+            background: #111827;
+            padding: 10px;
+        }
+
+        /* Order card */
+        .order-card {
+            background: linear-gradient(145deg, #1f2933, #111827);
+            border: 1px solid #374151;
+            border-radius: 10px;
+            padding: 5px 8px;
+            margin-bottom: 10px;
+            color: #e5e7eb;
+            cursor: grab;
+            transition: all 0.2s ease;
+            list-style: none;
+        }
+
+            /* Hover effect */
+            .order-card:hover {
+                background: #1f2937;
+                border-color: #4f46e5;
+                transform: translateX(3px);
+            }
+
+            /* While dragging */
+            .order-card:active {
+                cursor: grabbing;
+                opacity: 0.8;
+            }
+
+        /* Header row */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        /* Hover popup */
+        .order-info-popup {
+            display: none;
+            position: absolute;
+            top: 110%; /* below the header */
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.12); /* semi-transparent */
+            backdrop-filter: blur(10px); /* blur effect */
+            color: #fff;
+            border-radius: 10px;
+            padding: 12px 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            min-width: 220px;
+            z-index: 100;
+            font-size: 14px;
+            line-height: 1.5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            pointer-events: none; /* prevents flickering */
+        }
+
+        /* Show popup on hover */
+        .order-header:hover .order-info-popup {
+            display: block;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Optional: spacing for the text */
+        .order-info-popup p {
+            margin: 4px 0;
+        }
+
+        /* Order ID */
+        .order-id {
+            font-weight: 600;
+            font-size: 14px;
+            color: #60a5fa;
+        }
+
+        /* Quantity badge */
+        .order-qty {
+            background: #16a34a;
+            color: #fff;
+            font-size: 12px;
+    /*        padding: 2px 8px;*/
+            border-radius: 12px;
+        }
+
+        /* Company name */
+        .order-company {
+            font-size: 13px;
+            color: #d1d5db;
+            opacity: 0.9;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px; /* space between fields */
+            flex-wrap: wrap; /* wrap on smaller screens */
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+            .form-row label {
+                display: flex;
+                flex-direction: column;
+                font-weight: 500;
+            }
+
+            .form-row select,
+            .form-row input[type="date"] {
+                min-width: 150px;
+                padding: 5px;
+            }
+
+        /* Buttons in one line */
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-right {
+            margin-left: auto; /* push save button to the right if desired */
+        }
+
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loader-img {
+            width: 200px;
+            animation: slideX 1.2s ease-in-out infinite alternate;
+        }
+
+        @@keyframes slideX {
+            from {
+                transform: translateX(-40px);
+            }
+
+            to {
+                transform: translateX(40px);
+            }
         }
 
 
-    /* Sidebar container */
-    #sidebarOrders {
-        background: #111827;
-        padding: 10px;
-    }
 
-    /* Order card */
-    .order-card {
-        background: linear-gradient(145deg, #1f2933, #111827);
-        border: 1px solid #374151;
-        border-radius: 10px;
-        padding: 5px 8px;
-        margin-bottom: 10px;
-        color: #e5e7eb;
-        cursor: grab;
-        transition: all 0.2s ease;
-        list-style: none;
-    }
-
-        /* Hover effect */
-        .order-card:hover {
-            background: #1f2937;
-            border-color: #4f46e5;
-            transform: translateX(3px);
-        }
-
-        /* While dragging */
-        .order-card:active {
-            cursor: grabbing;
-            opacity: 0.8;
-        }
-
-    /* Header row */
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 6px;
-    }
-
-    /* Hover popup */
-    .order-info-popup {
-        display: none;
-        position: absolute;
-        top: 110%; /* below the header */
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(255, 255, 255, 0.12); /* semi-transparent */
-        backdrop-filter: blur(10px); /* blur effect */
-        color: #fff;
-        border-radius: 10px;
-        padding: 12px 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        min-width: 220px;
-        z-index: 100;
-        font-size: 14px;
-        line-height: 1.5;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        opacity: 0;
-        pointer-events: none; /* prevents flickering */
-    }
-
-    /* Show popup on hover */
-    .order-header:hover .order-info-popup {
-        display: block;
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    /* Optional: spacing for the text */
-    .order-info-popup p {
-        margin: 4px 0;
-    }
-
-    /* Order ID */
-    .order-id {
-        font-weight: 600;
-        font-size: 14px;
-        color: #60a5fa;
-    }
-
-    /* Quantity badge */
-    .order-qty {
-        background: #16a34a;
-        color: #fff;
-        font-size: 12px;
-/*        padding: 2px 8px;*/
-        border-radius: 12px;
-    }
-
-    /* Company name */
-    .order-company {
-        font-size: 13px;
-        color: #d1d5db;
-        opacity: 0.9;
-    }
 
 
 </style>
 <div style="margin-bottom:15px;">
+    <div id="loader" style="display:none;">
+        <img src="/content/images/logic.png" alt="Loading..." class="loader-img">
+    </div>
 
-    @*<div class="dateForm" style="margin-bottom:15px;">
-            <h3>Sewing Line Calendar</h3>
-            <form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")">
-                From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" />
-                To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" />
-                <button type="submit">Load Calendar</button>
-                <button type="button" id="btn-tasks">Load Tasks</button>
+    <!--<div class="dateForm">-->
+    @*<h3>Sewing Line Calendar</h3>*@
+    @*<form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")" class="calendar-form">
+                <label>
+                    CompanyId
+                </label>
+                <select id="CompanyId" class="form-control">
+                    <option value="">-- Select Company --</option>
+                </select>
+
+                <label>
+                    Location
+                </label>
+                <select id="LocationId" class="form-control">
+                    <option value="">-- Select Location --</option>
+                </select>
+
+
+                <label>From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" /></label>
+                <label>To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" /></label>
+                <button type="submit" class="btn btn-load">Load Calendar</button>
+                <button type="button" id="btn-tasks" class="btn btn-tasks">Load Tasks</button>
+                <button type="button" class="btn btn-save btn-right">
+                    <i class="bi bi-save"></i> Save
+                </button>
+
+
+
+
+
             </form>
-
         </div>*@
 
-    <div class="dateForm">
-        @*<h3>Sewing Line Calendar</h3>*@
+    <div class="dateForm card shadow-sm p-3 mb-3">
         <form id="dateForm" method="get" action="@Url.Action("MouseCalenderDrag")" class="calendar-form">
-            <label>From: <input type="date" name="FromDate" value="@(startDate.ToString("yyyy-MM-dd"))" /></label>
-            <label>To: <input type="date" name="ToDate" value="@(endDate.ToString("yyyy-MM-dd"))" /></label>
-            <button type="submit" class="btn btn-load">Load Calendar</button>
-            <button type="button" id="btn-tasks" class="btn btn-tasks">Load Tasks</button>
+
+            <!-- Filters Row -->
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-2">
+                    <label for="CompanyId" class="form-label fw-semibold">
+                        Company
+                    </label>
+                    <select id="CompanyId" class="form-control">
+                        <option value="">-- Select Company --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="LocationId" class="form-label fw-semibold">
+                        Location
+                    </label>
+                    <select id="LocationId" class="form-control">
+                        <option value="">-- Select Location --</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="FloorId" class="form-label fw-semibold">
+                        Floor
+                    </label>
+                    <select id="FloorId" class="form-control">
+                        <option value="">-- Select Floor --</option>
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-6 text-end">
+                    <button type="button" id="btn-tasks" class="btn btn-primary me-2">
+                        <i class="bi bi-list-task"></i> Load Tasks
+                    </button>
+
+                    <button type="button" class="btn btn-success btn-save">
+                        <i class="bi bi-save"></i> Save
+                    </button>
+                </div>
+
+            </div>
+
         </form>
     </div>
+
 
 
 
@@ -657,15 +723,138 @@
 
         <ul style="list-style:none;" id="contextMenu">
             <li data-action="edit">Edit</li>
+            <li data-action="details">Details</li>
             <li data-action="delete">Delete</li>
             <li data-action="split">split</li>
         </ul>
 
     </div>
 
+    @*---------- modal----------*@
+
+    <div class="modal fade" id="detailsModal" tabindex="-1" style="z-index:99999999999;">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content shadow">
+
+                <!-- HEADER -->
+                <div class="modal-header" style="border-top:4px solid #33cc33;">
+                    <div>
+                        <h5 class="modal-title mb-0">
+                            Plan Details <span class="text-muted" id="mdlPlanId"></span>
+                        </h5>
+                        <small class="text-muted" id="mdlJobNo"></small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <!-- BODY -->
+                <div class="modal-body">
+
+                    <div class="row g-3">
+
+                        <!-- LEFT COLUMN -->
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th width="35%">Style Ref</th>
+                                        <td id="mdlStyleRef">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Buyer</th>
+                                        <td id="mdlBuyer">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Item</th>
+                                        <td id="mdlItem">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Line</th>
+                                        <td id="mdlLine">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Quantity</th>
+                                        <td id="mdlQty">0</td>
+                                    </tr>
+                                    <tr>
+                                        <th>PO No</th>
+                                        <td id="mdlPO">-</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- RIGHT COLUMN -->
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <th width="35%">Start</th>
+                                        <td id="mdlStart">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>End</th>
+                                        <td id="mdlEnd">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Duration</th>
+                                        <td id="mdlDuration">-</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Production</th>
+                                        <td>
+                                            <span class="badge" id="mdlProduction"></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Holiday Included</th>
+                                        <td>
+                                            <span class="badge" id="mdlHoliday"></span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>This Production</th>
+                                        <td id="mdlThisProduction">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
+                    <!-- COLORS -->
+                    <hr />
+                    <div class="d-flex gap-4 align-items-center">
+                        <div>
+                            <strong>Left Color:</strong>
+                            <span class="badge ms-1" id="mdlLeftColor">-</span>
+                        </div>
+                        <div>
+                            <strong>Right Color:</strong>
+                            <span class="badge ms-1" id="mdlRightColor">-</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    @*--------------------------*@
 
 
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -716,12 +905,23 @@ function addDays(date,days){
 
         return Math.floor((d2 - d1) / MS_PER_DAY);
     }
+    function parseDotNetDate(dotNetDate) {
+        if (!dotNetDate) return null;
+        const match = /\/Date\((\d+)\)\//.exec(dotNetDate);
+        return match ? new Date(Number(match[1])) : null;
+    }
 
 
 // --- Calendar Render ---
-    function renderCalendar() {
-        const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-        const toDate = parseDateSafe($('input[name="ToDate"]').val());
+    function renderCalendar(allLine) {
+        //const fromDate = parseDateSafe($('input[name="FromDate"]').val());
+        //const toDate = parseDateSafe($('input[name="ToDate"]').val());
+       
+        const fromDate = new Date("@startDate");
+        const toDate = new Date("@endDate");
+
+    
+     
         if (!fromDate || !toDate) return;
 
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -762,19 +962,40 @@ function addDays(date,days){
 
 
 
-        lines.forEach(line => {
+        allLine.forEach(line => {
             const row = document.createElement('div');
             row.className = 'calendar-row';
             row.dataset.line = line.LINE_ID;
             row.dataset.manpower = line.MAN_POWER;
             row.dataset.manpowercapacity = line.ManWorkLimite;
             row.dataset.efficiency = line.EFFICIENCY;
-       
+
+            //const lineDiv = document.createElement('div');
+            //lineDiv.className = 'line-name';
+            //lineDiv.textContent = `${line.LINE_NAME} (ID: ${line.LINE_ID})`;
+            //row.appendChild(lineDiv);
+
             const lineDiv = document.createElement('div');
             lineDiv.className = 'line-name';
-            lineDiv.textContent = line.LINE_NAME;
-            row.appendChild(lineDiv);
 
+            // Create span for line name
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = line.LINE_NAME;
+
+            // Create span for line ID (smaller font)
+            const idSpan = document.createElement('span');
+            idSpan.textContent = ` (ID: ${line.LINE_ID})`;
+            idSpan.style.fontSize = '0.8em';   // smaller font
+            idSpan.style.color = 'gray';       // optional color
+
+            // Append both spans to the div
+            lineDiv.appendChild(nameSpan);
+            lineDiv.appendChild(idSpan);
+
+            // Append div to the row
+            row.appendChild(lineDiv);
+            const dragDropArea = document.createElement('div');
+                     dragDropArea.className = 'dragDropArea';
             for (let i = 0; i <= totalDays; i++) {
                 const currentDate = addDays(fromDate, i);
                 const isFriday = currentDate.getDay() === 5;
@@ -794,7 +1015,7 @@ function addDays(date,days){
         });
         //renderTasks(fromDate,toDate)
         requestAnimationFrame(() => {
-            renderTasks(fromDate, toDate)
+            renderTasks(allPlan);
         });
     }
 
@@ -924,7 +1145,7 @@ function addDays(date,days){
             lineWidth = firstRow.querySelector('.line-name')?.offsetWidth || 180;
         }
 
-       
+
 
     //function renderTasks(calendarStart, calendarEnd) {
 
@@ -1057,9 +1278,13 @@ function addDays(date,days){
     //}
 
 
-    function renderTasks(calendarStart, calendarEnd) {
-
+    function renderTasks(allPlan) {
+        console.log("allPlan", allPlan);
         // Remove old tasks
+        const calendarStart = new Date(@Html.Raw(Json.Encode(@startDate)));
+        const calendarEnd   = new Date(@Html.Raw(Json.Encode(ViewBag.EndDate)));
+
+
         document.querySelectorAll('.task').forEach(t => t.remove());
 
         if (!dayWidth || !hourWidth || !lineWidth) {
@@ -1083,8 +1308,8 @@ function addDays(date,days){
 
         /* ================= LOOP TASKS ================= */
         console.log("task total all render", tasks);
-
-        tasks.forEach(task => {
+        console.log("task total rowMap", rowMap);
+        allPlan.forEach(task => {
             const row = rowMap.get(String(task.line_id));
             if (!row) return;
 
@@ -1163,7 +1388,7 @@ function addDays(date,days){
 
             fragment.appendChild(taskDiv);
         });
-
+        console.log("task total fragmentMap", fragmentMap);
         /* ================= APPEND ALL ================= */
         fragmentMap.forEach((fragment, lineId) => {
             const row = rowMap.get(String(lineId));
@@ -1186,6 +1411,9 @@ function addDays(date,days){
     let rafRunning = false;
     let dragTimeout = null;
     let lastHoverCell = null;
+    let lastHoverHour = 0;
+    let ForSavePlan = [];
+
 
     // -------------------- HELPER FUNCTIONS --------------------
     function getHoverInfo(e, row) {
@@ -1315,7 +1543,8 @@ function addDays(date,days){
     //    taskDiv.dataset.line = newRow.dataset.line;
     //}
 
-    function moveTaskToRow(taskDiv, lastHover, durationHours) {
+    function moveTaskToRow(taskDiv, lastHover, durationHours, endDate,endHour)
+    {
         const { row, cell, hour } = lastHover;
         const newRow = row;
         console.log("newRow", newRow);
@@ -1323,83 +1552,33 @@ function addDays(date,days){
         const hourWidth = dayWidth / WORKING_HOURS;
         const lineWidth = newRow.querySelector(".line-name")?.offsetWidth || 180;
 
-       
+
         console.log("duration Hours from moveTaskToRow", durationHours);
 
         const cells = [...newRow.querySelectorAll(".cell")];
         const dayIndex = cells.indexOf(cell);
-
-        const left =
-            lineWidth +
-            (dayIndex * dayWidth) +
-            (hour * hourWidth);
-
-        // total hours available in calendar from this day
-        const calendarRemainingHours =
-            (cells.length - dayIndex) * WORKING_HOURS;
-
-        // Remove from old row
-        taskDiv.remove();
-        newRow.appendChild(taskDiv);
-        console.log("___________________taskDiv____________________")
-        console.log("taskDiv", taskDiv);
-        console.log("___________________taskDiv____________________")
-        // Width based on duration (hours)
-        let TemptotalHours = 0;
-        if (durationHours) {
-            console.log("durationHours", durationHours);
-            console.log("hourWidth", hourWidth);
-            TemptotalHours = durationHours * WORKING_HOURS;
-            // clamp duration so it doesn't exceed calendar
-            const visibleHours = Math.min(TemptotalHours, calendarRemainingHours);
-            const width = visibleHours * hourWidth;
-            taskDiv.style.width = `${width}px`;
-           
-        }
-
-        // GPU-accelerated move
-        taskDiv.style.transform = `translate3d(${left}px, 0, 0)`;
 
 
         // 🔹 Update dataset AFTER moving
         taskDiv.dataset.startDate = cell.dataset.date;
         taskDiv.dataset.startHour = hour;
         taskDiv.dataset.duration = durationHours;
-
-        // Calculate end hour / date if needed
-        const totalHours = hour + TemptotalHours;
-        taskDiv.dataset.endHour = Math.floor(totalHours % WORKING_HOURS);
-
-        // End date
-        const endDayOffset = Math.floor(totalHours / WORKING_HOURS);
-        const maxDayIndex = cells.length - 1;
-        const safeDayIndex = Math.min(dayIndex + endDayOffset, maxDayIndex);
-        console.log("day Index", dayIndex);
-        console.log("day Index", endDayOffset);
-        console.log("max Index", maxDayIndex);
-        console.log("safe Day Index", safeDayIndex);
-        const endCell = cells[safeDayIndex];
-        if (endCell) {
-            taskDiv.dataset.endDate = convertToDMY(endCell.dataset.date);
-            console.log("convertToDMY(endCell.dataset.date);", convertToDMY(endCell.dataset.date))
-            console.log("convertToDMY(endCell.dataset.date);", endCell.dataset.date)
-        }
+        taskDiv.dataset.endHour = Math.floor(endHour);
 
         taskDiv.dataset.line = newRow.dataset.line;
 
         // Update task data
 
-      
-
         const planID = parseInt(draggedTask.dataset.id);
         const start_date = convertToDMY(cell.dataset.date);
         const startHour = hour;
         const LineId = parseInt(newRow.dataset.line);
-        const EndDate = convertToDMY(endCell.dataset.date);
+        //const EndDate = convertToDMY(endCell.dataset.date);
+        const EndDate = convertToDMY(formatYMD(endDate));
         const EndHour = taskDiv.dataset.endHour
         const duration = durationHours;
         const quantity = parseInt(draggedTask.dataset.quantity);
-        
+
         updatePlan(planID, start_date, startHour, EndDate, EndHour, LineId, duration, quantity, lastHover);
     }
 
@@ -1612,149 +1791,51 @@ function addDays(date,days){
     }
 
 
-    //function calculateDuration({
-    //    startDate,
-    //    startHour,
-    //    row,
-    //    totalQuantity,
-    //    isIncludedHoliday
-    //}) {
-
-    //    const manpower = Number(row?.dataset.manpower) || 0;
-    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
-
-    //    let efficiencyRaw = row?.dataset.efficiency || 0;
-    //    const efficiency = efficiencyRaw.toString().includes("%")
-    //        ? parseFloat(efficiencyRaw) / 100
-    //        : parseFloat(efficiencyRaw);
-    //    console.log("===============  calculateDuration END =============");
-    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
-    //        return null;
-    //    }
-
-    //    /* ---------- TOTAL HOURS ---------- */
-    //    const effectiveHourlyOutput = hourlyQty * efficiency;
-
-    //    // KEEP decimal precision
-    //    const totalHours = Number(
-    //        (totalQuantity / effectiveHourlyOutput).toFixed(1)
-    //    );
-
-    //    /* ---------- DURATION (1.1 format) ---------- */
-    //    const days = Math.floor(totalHours / WORKING_HOURS);
-    //    const hours = Math.round(totalHours % WORKING_HOURS);
-
-
-
-
-    //    let duration = Number(`${days}.${hours}`);
-
-    //    /* ---------- END HOUR & DAY OFFSET ---------- */
-    //    let endHour = startHour + hours;
-    //    let endDayOffset = days;
-
-    //    if (endHour >= WORKING_HOURS) {
-    //        endDayOffset += Math.floor(endHour / WORKING_HOURS);
-    //        endHour = endHour % WORKING_HOURS;
-    //    }
-
-    //    /* ---------- END DATE ---------- */
-    //    console.log("============================startdate Before Before", startDate);
-    //    const endDate = new Date(startDate);
-    //    endDate.setHours(0, 0, 0, 0);
-
-    //    console.log("============================endDate Before Before", endDate.getDate());
-    //    if (isNaN(endDate)) return null;
-    //    console.log("============================endDate Before", endDate);
-    //    let addedWorkingDays = 0;
-    //    let disabledDayCount = 0;
-    //    console.log("============================endDayOffset Before Before", endDayOffset);
-    //    if (isIncludedHoliday == 1) {
-    //        endDate.setDate(endDate.getDate() + endDayOffset);
-
-    //    } else {
-
-
-    //        while (addedWorkingDays <= endDayOffset) {
-    //            endDate.setDate(endDate.getDate() + 1);
-    //            endDate.setHours(0, 0, 0, 0);
-    //            if (isDisabledDay(endDate)) {
-    //                disabledDayCount++;
-    //                continue;
-    //            }
-
-    //            addedWorkingDays++;
-    //        }
-    //        if (disabledDayCount > 0) {
-    //            console.log("============================endDate Before disable day count", endDate);
-    //            console.log("============================duration Before disable day count", duration);
-    //            endDate.setDate(endDate.getDate() + disabledDayCount);
-    //            console.log("============================endDate after disable day count", endDate);
-    //            duration = duration + disabledDayCount;
-    //            console.log("============================duration after disable day count", duration);
-    //        }
-    //    }
-
-
-
-
-
-    //        console.log("==================   calculation time  =====================");
-    //        console.log("startDate", startDate);
-    //        console.log("endDate", convertToDMY(formatYMD(endDate)));
-    //        console.log("endHour", endHour);
-    //        console.log("duration", duration);
-    //        console.log("hourlyQty", hourlyQty);
-    //        console.log("Total Quantity", totalQuantity);
-    //        console.log("manpower", manpower);
-    //        console.log("disabledDayCount", disabledDayCount);
-    //        console.log("endDayOffset", endDayOffset);
-    //        console.log("========================================================");
-
-
-
-    //    return {
-    //        startDate,
-    //        endDate,
-    //        endHour,
-    //        duration // 👉 1.1 format
-    //    };
-    //}
 
     function calculateDuration({
-        startDate,           
-        startHour,          
-        row,                 
+        startDate,
+        startHour,
+        row,
         totalQuantity,
-        isIncludedHoliday  
+        isIncludedHoliday = 0
     }) {
-      
+
+        console.log("startDate given :", startDate); // 2026-01-20
+        console.log("startHour given :", startHour);
+        console.log("row given :", row);
+        console.log("totalQuantity given :", totalQuantity);
+        console.log("is IncludedHoliday :", isIncludedHoliday);
 
         // ---------- READ MANPOWER DATA ----------
-        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+        const hourlyQty = Number(row?.dataset.manpowercapacity) || 30;
+        console.log("is hourlyQty :", hourlyQty);
         let efficiencyRaw = row?.dataset.efficiency || 0;
-        const efficiency = efficiencyRaw.toString().includes("%")
-            ? parseFloat(efficiencyRaw) / 100
-            : parseFloat(efficiencyRaw);
-
+        //const efficiency = efficiencyRaw.toString().includes("%")
+        //    ? parseFloat(efficiencyRaw) / 100
+        //    : parseFloat(efficiencyRaw);
+        const efficiency = 10;
+        console.log("is efficiency :", efficiency);
         if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
 
         // ---------- TOTAL REQUIRED HOURS ----------
         const effectiveHourlyOutput = hourlyQty * efficiency;
-        const totalHours = totalQuantity / effectiveHourlyOutput;
+        let totalHours = totalQuantity / effectiveHourlyOutput;
 
         // ---------- SPLIT INTO FULL DAYS + REMAINING HOURS ----------
         const fullDays = Math.floor(totalHours / WORKING_HOURS);
-        const remainingHours = totalHours % WORKING_HOURS; // exact hours
+        const remainingHours = totalHours % WORKING_HOURS;
 
-        // ---------- CALCULATE END HOUR & DAY OFFSET ----------
+        // ---------- CALCULATE END HOUR ----------
         let endHour = startHour + remainingHours;
-        let endDayOffset = fullDays;
+        let extraDayFromHour = 0;
 
         if (endHour >= WORKING_HOURS) {
-            endDayOffset += Math.floor(endHour / WORKING_HOURS);
-            endHour = endHour % WORKING_HOURS;
+            endHour -= WORKING_HOURS;
+            extraDayFromHour = 1;
         }
+
+        // ---------- TOTAL DAY OFFSET FOR END DATE ----------
+        const endDayOffset = fullDays + extraDayFromHour;
 
         // ---------- CALCULATE END DATE ----------
         const endDate = new Date(startDate);
@@ -1763,40 +1844,44 @@ function addDays(date,days){
 
         let addedWorkingDays = 0;
         let disabledDayCount = 0;
-
+        let disableWorkingHour = 0;
         if (isIncludedHoliday == 1) {
-            // Include holidays → simple offset
             endDate.setDate(endDate.getDate() + endDayOffset);
         } else {
-            // Exclude disabled days
             while (addedWorkingDays < endDayOffset) {
                 endDate.setDate(endDate.getDate() + 1);
-                endDate.setHours(0, 0, 0, 0);
-
-                if (isDisabledDay(endDate)) {
+                if (!isDisabledDay(endDate)) {
+                    addedWorkingDays++;
+                } else {
+                    console.log("off Day");
                     disabledDayCount++;
-                    continue;
+                    disableWorkingHour += WORKING_HOURS;
                 }
-                addedWorkingDays++;
             }
         }
 
-        // ---------- FINAL UI DURATION (days.hours style) ----------
-        const totalDaySpan = endDayOffset + disabledDayCount;
-        const remainingHoursInt = Math.round(remainingHours); // integer hours
-        const duration = Number(`${totalDaySpan}.${remainingHoursInt}`); // 4.3 = 4 days 3 hours
+        totalHours += disableWorkingHour;
+        //// ---------- FINAL UI DURATION (days.hours style) ----------
+        const totalDaySpan = fullDays + disabledDayCount;
+        
+        const remainingHoursInt = Math.round(remainingHours);
+        const duration = Number(
+            `${totalDaySpan}.${remainingHoursInt}`
+        );
+
 
         // ---------- ENSURE END HOUR IS INTEGER ----------
         endHour = Math.floor(endHour);
 
         // ---------- DEBUG LOG (OPTIONAL) ----------
-        console.log("========= CALCULATION RESULT =========");
+        console.log("========= CALCULATION RESULT ======1===");
         console.log("Start Date :", startDate);
         console.log("End Date   :", endDate.toString());
         console.log("Start Hour :", startHour);
         console.log("End Hour   :", endHour);
+        console.log("endDayOffset day   :", endDayOffset);
         console.log("Total Hours:", totalHours.toFixed(2));
-        console.log("UI Duration (days.hours):", duration);
+        console.log("UI Duration (days.Endhours):", duration);
         console.log("Disabled Days Skipped:", disabledDayCount);
         console.log("=====================================");
 
@@ -1816,7 +1901,7 @@ function addDays(date,days){
     function getDuration(hover, totalQuantity,isIncludedHoliday = 0) {
 
         const { row, cell, hour: startHour } = hover;
-
+        isIncludedHoliday = 0;
         return calculateDuration({
             startDate: cell.dataset.date, // from cell
             startHour,
@@ -1832,8 +1917,9 @@ function addDays(date,days){
         console.log("================================================================================getDurationForBalance");
         console.log("================================================================================startDate", startDate);
         console.log("================================================================================startDate", startHour);
+        isIncludedHoliday = 0;
         return calculateDuration({
-            startDate,        
+            startDate,
             startHour,
             row,
             totalQuantity,
@@ -1847,7 +1933,7 @@ function addDays(date,days){
         const hours = Math.round(totalHours % WORKING_HOURS);
 
         return Number(`${days}.${hours}`);
-    }  
+    }
 
 
 
@@ -1858,9 +1944,9 @@ function addDays(date,days){
 
         const row = hoverInfo.row;
         const startDate = convertToDMY(task.start_date);
-      
+
         const enddate = hoverInfo.cell.dataset.date;
-       
+
         const totalQuantity = task.plan_qnty;
         const startHour = Number(task.start_hour);
         const endhour = Number(hoverInfo.hour);
@@ -1868,23 +1954,25 @@ function addDays(date,days){
         const isIncludedHoliday = Number(task.IsIncludedHoliday);
 
         const totalHours = calculateTotalHours(startDate, startHour, enddate, endhour, isIncludedHoliday);
-      
+
         // ---------- READ MANPOWER DATA ----------
         const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
         let efficiencyRaw = row?.dataset.efficiency || 0;
-        const efficiency = efficiencyRaw.toString().includes("%")
-            ? parseFloat(efficiencyRaw) / 100
-            : parseFloat(efficiencyRaw);
+        //const efficiency = efficiencyRaw.toString().includes("%")
+        //    ? parseFloat(efficiencyRaw) / 100
+        //    : parseFloat(efficiencyRaw);
+
+        const efficiency = 10;
 
         if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
 
         // ---------- TOTAL REQUIRED HOURS ----------
         const effectiveHourlyOutput = hourlyQty * efficiency;
-       
+
 
         const estimatedQuantity = totalHours * effectiveHourlyOutput;
         const totalDuration = getDurationInDaysHours(totalHours);
-      
+
         // ---------- DEBUG LOG (OPTIONAL) ----------
         console.log("========= CALCULATION RESULT =========");
         console.log("Start Date :", startDate);
@@ -1892,10 +1980,11 @@ function addDays(date,days){
         console.log("Start Hour :", startHour);
         console.log("End Hour   :", endhour);
         console.log("Total Hours:", totalHours);
+        console.log("effectiveHourlyOutput :", effectiveHourlyOutput);
         console.log("Total Quantity  :", totalQuantity);
         console.log("estimatedQuantity  :", estimatedQuantity);
-        
-       
+
+
         console.log("=====================================");
 
         // ---------- RETURN RESULT ----------
@@ -1954,14 +2043,14 @@ function addDays(date,days){
                 // First day
                 else
                     if (current.getTime() === start.getTime()) {
-                   
+
                     totalHours += WORKING_HOURS - startHour;
                         console.log("first Date : ", totalHours);
 
-                           
-                  
 
-                    
+
+
+
 
                 }
                 // Last day
@@ -2052,40 +2141,68 @@ function addDays(date,days){
 
 
    // drag and drop
-    //document.addEventListener("mousedown", e => {
-    //    console.log("mouse down");
-    //    if (e.button !== 0) return;
-    //    const taskEl = e.target.closest(".task");
-    //    if (!taskEl) return;
-
-    //    draggedTask = taskEl;
-    //    isDragging = true;
-    //    console.log("mouse down", draggedTask);
-    //    const rect = draggedTask.getBoundingClientRect();
-    //    //grabOffsetX = e.clientX - rect.left;
-    //    grabOffsetX = e.clientX - rect.left;
-    //    grabOffsetY = e.clientY - rect.top;
-
-    //    mouseX = e.clientX;
-    //    mouseY = e.clientY;
-
-    //    showPreviewOptimized(draggedTask, draggedTask.dataset.duration);
-
-    //    document.body.style.userSelect = "none";
-    //});
 
     const calendarArea = document.querySelector(".calendar-body");
-
+    let previousTask = null;
     document.addEventListener("mousedown", e => {
         if (e.button !== 0) return;
 
         const taskEl = e.target.closest(".task");
         if (!taskEl) return;
-
-      
+        
         if (!calendarArea.contains(e.target)) return;
 
+
+
+        if (draggedTask !== null && draggedTask !== undefined) {
+            previousTask = draggedTask;
+            console.clear();
+            console.log("previousTask", previousTask);
+            console.log("new Task", taskEl);
+            const planId = previewTask.dataset.id;
+            const row = e.target.closest(".calendar-row");
+            const planhover = getHoverInfo(e, row);
+            const isIncludedHoliday = Number(draggedTask.dataset.isincludedholiday) ? 1 : 0;
+            const totalQuantity = previousTask.dataset.quantity;
+            //durationPreData = getDuration(planhover, quantity, isIncludedHoliday);
+            console.log("previousTask.dataset :", previousTask.dataset);
+            console.log("taskE  dataset :", taskEl.dataset);
+            console.log("previousTask.dataset quantity", previousTask.dataset.quantity);
+            console.log("start_date down :", taskEl.dataset.endDate);
+            console.log("start Hour down :", taskEl.dataset.endHour);
+           
+
+            const planID = parseInt(previousTask.dataset.id);
+            //const start_date = formatYMD(taskEl.dataset.endDate);
+            const startDate = convertToDMY(taskEl.dataset.endDate);
+            const startHour = parseInt(taskEl.dataset.endHour);
+            const LineId = parseInt(planhover.row.dataset.line);
+            //const EndDate = convertToDMY(endCell.dataset.date);
+            
+            console.log("===================================convertToDMY(taskEl.dataset.endDate) :", convertToDMY(taskEl.dataset.endDate));
+            console.log("===================================formatYMD(taskEl.dataset.endDate) :", formatYMD(taskEl.dataset.endDate));
+            console.log("===================================parseDMY(taskEl.dataset.endDate) :", parseDMY(taskEl.dataset.endDate));
+
+           durationPreData= calculateDuration({
+               startDate, // from cell
+               startHour,
+                row,
+               totalQuantity,
+               isIncludedHoliday
+           })
+            console.log("durationPreData test", durationPreData);
+            duration = durationPreData.duration;
+           
+            const EndDate = convertToDMY(formatYMD(durationPreData.endDate));
+            const EndHour = durationPreData.endHour
+            const startDateForUpdate = taskEl.dataset.endDate;
+            console.log("==========================================================beforeUpdate :", startDateForUpdate);
+            updatePlan(planID, startDateForUpdate, startHour, EndDate, EndHour, LineId, duration, totalQuantity, planhover)
+            cleanupDrag();
+        }
+
         draggedTask = taskEl;
+      
         isDragging = true;
 
         const rect = draggedTask.getBoundingClientRect();
@@ -2119,9 +2236,12 @@ function addDays(date,days){
         if (!hover || !hover.cell) return;
 
         lastHover = hover;
+        const hoverKey = `${hover.cell.dataset.date}_${hover.hour}`;
 
-        if (hover.cell !== lastHoverCell) {
+        if (hoverKey !== lastHoverCell) {
+           
             lastHoverCell = hover.cell;
+
 
             if (dragTimeout) clearTimeout(dragTimeout);
 
@@ -2129,11 +2249,12 @@ function addDays(date,days){
             const isIncludedHoliday = Number(draggedTask.dataset.isincludedholiday);
             dragTimeout = setTimeout(() => {
                 console.log("Drag pulse 1 sec", duration);
-               
+
                 durationsData = getDuration(hover, quantity, isIncludedHoliday);
+                console.log("Drag pulse durationsData", durationsData);
                 duration = durationsData.duration;
                 showPreviewOptimized(draggedTask, duration);
-            }, 600);
+            }, 300);
         }
     });
 
@@ -2141,6 +2262,8 @@ function addDays(date,days){
         if (!isDragging) return;
         stopScroll();
         isDragging = false;
+
+      
        
 
         if (!calendarArea.contains(e.target)) {
@@ -2151,24 +2274,30 @@ function addDays(date,days){
         if (!draggedTask || !lastHover) {
             cleanupDrag();
             return;
+        } else {
+            console.log("draggedTask Task", draggedTask);
         }
 
         const { row, cell, hour } = lastHover;
         if (!row || !cell) {
+            alert("Invalid drop area");
             cleanupDrag();
             return;
         }
+
 
         if (cell.classList.contains("disabled-day")) {
+            alert("You cannot drop on a disabled day (Friday).");
             cleanupDrag();
             return;
         }
 
-        //moveTaskToRow(draggedTask, row, cell, hour, duration || draggedTask.dataset.duration);
+      
+       
 
         if (duration) {
             //moveTaskToRow(draggedTask, row, cell, hour, duration);
-            moveTaskToRow(draggedTask, lastHover, duration);
+            moveTaskToRow(draggedTask, lastHover, duration, durationsData.endDate, durationsData.endHour);
         }
 
         cleanupDrag();
@@ -2231,7 +2360,7 @@ function addDays(date,days){
      console.log("startDate for order", startDate);
      console.log("startHour for order", startHour);
 
-     const line = lines.find(l => l.LINE_ID == lineId);
+     const line = allLine.find(l => l.LINE_ID == lineId);
      if (!line) {
          console.error("Line not found for ID:", lineId.LINE_ID);
          return;
@@ -2252,10 +2381,10 @@ function addDays(date,days){
 
      draggedOrder = null;
 
-     const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-     const toDate = parseDateSafe($('input[name="ToDate"]').val());
+      const fromDate = new Date(@Html.Raw(Json.Encode(ViewBag.StartDate)));
+      const toDate = new Date(@Html.Raw(Json.Encode(ViewBag.EndDate)));
      requestAnimationFrame(() => {
-         renderTasks(fromDate, toDate)
+         renderTasks(allPlan);
      });
  });
 
@@ -2324,13 +2453,13 @@ function addDays(date,days){
         // Calculate duration for this order
         const durationForOrder = getDuration(orderHover, order.Quantity, isIncludedHoliday);
         if (!durationForOrder || !durationForOrder.endDate || !durationForOrder.endHour || !durationForOrder.duration === undefined) {
-            console.error("Duration calculation failed:", durationForOrder);
+            alert("Duration calculation failed:", durationForOrder);
             return null;
         }
         console.log("==============================durationFor Order", durationForOrder);
         // Create the task object
         const task = {
-            plan_id: tasks.length + 1,                   // unique id
+            plan_id: allPlan.length + 1,                   // unique id
             JOB_NO: `Task From Order #${order.OrderId}`, // label
             plan_qnty: order.Quantity,
             line_id: lineId,
@@ -2349,8 +2478,13 @@ function addDays(date,days){
 
         console.log("newTask:", task);
 
-        tasks.push(task);
-        console.log("total task:", tasks);
+        if (task) {
+
+            AllPlansByLineId(lineId, task, orderHover)
+        }
+        allPlan.push(task);
+        console.log("total task:", allPlan);
+
         //moveTaskToRow(task, orderHover.row, orderHover.cell, orderHover.hour, durationForOrder.duration);
         return task;
     }
@@ -2375,7 +2509,7 @@ function addDays(date,days){
         console.log("==============================durationFor Order", durationForPlan);
         // Create the task object
         const task = {
-            plan_id: tasks.length + 1,                   // unique id
+            plan_id: allPlan.length + 1,                   // unique id
             JOB_NO: `PLAN FROM SPLIT`, // label
             plan_qnty: Quantity,
             line_id: lineId,
@@ -2393,8 +2527,8 @@ function addDays(date,days){
         };
 
         console.log("newTask:", task);
-
-        tasks.push(task);
+        updateForSavePlan(task);
+        allPlan.push(task);
         console.log("total task:", tasks);
         //moveTaskToRow(task, orderHover.row, orderHover.cell, orderHover.hour, durationForOrder.duration);
         if (task) {
@@ -2402,16 +2536,283 @@ function addDays(date,days){
         }
         //return task;
     }
+    //api data fetch
 
 
-        function getAllPlansfromApi() {
-            $.get("http://202.4.125.191/platform_erp/logic-api/index.php/api/planning/line_info/company_id/1/location_id/2/floor_id/0/user/1/date/2025-12-21", function (data) {
-                console.log("Plans received:", data);
-
-            }).fail(function (err) {
-                console.error("API request failed:", err);
+    async function loadCalenderData(CompanyId, LocationId) {
+        try {
+            showLoader();
+            const data = await new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/Home/CalenderDateFromApi',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        CompanyId: CompanyId,
+                        LocationId: LocationId
+                    },
+                    success: resolve,
+                    error: reject
+                });
             });
+
+            console.log('Calendar Data:', data);
+
+            allPlan = data;
+            // renderPlanningBoard(data);
+            hideLoader();
+            return data;
+
+        } catch (err) {
+            hideLoader();
+            console.error('Calendar API Error', err);
+            throw err;
         }
+    }
+
+
+    let allPlan = [];
+    let allLine = [];
+
+    async function loadPlanData(companyId, locationId, floorId, autoBalancing) {
+        try {
+            const data = await $.ajax({
+                url: '/Home/PlanDataFromApi',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    CompanyID: companyId,
+                    locationId: locationId,
+                    floorId: floorId,
+                    auto_balancing: autoBalancing
+                }
+            });
+
+            console.log('Plan Data:', data);
+            console.log('data.resultset:', data?.resultset);
+
+            allPlan = Array.isArray(data?.resultset) ? data.resultset : [];
+            console.log('Plan Data allPlan:', allPlan);
+
+            return allPlan;
+
+        } catch (error) {
+            console.error('Plan API Error:', error);
+            return [];
+        }
+    }
+
+
+
+
+    async function loadLineData(companyId, locationId, floorId) {
+        try {
+            showLoader();
+            const data = await $.ajax({
+                url: '/Home/LineDataFromApi',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    companyId: companyId,
+                    locationID: locationId,
+                    floorId: floorId
+                }
+            });
+
+            console.log('Line Data:', data);
+            allLine = Array.isArray(data?.resultset) ? data.resultset : [];
+            console.log('Plan Data allPlan loadLineData:', allLine);
+
+
+            await loadPlanData(companyId, locationId, floorId, 0);
+            
+            renderCalendar(data.resultset);
+            hideLoader();
+        } catch (err) {
+            hideLoader();
+            console.error('Line API Error', err);
+        }
+    }
+
+
+    //function loadLogInData() {
+    //    $.ajax({
+    //        url: '/Home/LoginDataFromApi',
+    //        type: 'GET',
+    //        dataType: 'json',
+    //        success: function (data) {
+    //            console.log('Plan Data:', data.resultset.company_info);
+
+    //            // draw calendar / gantt
+    //            // renderPlanningBoard(data);
+    //        },
+    //        error: function (err) {
+    //            console.error('Plan API Error', err);
+    //        }
+    //    });
+    //}
+
+    //let locationData = []; // store all location info globally
+
+    //function loadLogInData() {
+    //    $.ajax({
+    //        url: '/Home/LoginDataFromApi',
+    //        type: 'GET',
+    //        dataType: 'json',
+    //        success: function (data) {
+    //            if (!data || !data.resultset) {
+    //                console.error('Invalid data from API');
+    //                return;
+    //            }
+
+    //            // Store location info globally
+    //            locationData = data.resultset.location_info || [];
+    //            console.log("Login Info  :", data);
+    //            console.log("Floor Info  :", data.resultset.floor_info);
+
+
+    //            console.log("Company Info  :", data.resultset.company_info);
+    //            // Populate Company dropdown
+    //            const ddlCompany = $('#CompanyId');
+    //            console.log("ddlCompany Info  :", ddlCompany);
+    //            ddlCompany.empty().append('<option value="">-- Select Company --</option>');
+
+    //            (data.resultset.company_info || []).forEach(company => {
+    //                ddlCompany.append(
+    //                    $('<option>', {
+    //                        value: company.ID,   // this is the ID
+    //                        text: company.COMPANY_NAME   // this is the visible name
+    //                    })
+    //                );
+    //            });
+
+    //            // Auto-select last company
+    //            const lastCompanyId = localStorage.getItem('companyId');
+    //            if (lastCompanyId) {
+    //                ddlCompany.val(lastCompanyId).trigger('change');
+    //            }
+    //        },
+    //        error: function (err) {
+    //            console.error('Plan API Error', err);
+    //        }
+    //    });
+    //}
+
+    let locationData = [];
+    let floorData = [];
+
+    function loadLogInData() {
+        $.ajax({
+            url: '/Home/LoginDataFromApi',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                showLoader();
+                if (!data || !data.resultset) {
+                    console.error('Invalid data from API');
+                    return;
+                }
+
+                locationData = data.resultset.location_info || [];
+                floorData = data.resultset.floor_info || [];
+
+                console.log("Login Info:", data);
+                console.log("Floor Info:", floorData);
+                console.log("Company Info:", data.resultset.company_info);
+
+                /* ---------- Company Dropdown ---------- */
+                const ddlCompany = $('#CompanyId');
+                ddlCompany.empty().append('<option value="">-- Select Company --</option>');
+
+                (data.resultset.company_info || []).forEach(company => {
+                    ddlCompany.append(
+                        $('<option>', {
+                            value: company.ID,
+                            text: company.COMPANY_NAME
+                        })
+                    );
+                });
+
+                /* ---------- Floor Dropdown ---------- */
+                const ddlFloor = $('#FloorId');
+                ddlFloor.empty().append('<option value="">-- Select Floor --</option>');
+
+                floorData.forEach(floor => {
+                    ddlFloor.append(
+                        $('<option>', {
+                            value: floor.ID,
+                            text: floor.FLOOR_NAME
+                        })
+                    );
+                });
+
+                /* ---------- Restore Last Selection ---------- */
+                const lastCompanyId = localStorage.getItem('companyId');
+                if (lastCompanyId) {
+                    ddlCompany.val(lastCompanyId).trigger('change');
+                }
+                hideLoader();
+            },
+
+            error: function (err) {
+                console.error('Login API Error', err);
+            }
+        });
+    }
+
+    function LoadFloorData(locationId, companyId) {
+
+        const ddlFloor = $('#FloorId');
+        ddlFloor.empty().append('<option value="">-- Select Floor --</option>');
+
+        if (!locationId || !companyId) return;
+
+        const matchedFloors = floorData.filter(f =>
+            f.COMPANY_ID === parseInt(companyId) &&
+            f.LOCATION_ID === parseInt(locationId)
+        );
+        console.log("LoadFloorData loaded", matchedFloors);
+        if (matchedFloors.length === 0) {
+            ddlFloor.append('<option value="">No Floor Found</option>');
+            return;
+        }
+
+        matchedFloors.forEach(floor => {
+            ddlFloor.append(
+                $('<option>', {
+                    value: floor.ID,
+                    text: floor.FLOOR_NAME
+                })
+            );
+        });
+    }
+
+
+    function LoadLocation(companyId) {
+        const ddlLocation = $('#LocationId');
+        ddlLocation.empty(); // clear previous options
+        ddlLocation.append('<option value="">-- Select Location --</option>');
+
+        if (!companyId) return; // no company selected
+
+        // Filter locations by selected company
+        const filteredLocations = locationData.filter(loc => loc.COMPANY_ID == companyId);
+        console.log("COmpany Locations:", filteredLocations);
+        // Populate dropdown
+        filteredLocations.forEach(loc => {
+            ddlLocation.append(
+                $('<option>', {
+                    value: loc.ID,
+                    text: loc.LOCATION_NAME
+                })
+            );
+        });
+
+        // Optional: select first location automatically
+        if (filteredLocations.length > 0) {
+            ddlLocation.val(filteredLocations[0].ID);
+        }
+    }
 
 
         function exportTasksToExcel() {
@@ -2433,7 +2834,8 @@ function addDays(date,days){
     function updatePlan(planID, startdate, startHour, EndDate, EndHour, LineId, duration,Quantity = 0, lastHover)
     {
 
-        const task = tasks.find(t => t.plan_id == planID);
+        const task = allPlan.find(t => t.plan_id == planID);
+        console.log("update task startDate :", startdate);
         console.log("update task :", task);
         console.log("update Quantity :", Quantity);
         if (!task) return;
@@ -2444,7 +2846,7 @@ function addDays(date,days){
         task.end_date = EndDate;
         task.end_hour = EndHour;
         task.duration = duration;
-        
+
         task.plan_qnty = Quantity;
         //console.clear();
         console.log("task after update in update method", task)
@@ -2453,7 +2855,7 @@ function addDays(date,days){
 
     function updatePlanForSplit(planID, startdate, startHour, EndDate, EndHour, LineId, duration, Quantity, lastHover) {
 
-        const task = tasks.find(t => t.plan_id == planID);
+        const task = allPlan.find(t => t.plan_id == planID);
         console.log("update task :", task);
         console.log("update Quantity :", Quantity);
         if (!task) return;
@@ -2468,20 +2870,24 @@ function addDays(date,days){
         task.plan_qnty = Quantity;
         //console.clear();
         console.log("task after update in update method", task)
-       
+
     }
 
 
-   
+
 
     let renderTimeout = null;
     let rafId = null;
- 
+
 
 
     function AllPlansByLineId(lineId, updatedTask, lastHover) {
         // Get all tasks in the line, excluding the updated task
-        const lineTasks = tasks
+        updateForSavePlan(updatedTask);
+        console.clear();
+        console.log("updatedTask in AllPlansByLineId", updatedTask);
+
+        const lineTasks = allPlan
             .filter(t => t.line_id === lineId && t.plan_id !== updatedTask.plan_id)
             .sort((a, b) => toTimelineValue(a.start_date, a.start_hour) - toTimelineValue(b.start_date, b.start_hour));
 
@@ -2500,7 +2906,7 @@ function addDays(date,days){
             updatedTask.start_hour
         );
 
-
+        console.log("total chain Tasks: ", lineTasks);
         console.log("🟢 Chain start:", chainEndDate, chainEndHour);
 
         for (const task of lineTasks) {
@@ -2518,7 +2924,7 @@ function addDays(date,days){
             const noOverlap =
                 taskStartTimeline >= chainEndTimeline ||
                 taskEndTimeline <= chainStartTimeline;
-           
+
             console.log("no Over lap", noOverlap);
             console.log(" taskEndTimeline <= chainStartTimeline", taskEndTimeline <= chainStartTimeline);
             console.log(" taskStartTimeline >= chainEndTimeline",  taskStartTimeline >= chainEndTimeline);
@@ -2534,7 +2940,7 @@ function addDays(date,days){
                 IsUpdateMain = true;
                 chainEndDate = task.end_date;
                 chainEndHour = task.end_hour;
-            
+
 
             } else {
                 const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
@@ -2551,7 +2957,7 @@ function addDays(date,days){
 
                 console.log("⏩ Chain extended to:", chainEndDate, chainEndHour);
             }
-            
+
         }
         if (IsUpdateMain) {
             const updatedNewTask = tasks
@@ -2568,16 +2974,17 @@ function addDays(date,days){
             console.log("updatedNewTask result", result);
             updatedNewTask.end_date = convertToDMY(formatYMD(result.endDate));
             updatedNewTask.end_hour = result.endHour;
-            updatedNewTask.duration = result.duration; 
+            updatedNewTask.duration = result.duration;
             console.log("➡ Moving updated task to after chain end", chainEndDate, chainEndHour);
             console.log("updatedNewTask", updatedNewTask);
-           
+
+            updateForSavePlan(updatedTask);
             AllPlansByLineId(updatedNewTask.line_id, updatedNewTask, lastHover);
-          
+
         }
         // If conflicts occurred, re-render tasks
         if (hasConflict) {
-           
+
             renderAfterChangeDebounced();
         } else {
             renderAfterChangeDebounced();
@@ -2591,6 +2998,7 @@ function addDays(date,days){
 
     function pushTaskAfter(task, startDate, startHour, hover) {
 
+        updateForSavePlan(task);
         const result = getDurationForBalance(
             convertToDMY(startDate),
             parseInt(startHour, 10),
@@ -2598,7 +3006,9 @@ function addDays(date,days){
             task.plan_qnty,
             task.IsIncludedHoliday
         );
+
         console.log("=======================================result", result);
+
         if (!result) return null;
 
         const endDateDMY = convertToDMY(formatYMD(result.endDate));
@@ -2608,7 +3018,7 @@ function addDays(date,days){
         task.end_date = endDateDMY;
         task.end_hour = result.endHour;
         task.duration = result.duration;
-
+       updateForSavePlan(task);
         // ✅ return normalized values for chaining
         return {
             endDateDMY,
@@ -2617,19 +3027,39 @@ function addDays(date,days){
         };
     }
 
+    function updateForSavePlan(task) {
+
+        const index = ForSavePlan.findIndex(
+            p => p.plan_id === task.plan_id
+        );
+
+        if (index !== -1) {
+            // update existing
+            ForSavePlan[index] = { ...task };
+        } else {
+            // insert new
+            ForSavePlan.push({ ...task });
+        }
+
+
+        console.log("=======================================updateForSavePlan", ForSavePlan);
+    }
+
 
     function renderAfterChangeDebounced(delay = 50) {
 
         if (renderTimeout) clearTimeout(renderTimeout);
         if (rafId) cancelAnimationFrame(rafId);
-       
+
         console.log("renderAfterChangeDebounced");
         renderTimeout = setTimeout(() => {
             rafId = requestAnimationFrame(() => {
-                const fromDate = parseDateSafe($('input[name="FromDate"]').val());
-                const toDate = parseDateSafe($('input[name="ToDate"]').val());
 
-                renderTasks(fromDate, toDate);
+
+                 const fromDate = new Date(@Html.Raw(Json.Encode(ViewBag.StartDate)));
+                 const toDate = new Date(@Html.Raw(Json.Encode(ViewBag.EndDate)));
+
+                renderTasks(allPlan);
                 rafId = null;
             });
         }, delay);
@@ -2726,7 +3156,15 @@ function addDays(date,days){
         return date.toISOString().split("T")[0];
     }
 
-   
+
+    function showLoader() {
+        $('#loader').show();
+    }
+
+    function hideLoader() {
+        $('#loader').hide();
+    }
+
 
 
 
@@ -2735,11 +3173,11 @@ function addDays(date,days){
 
 // --- Init ---
 $(document).ready(()=>{
-    renderCalendar();
-   
+    //renderCalendar();
+
     LoadOrders();
     //getAllPlansfromApi()
-    $('#btn-tasks').click(() => renderCalendar());
+    //$('#btn-tasks').click(() => renderCalendar());
 
     //exportTasksToExcel();
     //exportLineToExcel();
@@ -2757,7 +3195,7 @@ $(document).ready(()=>{
         window.dispatchEvent(new Event("resize"));
     };
 
-    console.log("date", formatYMD("Mon Dec 01 2025 06:00:00 GMT+0600 (Bangladesh Standard Time)"))
+
 
     let calendarContext = null;
     let selectedTask = null;
@@ -2769,7 +3207,7 @@ $(document).ready(()=>{
         const taskEl = e.target.closest(".task");
         const clickRow = e.target.closest(".calendar-row");
         hoverInfo = getHoverInfo(e, clickRow);
-      
+
         //selectedTask = taskEl ? $(taskEl) : null;
         selectedTask = taskEl ;
         console.log("taskEl", taskEl);
@@ -2787,7 +3225,7 @@ $(document).ready(()=>{
             console.log("selectedTask data-duration", selectedTask.dataset.duration);
             console.log("selectedTask data-quantity", selectedTask.dataset.quantity);
             console.log("selectedTask data-isincludedholiday", selectedTask.dataset.isincludedholiday);
-            
+
             taskInfo = {
                 id: selectedTask.dataset.id,
                 totalWidth: rect.width,
@@ -2835,17 +3273,17 @@ $(document).ready(()=>{
                 console.log("split", hoverInfo.hour);
                 console.log("split clickDate", hoverInfo.cell.dataset.date);
 
-                var task = tasks.find(t => t.plan_id == planID);
+                var task = allPlan.find(t => t.plan_id == planID);
                 console.log("task", task);
 
                 var estimatedPlan = getQuantityByDateRenge(hoverInfo, task);
 
                 estimatedQty = Math.round(estimatedPlan.estimatedQuantity);
                 estimatedDuration = estimatedPlan.Duration;
-              
+
 
                 totalQuantity = task.plan_qnty;
-              
+
                 //const start_date = convertToDMY(task.start_date);
                 const start_date = task.start_date;
                 const startHour = task.start_hour;
@@ -2888,14 +3326,74 @@ $(document).ready(()=>{
                         if (remainingQuantity > 0) {
                             createPlanFromSplit(remainingQuantity, hoverInfo)
                         }
-                       
+
                     } else {
                         console.log("Update cancelled by user");
                     }
                 }
                 // ✅ CONFIRM BEFORE UPDATE
-                
+
+            } else if (action === "details") {
+
+                const task = allPlan.find(t => t.plan_id == planID);
+                if (!task) return;
+
+                // Header
+                document.getElementById("mdlPlanId").innerText = `#${task.plan_id}`;
+                document.getElementById("mdlJobNo").innerText =
+                    `Job No: ${task.JOB_NO?.split(",")[0] ?? "-"}`;
+
+                // Left column
+                document.getElementById("mdlStyleRef").innerText =
+                    task.STYLE_REF_NO?.split(",")[0] ?? "-";
+                document.getElementById("mdlBuyer").innerText = task.BUYER_NAME ?? "-";
+                document.getElementById("mdlItem").innerText = task.item_name ?? "-";
+                document.getElementById("mdlLine").innerText = task.line_id ?? "-";
+                document.getElementById("mdlQty").innerText =
+                    task.plan_qnty?.toLocaleString() ?? "0";
+                document.getElementById("mdlPO").innerText = task.PO_NUMBER ?? "-";
+
+                // Right column
+                document.getElementById("mdlStart").innerText =
+                    `${task.start_date} (${task.start_hour}:00)`;
+                document.getElementById("mdlEnd").innerText =
+                    `${task.end_date} (${task.end_hour}:00)`;
+                document.getElementById("mdlDuration").innerText =
+                    `${task.duration} hrs`;
+                document.getElementById("mdlThisProduction").innerText =
+                    task.THIS_PRODUCTION ?? 0;
+
+                // Production badge
+                const prod = document.getElementById("mdlProduction");
+                prod.innerText = task.IS_PRODUCTION ? "YES" : "NO";
+                prod.className = `badge ${task.IS_PRODUCTION ? "bg-success" : "bg-danger"}`;
+
+                // Holiday badge
+                const holiday = document.getElementById("mdlHoliday");
+                holiday.innerText = task.IsIncludedHoliday ? "YES" : "NO";
+                holiday.className =
+                    `badge ${task.IsIncludedHoliday ? "bg-warning" : "bg-secondary"}`;
+
+                // Colors
+                const lc = document.getElementById("mdlLeftColor");
+                lc.innerText = task.LEFT_COLOR;
+                lc.style.background = task.LEFT_COLOR?.toLowerCase();
+
+                const rc = document.getElementById("mdlRightColor");
+                rc.innerText = task.RIGHT_COLOR;
+                rc.style.background = task.RIGHT_COLOR?.toLowerCase();
+
+                // Top border color
+                document.querySelector("#detailsModal .modal-header")
+                    .style.borderTopColor = task.TOP_BORDER_COLOR;
+
+                // Show modal
+                new bootstrap.Modal(
+                    document.getElementById("detailsModal")
+                ).show();
             }
+
+
                  else {
 
                 alert(`
@@ -2908,9 +3406,9 @@ $(document).ready(()=>{
              `);
             }
 
-           
 
-         
+
+
 
             $("#contextMenu").hide();
         } else {
@@ -2934,6 +3432,85 @@ $(document).ready(()=>{
         }
     });
 
+    $(".btn-save").on("click", function () {
+        console.log("cliecked");
+        if (!ForSavePlan || ForSavePlan.length === 0) {
+            alert("No changes to save");
+            return;
+        }
+
+        // Build a summary string of plan IDs and job numbers
+        let summary = ForSavePlan.map(task => `Plan ID: ${task.plan_id}, Job No: ${task.JOB_NO || 'N/A'}`).join("\n");
+
+        // Confirm before saving
+        if (!confirm(`Are you sure you want to save these changes?\n\n${summary}`)) {
+            return;
+        }
+
+        console.log("Saving:", JSON.stringify(ForSavePlan));
+
+        $.ajax({
+            url: "",  // Replace with your controller URL
+            type: "POST",
+            data: JSON.stringify(ForSavePlan),
+            contentType: "application/json; charset=utf-8",
+            success: function (res) {
+                alert(`✅ Saved successfully:\n\n${summary}`);
+
+                // Clear after save
+                ForSavePlan.length = 0;
+            },
+            error: function (err) {
+                console.error(err);
+                alert("❌ Failed to save. Please try again.");
+            }
+        });
+    });
+
+
+    $('#CompanyId').on('change', function () {
+        let companyId = $(this).val();       // use let, not const
+        if (!companyId) return;              // exit if nothing selected
+
+        companyId = parseInt(companyId, 10); // convert string to number
+
+        console.log("Selected COMPANY_ID:", companyId);
+
+
+        localStorage.setItem('companyId', companyId);
+
+
+        LoadLocation(companyId);
+
+        $('#FloorId').empty().append('<option value="">-- Select Floor --</option>');
+    });
+
+    $('#LocationId').on('change', function () {
+        const locationID = $(this).val();
+        const companyId = $('#CompanyId').val();
+        if (!locationID) return;
+        loadCalenderData(companyId, locationID);
+        LoadFloorData(locationID,companyId);
+    });
+
+    $("#btn-tasks").on("click", function () {
+        const locationID = $("#LocationId").val();
+        const companyId = $("#CompanyId").val();
+        const floorId = $("#FloorId").val() ? $("#FloorId").val() : 0;
+
+        loadLineData(companyId, locationID, floorId)
+        //alert(
+        //    "Company ID: " + companyId + "\n" +
+        //    "Location ID: " + locationID + "\n" +
+        //    "Floor ID: " + floorId
+        //);
+    });
+
+
+    //loadPlanData();
+    //loadLineData();
+    loadLogInData();
+    //loadCalenderData(17,65);
 
 });
 </script>

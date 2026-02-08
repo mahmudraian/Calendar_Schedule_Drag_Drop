@@ -2,9 +2,13 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http.Results;
@@ -319,11 +323,19 @@ namespace WebApplication1.Controllers
 
             ViewBag.Lines = linesFromDB;
             ViewBag.Tasks = tasksFromDB;
-            DateTime startDate = FromDate ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            DateTime endDate = ToDate ?? startDate.AddMonths(1).AddDays(-1);
+            DateTime startDate = DateTime.Today.AddDays(-20);
+            //string formattedStartDate = startDate.ToString("d/M/yyyy");
 
-            ViewBag.StartDate = startDate;
-            ViewBag.EndDate = endDate;
+            DateTime endDate =  DateTime.Today.AddYears(2);
+            //string formattedEndDate = endDate.ToString("d/M/yyyy");
+
+            string formattedStartDate = startDate.ToString("yyyy-MM-dd");
+            string formattedEndDate = endDate.ToString("yyyy-MM-dd");
+
+
+
+            ViewBag.StartDate = formattedStartDate;
+            ViewBag.EndDate = formattedEndDate;
 
             return View();
         }
@@ -379,6 +391,104 @@ namespace WebApplication1.Controllers
             return View();
         }
 
+        public async Task<ActionResult> PlanDataFromApi(
+           int CompanyID,
+           int locationId,
+           int floorId,
+           int auto_balancing)
+        {
+            int userId = 0;
+           string  startDate  = DateTime.Today.ToString("d-M-yyyy");    
+         
+            string apiUrl = $"http://202.4.102.250:7964/lr_api/index.php/api/planning/plan_info" +
+                            $"/company_id/{CompanyID}/location_id/{locationId}/floor_id/{floorId}" +
+                            $"/txt_date_from/{startDate}/user_id/{userId}/auto_balancing/{auto_balancing}";
 
-     }
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var response = await client.GetAsync(apiUrl);
+
+                    if (!response.IsSuccessStatusCode)
+                        return new HttpStatusCodeResult((int)response.StatusCode, "API request failed");
+
+                    var json = await response.Content.ReadAsStringAsync();
+
+                    // Return JSON properly
+                    return Content(json, "application/json");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if you have a logging system
+                return new HttpStatusCodeResult(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        public ActionResult LineDataFromApi(int companyId, int locationID, int floorId)
+        {
+            DateTime date = DateTime.Today;
+            string formattedDate = date.ToString("d/M/yyyy");
+            string apiUrl =
+                $"http://202.4.102.250:7964/lr_api/index.php/api/planning/line_info/" +
+                $"company_id/{companyId}/" +
+                $"location_id/{locationID}/" +
+                $"floor_id/{floorId}/" +
+                $"user/165/" +
+                $"date/{formattedDate}";
+
+            using (var client = new WebClient())
+            {
+                var json = client.DownloadString(apiUrl);
+                return Content(json, "application/json");
+            }
+        }
+
+
+
+        public ActionResult LoginDataFromApi()
+        {
+            string apiUrl =
+                "http://202.4.102.250:7964/lr_api/index.php/api/planning/login/user_id/developer/pwd/fcrtt";
+
+            using (var client = new WebClient())
+            {
+                var json = client.DownloadString(apiUrl);
+                return Content(json, "application/json");
+            }
+        }
+
+
+        public async Task<ActionResult> CalenderDateFromApi(int CompanyId, int LocationId)
+        {
+            if (CompanyId <= 0 || LocationId <= 0)
+            {
+                return Json(new { error = "Invalid Company or Location" }, JsonRequestBehavior.AllowGet);
+            }
+
+            DateTime startDate = DateTime.Today.AddYears(-1);
+            DateTime endDate = DateTime.Today.AddYears(1);
+
+            string fromDate = startDate.ToString("d-M-yyyy"); // API format
+            string toDate = endDate.ToString("d-M-yyyy");
+
+            string apiUrl =
+                $"http://202.4.102.250:7964/lr_api/index.php/api/planning/work_hour/" +
+                $"company_id/{CompanyId}/location_id/{LocationId}/start_date/{fromDate}/end_date/{toDate}";
+
+            using (var client = new HttpClient())
+            {
+                var json = await client.GetStringAsync(apiUrl);
+                return Content(json, "application/json");
+            }
+        }
+
+
+
+
+
+
+
+    }
 }
