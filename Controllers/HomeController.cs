@@ -467,10 +467,14 @@ namespace WebApplication1.Controllers
                 return Json(new { error = "Invalid Company or Location" }, JsonRequestBehavior.AllowGet);
             }
 
-            DateTime startDate = DateTime.Today.AddYears(-1);
-            DateTime endDate = DateTime.Today.AddYears(1);
+            //DateTime startDate = DateTime.Today.AddYears(-1);
+            //DateTime endDate = DateTime.Today.AddYears(1);
 
-            string fromDate = startDate.ToString("d-M-yyyy"); // API format
+
+            DateTime startDate = DateTime.Today.AddDays(-20);
+            DateTime endDate = DateTime.Today.AddYears(2);
+
+            string fromDate = startDate.ToString("d-M-yyyy");
             string toDate = endDate.ToString("d-M-yyyy");
 
             string apiUrl =
@@ -486,7 +490,32 @@ namespace WebApplication1.Controllers
 
 
 
+        //http://202.4.102.250:7964/lr_api/index.php/api/planning/line_capacity/from_date/24-01-2026/to_date/24-02-2028/company_id/17/location_id/65/floor_id/0
 
+
+        public async Task<ActionResult> PlanLineCapacity(int CompanyId, int LocationId)
+        {
+            if (CompanyId <= 0 || LocationId <= 0)
+            {
+                return Json(new { error = "Invalid Company or Location" }, JsonRequestBehavior.AllowGet);
+            }
+
+            DateTime startDate = DateTime.Today.AddDays(-20);
+            DateTime endDate = DateTime.Today.AddYears(2);
+
+            string fromDate = startDate.ToString("d-M-yyyy");
+            string toDate = endDate.ToString("d-M-yyyy");
+
+            string apiUrl =
+                $"http://202.4.102.250:7964/lr_api/index.php/api/planning/line_capacity/" +
+                $"from_date/{fromDate}/to_date/{toDate}/company_id/{CompanyId}/location_id/{LocationId}";
+
+            using (var client = new HttpClient())
+            {
+                var json = await client.GetStringAsync(apiUrl);
+                return Content(json, "application/json");
+            }
+        }
 
 
 

@@ -1,6 +1,6 @@
 [
-  { "OrderId": 1, "OrderCompany": "AB Fashion", "Quantity": 1674823, "MaximumDays": 17 },
-  { "OrderId": 2, "OrderCompany": "BlueLine Garments", "Quantity": 1985732, "MaximumDays": 11 },
+  { "OrderId": 1, "OrderCompany": "AB Fashion", "Quantity": 1674, "MaximumDays": 17 },
+  { "OrderId": 2, "OrderCompany": "BlueLine Garments", "Quantity": 1945, "MaximumDays": 11 },
   { "OrderId": 3, "OrderCompany": "Nova Stitch", "Quantity": 1458921, "MaximumDays": 9 },
   { "OrderId": 4, "OrderCompany": "TexWorld Ltd", "Quantity": 1763945, "MaximumDays": 14 },
   { "OrderId": 5, "OrderCompany": "Seven Stars Apparel", "Quantity": 1538920, "MaximumDays": 8 },

@@ -5,7 +5,7 @@
     var tasksJson = Newtonsoft.Json.JsonConvert.SerializeObject(tasks);
     string startDate = ViewBag.StartDate;
     string endDate = ViewBag.EndDate;
-    int workingHours = 10; // daily working hours
+    int workingHours = 12; // daily working hours
 }
 @*<style>
         :root {
@@ -94,7 +94,7 @@
             border-bottom: 1px solid #e9d7d7;
             position: sticky;
             left: 0;
-            z-index: 5000000;
+            z-index: 50000;
         }
 
         /* calendar cell */
@@ -174,7 +174,7 @@
             display: flex;
             position: sticky;
             top: 0;
-            z-index: 1000;
+/*            z-index: 1000;*/
             background: #f8f9fa;
             border-bottom: 2px solid #ddd;
             min-width: max-content;
@@ -201,7 +201,7 @@
             border-bottom: 1px solid #e9d7d7;
             position: sticky;
             left: 0;
-            z-index: 999999;
+            z-index: 11000;
         }
 
         /* Header cell */
@@ -310,7 +310,7 @@
                 opacity: 0.8;
                 cursor: grabbing;
                 position: absolute;
-                z-index: 10;
+                z-index: 100;
                 pointer-events: none;
             }
 
@@ -396,24 +396,72 @@
             width: 100%;
         }
 
-        #contextMenu {
-            position: fixed; /* 🔥 prevents clipping */
-            display: none;
-            z-index: 999999;
-            background: #fff;
-            border: 1px solid #ccc;
-            min-width: 130px;
-            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    /* Context Menu Container */
+    #contextMenu {
+        position: absolute;
+        display: none; /* show on right click */
+        min-width: 200px;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        padding: 6px 0;
+        z-index: 1000;
+        font-family: 'Segoe UI', sans-serif;
+        border: 1px solid #e5e5e5;
+    }
+
+        /* Menu Items */
+        #contextMenu li {
+            list-style: none;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
         }
 
-            #contextMenu li {
-                padding: 8px 12px;
-                cursor: pointer;
+            /* Hover Effect */
+            #contextMenu li:hover {
+                background: #f3f6fb;
+                color: #0d6efd;
+                padding-left: 20px;
             }
 
-                #contextMenu li:hover {
-                    background: #f0f0f0;
-                }
+        /* Divider (optional if you add hr) */
+        #contextMenu .divider {
+            height: 1px;
+            background: #e5e5e5;
+            margin: 6px 0;
+        }
+
+        /* Danger Item (Delete style) */
+        #contextMenu li[data-action="delete"],
+        #contextMenu li[data-action="deleteStrip"] {
+            color: #dc3545;
+        }
+
+            #contextMenu li[data-action="delete"]:hover {
+                background: #fdeaea;
+                color: #b02a37;
+            }
+
+            #contextMenu.show {
+    display: block;
+    animation: fadeIn 0.15s ease-in-out;
+}
+
+@@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+
     /*    ------------------*/
         .dateForm {
             background: #fff;
@@ -565,7 +613,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            z-index: 999999;
         }
 
         .loader-img {
@@ -721,12 +769,19 @@
             </div>
         </div>
 
-        <ul style="list-style:none;" id="contextMenu">
-            <li data-action="edit">Edit</li>
-            <li data-action="details">Details</li>
-            <li data-action="delete">Delete</li>
-            <li data-action="split">split</li>
+        <ul id="contextMenu">
+            <li data-action="edit">✏️ Edit</li>
+            <li data-action="details">📄 Details</li>
+            <li data-action="delete">🗑 Delete</li>
+            <li data-action="split">✂ Split</li>
+            <li data-action="mergeline">🔗 Merge Line</li>
+            <li data-action="deleteStrip">🚫 Delete Strip</li>
+            <li data-action="revise">🔄 Revise Plan</li>
+            <li data-action="supplyChain">🚚 Supply Chain</li>
+            <li data-action="potracking">📦 PO Tracking</li>
+            <li data-action="blockedsubline">⛔ Blocked Subline</li>
         </ul>
+
 
     </div>
 
@@ -852,6 +907,55 @@
 
     @*--------------------------*@
 
+    @*merge line modal*@
+
+    <!-- Merge Line Modal -->
+    <div class="modal fade" id="mergeLineModal" tabindex="-1" style="z-index:999999">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Merge Line Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="mergeLineInfo" class="mb-3"></div>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Line ID</th>
+                                <th>Name</th>
+                                <th>Location</th>
+
+                            </tr>
+                        </thead>
+                        <tbody id="lineListBody">
+                        </tbody>
+                    </table>
+
+                    <select>
+                        <option> select</option>
+                    </select>
+
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary">Confirm Merge</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    @*---------------------*@
+
 
 </div>
 
@@ -913,14 +1017,14 @@ function addDays(date,days){
 
 
 // --- Calendar Render ---
-    function renderCalendar(allLine) {
+    function renderCalendar(allLine,datedata) {
         //const fromDate = parseDateSafe($('input[name="FromDate"]').val());
         //const toDate = parseDateSafe($('input[name="ToDate"]').val());
        
         const fromDate = new Date("@startDate");
         const toDate = new Date("@endDate");
-
-    
+        //console.clear();
+        console.log("datedata  :", datedata);
      
         if (!fromDate || !toDate) return;
 
@@ -929,13 +1033,13 @@ function addDays(date,days){
 
         /* ================= HEADER ================= */
         const header = document.getElementById('calendar-header');
-        header.style.zIndex = 9999999;
+        header.style.zIndex = 99999;
         header.innerHTML = '';
 
         const headerLine = document.createElement('div');
         headerLine.className = 'line-name';
         headerLine.classList.add('line-name-header');
-        headerLine.style.zIndex = 9999999;
+        headerLine.style.zIndex = 99998;
         headerLine.textContent = 'Line';
         header.appendChild(headerLine);
 
@@ -1049,7 +1153,10 @@ function addDays(date,days){
             const fraction = duration - days;
             return (days * WORKING_HOURS) + Math.round(fraction * WORKING_HOURS);
         }
-        function convertToDMY(dateStr) {
+    function convertToDMY(dateStr) {
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~////////////////~~~~~~~~~~~~~~~~~~~~~~~~~")
+        console.log("convertToDMY :", dateStr);
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~////////////////~~~~~~~~~~~~~~~~~~~~~~~~~")
             const [year, month, day] = dateStr.split('-').map(Number);
             const d = String(day).padStart(2, '0');
             const m = String(month).padStart(2, '0');
@@ -1279,7 +1386,7 @@ function addDays(date,days){
 
 
     function renderTasks(allPlan) {
-        console.log("allPlan", allPlan);
+        console.log("allPlan :", allPlan);
         // Remove old tasks
         const calendarStart = new Date(@Html.Raw(Json.Encode(@startDate)));
         const calendarEnd   = new Date(@Html.Raw(Json.Encode(ViewBag.EndDate)));
@@ -1426,16 +1533,25 @@ function addDays(date,days){
         if (x < 0) return null;
 
         const cells = row.querySelectorAll(".cell");
+        const hovercell = e.target.closest(".cell");
         if (!cells.length) return null;
 
         const dayWidth = cells[0].offsetWidth;
-        const hourWidth = dayWidth / WORKING_HOURS;
+
+
+        //console.log("getHoverInfo date :", hovercell?.dataset.date);
+
+     //   const workingHour = getWorkingHour(hovercell?.dataset.date);
+
+        const workingHour = 12;
+
+        const hourWidth = dayWidth / workingHour;
 
         let dayIndex = Math.floor(x / dayWidth);
         dayIndex = Math.max(0, Math.min(dayIndex, cells.length - 1));
 
         let hour = Math.floor((x % dayWidth) / hourWidth);
-        hour = Math.max(0, Math.min(hour, WORKING_HOURS - 1));
+        hour = Math.max(0, Math.min(hour, workingHour - 1));
 
         return {
             row,
@@ -1444,6 +1560,49 @@ function addDays(date,days){
             hour
         };
     }
+
+    //function getHoverInfo(e, row) {
+    //    if (!row) return null;
+
+    //    const rowRect = row.getBoundingClientRect();
+    //    const lineName = row.querySelector(".line-name");
+    //    if (!lineName) return null;
+
+    //    const cells = row.querySelectorAll(".cell");
+    //    if (!cells.length) return null;
+
+    //    const hoverCell = e.target.closest(".cell");
+    //    if (!hoverCell) return null;
+
+    //    // Get correct day index from actual hovered cell
+    //    const dayIndex = Array.from(cells).indexOf(hoverCell);
+    //    if (dayIndex === -1) return null;
+
+    //    const dayWidth = hoverCell.offsetWidth;
+
+    //    // Safe working hour fetch
+    //    //let workingHour = Number(getWorkingHour(hoverCell.dataset.date)) || 0;
+
+    //    let workingHour = WORKING_HOURS;
+
+    //    if (workingHour <= 0) return null;
+
+    //    const hourWidth = dayWidth / workingHour;
+
+    //    // Calculate mouse X relative to hovered cell
+    //    const cellRect = hoverCell.getBoundingClientRect();
+    //    const relativeX = e.clientX - cellRect.left;
+
+    //    let hour = Math.floor(relativeX / hourWidth);
+    //    hour = Math.max(0, Math.min(hour, workingHour - 1));
+
+    //    return {
+    //        row,
+    //        cell: hoverCell,
+    //        dayIndex,
+    //        hour
+    //    };
+    //}
 
     function renderPreview() {
         if (!previewTask) {
@@ -1463,7 +1622,7 @@ function addDays(date,days){
             previewTask.style.top = "0";
             previewTask.style.left = "0";
             previewTask.style.willChange = "transform";
-            previewTask.style.zIndex = "999999";
+            previewTask.style.zIndex = "99997";
 
             document.body.appendChild(previewTask);
         }
@@ -1715,75 +1874,6 @@ function addDays(date,days){
     //}
 
 
-    // new duration start //
-    //function calculateDuration({
-    //    startDate,
-    //    startHour,
-    //    row,
-    //    totalQuantity
-    //}) {
-
-    //    console.log("===============startDate=============");
-    //    console.log("startDate", startDate);
-    //    console.log("startHour", startHour);
-    //    console.log("row", row);
-    //    console.log("totalQuantity", totalQuantity);
-    //    console.log("===========================");
-    //    const manpower = Number(row?.dataset.manpower) || 0;
-    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
-
-
-    //    let efficiencyRaw = row?.dataset.efficiency || 0;
-    //    const efficiency = efficiencyRaw.toString().includes("%")
-    //        ? parseFloat(efficiencyRaw) / 100
-    //        : parseFloat(efficiencyRaw);
-
-    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) {
-    //        return null;
-    //    }
-
-    //    /* ---------- DURATION ---------- */
-
-    //    const effectiveHourlyOutput = hourlyQty * efficiency;
-    //    const durationHours = Math.floor( Number(
-    //        (totalQuantity / effectiveHourlyOutput).toFixed(1))
-    //    );
-
-    //    const duration = getDurationInDaysHours(durationHours);
-
-    //    /* ---------- END TIME ---------- */
-
-    //    const totalStartHours = startHour + durationHours;
-    //    const endDayOffset = Math.floor(totalStartHours / WORKING_HOURS);
-    //    const endHour = Math.floor(totalStartHours % WORKING_HOURS);
-
-    //    /* ---------- END DATE ---------- */
-    //    //startDate 03 - 12 - 2025
-    //    const endDate = new Date(startDate);
-    //    console.log("startDate", startDate);
-    //    console.log("============endDate before", endDate);
-    //    if (!endDate || isNaN(endDate)) return null;
-
-    //    endDate.setDate(endDate.getDate() + endDayOffset);
-    //    console.log("==================   calculation time  =====================");
-    //    console.log("startDate", startDate);
-    //    console.log("endDate", convertToDMY(formatYMD(endDate)));
-    //    console.log("endHour", endHour);
-    //    console.log("durationHours", durationHours);
-    //    console.log("duration", duration);
-    //    console.log("hourlyQty", hourlyQty);
-    //    console.log("manpower", manpower);
-    //    console.log("endDayOffset", endDayOffset);
-    //    console.log("========================================================");
-    //    return {
-    //        startDate: startDate,
-    //        endDate: endDate,
-    //        endHour,
-    //        duration: duration
-    //    };
-    //}
-
-
 
     function isDisabledDay(date) {
         const day = date.getDay();
@@ -1792,105 +1882,494 @@ function addDays(date,days){
 
 
 
+    //function calculateDuration({
+    //    startDate,
+    //    startHour,
+    //    row,
+    //    totalQuantity,
+    //    isIncludedHoliday = 0
+    //}) {
+
+    //    console.log("startDate given :", startDate); // 2026-01-20
+    //    console.log("startHour given :", startHour);
+    //    console.log("row given :", row);
+    //    console.log("totalQuantity given :", totalQuantity);
+    //    console.log("is IncludedHoliday :", isIncludedHoliday);
+
+    //    // ---------- READ MANPOWER DATA ----------
+    //    const hourlyQty = Number(row?.dataset.manpowercapacity) || 30;
+    //    console.log("is hourlyQty :", hourlyQty);
+    //    let efficiencyRaw = row?.dataset.efficiency || 0;
+    //    //const efficiency = efficiencyRaw.toString().includes("%")
+    //    //    ? parseFloat(efficiencyRaw) / 100
+    //    //    : parseFloat(efficiencyRaw);
+    //    const efficiency = 10;
+    //    console.log("is efficiency :", efficiency);
+    //    if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
+
+    //    // ---------- TOTAL REQUIRED HOURS ----------
+    //    const effectiveHourlyOutput = hourlyQty * efficiency;
+    //    let totalHours = totalQuantity / effectiveHourlyOutput;
+
+    //    // ---------- SPLIT INTO FULL DAYS + REMAINING HOURS ----------
+    //    const fullDays = Math.floor(totalHours / WORKING_HOURS);
+    //    const remainingHours = totalHours % WORKING_HOURS;
+
+    //    // ---------- CALCULATE END HOUR ----------
+    //    let endHour = startHour + remainingHours;
+    //    let extraDayFromHour = 0;
+
+    //    if (endHour >= WORKING_HOURS) {
+    //        endHour -= WORKING_HOURS;
+    //        extraDayFromHour = 1;
+    //    }
+
+    //    // ---------- TOTAL DAY OFFSET FOR END DATE ----------
+    //    const endDayOffset = fullDays + extraDayFromHour;
+
+    //    // ---------- CALCULATE END DATE ----------
+    //    const endDate = new Date(startDate);
+    //    endDate.setHours(0, 0, 0, 0);
+    //    if (isNaN(endDate)) return null;
+
+    //    let addedWorkingDays = 0;
+    //    let disabledDayCount = 0;
+    //    let disableWorkingHour = 0;
+    //    if (isIncludedHoliday == 1) {
+    //        endDate.setDate(endDate.getDate() + endDayOffset);
+    //    } else {
+    //        while (addedWorkingDays < endDayOffset) {
+    //            endDate.setDate(endDate.getDate() + 1);
+    //            if (!isDisabledDay(endDate)) {
+    //                addedWorkingDays++;
+    //            } else {
+    //                console.log("off Day");
+    //                disabledDayCount++;
+    //                disableWorkingHour += WORKING_HOURS;
+    //            }
+    //        }
+    //    }
+
+    //    totalHours += disableWorkingHour;
+    //    //// ---------- FINAL UI DURATION (days.hours style) ----------
+    //    const totalDaySpan = fullDays + disabledDayCount;
+
+    //    const remainingHoursInt = Math.round(remainingHours);
+    //    const duration = Number(
+    //        `${totalDaySpan}.${remainingHoursInt}`
+    //    );
+
+
+    //    // ---------- ENSURE END HOUR IS INTEGER ----------
+    //    endHour = Math.floor(endHour);
+
+    //    // ---------- DEBUG LOG (OPTIONAL) ----------
+    //    console.log("========= CALCULATION RESULT ======1===");
+    //    console.log("Start Date :", startDate);
+    //    console.log("End Date   :", endDate.toString());
+    //    console.log("Start Hour :", startHour);
+    //    console.log("End Hour   :", endHour);
+    //    console.log("endDayOffset day   :", endDayOffset);
+    //    console.log("Total Hours:", totalHours.toFixed(2));
+    //    console.log("UI Duration (days.Endhours):", duration);
+    //    console.log("Disabled Days Skipped:", disabledDayCount);
+    //    console.log("=====================================");
+
+    //    // ---------- RETURN RESULT ----------
+    //    return {
+    //        startDate,
+    //        endDate,    // 00:00
+    //        endHour,    // integer working hour
+    //        duration    // days.hours integer hours format
+    //    };
+    //}
+    function formatToCustom(date) {     //"Mon Mar 02 2026 00:00:00 GMT+0600" to 02-Mar-26
+        const day = String(date.getDate()).padStart(2, '0');
+
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const month = months[date.getMonth()];
+
+        const year = String(date.getFullYear()).slice(-2);
+
+        return `${day}-${month}-${year}`;
+    }
+
+    function parseCustomDate(dateStr) {
+
+        const [day, mon, year] = dateStr.split("-");
+
+        const months = {
+            Jan: 0, Feb: 1, Mar: 2, Apr: 3,
+            May: 4, Jun: 5, Jul: 6, Aug: 7,
+            Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+
+        return new Date(2000 + parseInt(year), months[mon], parseInt(day));
+    }
+
+
+
+    //function getWorkingHour(workingDate) {
+
+    //    console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    //    console.log("workingDate :", workingDate);
+    //    console.log("calenderdata :", calenderdata);
+
+    //    const dateObj = new Date(workingDate);
+
+    //    const targetMonth = dateObj.getMonth();   // 0-11
+    //    const targetYear = dateObj.getFullYear();
+
+    //    //console.log("Target Month:", targetMonth);
+    //    //console.log("Target Year:", targetYear);
+
+    //    const foundDate = calenderdata.find(t => {
+
+    //        const dbDate = parseCustomDate(t.APPLYING_PERIOD_DATE);
+    //        //console.log("dbDate :", dbDate);
+    //        return (
+    //            dbDate.getMonth() === targetMonth &&
+    //            dbDate.getFullYear() === targetYear
+    //        );
+    //    });
+
+    //    console.log("Matched Row:", foundDate);
+    //    console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+    //    return foundDate ? foundDate.WORKING_HOUR : 0;
+    //}
+
+
+    // Build lookup map safely
+
+   
+    let workingHourMap = {};
+
+    function buildWorkingHourMap(calenderdata) {
+        workingHourMap = {};
+
+        calenderdata?.forEach(item => {
+            const dateObj = parseCustomDate(item.APPLYING_PERIOD_DATE);
+            if (!dateObj) return;
+
+            const key = `${dateObj.getFullYear()}-${dateObj.getMonth()}`;
+            // Month stored as 0-11 (JS standard)
+
+            workingHourMap[key] = Number(item.WORKING_HOUR);
+        });
+    }
+
+    function getWorkingHourByMonth(date) {
+        if (!date) return 0;
+
+        const d = new Date(date);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+
+        return workingHourMap[key] ?? 0;
+    }
+
+
+
+
+
+
+//    function calculateDuration({
+//        startDate,
+//        startHour = 0,
+//        row,
+//        totalQuantity,
+//        learningCurve = [],     // example: ["50","60","70","80","90"]
+//        isIncludedHoliday = 0
+//    }) {
+
+//    if (!startDate || totalQuantity <= 0) return null;
+
+
+//        let qtyToSchedule = totalQuantity;
+//        let dayIterator = new Date(startDate);
+//        let manpower = Number(row?.dataset.manpower) || 50;
+//        const smv = Number(row?.dataset.manpowercapacity) || 30;
+//        //let workingHours = WORKING_HOURS;
+//        dayIterator.setHours(0, 0, 0, 0);
+
+//        console.log("smv 1:", smv);
+//        console.log("manpower 1 :", manpower);
+//        console.log("qtyToSchedule 1 :", qtyToSchedule);
+//        console.log("row :", row);
+//        console.log("Start Date :", startDate);
+//        console.log("Start Hour :", startHour);
+
+//    let days = 0;
+//    let iterator = 0;
+//    let remainingWorkHour = 0;
+
+//    while (qtyToSchedule > 0) {
+
+//        // ---- Skip Holiday ----
+//        if (isIncludedHoliday !== 1) {
+//            while (isDisabledDay(dayIterator)) {
+//                dayIterator.setDate(dayIterator.getDate() + 1);
+//                days++;
+//            }
+//        }
+
+//        // ---- Determine Workhour for the Day ----
+//        console.log("~~~~~~~```````day :", dayIterator);
+//        let workingHours = getWorkingHour(dayIterator);
+//        let workhour = workingHours;
+//        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+//        console.log("workhour  :", workhour);
+//        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+//        // Partial first day logic
+//        if (dayIterator.getTime() === new Date(startDate).setHours(0,0,0,0)) {
+//            workhour = workingHours - startHour;
+//        }
+
+//        // ---- Learning Curve Efficiency ----
+//        if (iterator >= learningCurve.length)
+//            iterator = learningCurve.length - 1;
+
+//        let efficiency = learningCurve.length > 0
+//            ? parseFloat(learningCurve[iterator]) / 100
+//            : 1;
+
+//        // ---- Calculate Daily Output ----
+//        const totalDailyMinutes = manpower * workhour * 60;
+
+//        let dayOutput = Math.floor(
+//            efficiency * (totalDailyMinutes / smv)
+//        );
+
+//        if (dayOutput <= 0) return null;
+
+//        let firstWorkHour = workhour;
+//        let originalDayOutput = dayOutput;
+
+//        // ---- If last day partial ----
+//        if (dayOutput >= qtyToSchedule) {
+//            dayOutput = qtyToSchedule;
+
+//            workhour = Math.ceil(
+//                (firstWorkHour * qtyToSchedule) / originalDayOutput
+//            );
+
+//            remainingWorkHour = firstWorkHour - workhour;
+//        }
+
+//        qtyToSchedule -= dayOutput;
+
+//        // ---- Calculate day fraction ----
+//        if (workhour < workingHours) {
+//            days += (workhour / workingHours);
+//        } else {
+//            days += 1;
+//        }
+
+//        // ---- Move to next day ----
+//        dayIterator.setDate(dayIterator.getDate() + 1);
+//        iterator++;
+//        startHour = 0; // reset after first day
+//    }
+
+//        console.log("dayIterator :", dayIterator);
+
+//    const endDate = new Date(dayIterator);
+//    endDate.setDate(endDate.getDate() - 1);
+//        console.log("dayIterator 2", endDate);
+//        const endDateWorkingHours = getWorkingHour(dayIterator);
+//        const endHour = endDateWorkingHours - remainingWorkHour;
+//        const duration = Number(days.toFixed(3));
+//        //    // ---------- DEBUG LOG (OPTIONAL) ----------
+//            console.log("========= CALCULATION RESULT ======1===");
+//            console.log("Start Date :", startDate);
+//            console.log("End Date   :", endDate.toString());
+//            console.log("Start Hour :", startHour);
+//            console.log("End Hour   :", endHour);
+
+//            //console.log("endDayOffset day   :", endDayOffset);
+//            //console.log("Total Hours:", totalHours.toFixed(2));
+//            console.log("UI Duration (days.Endhours):", duration);
+//            //console.log("Disabled Days Skipped:", disabledDayCount);
+//            //console.log("workingHours :", workingHours);
+//            console.log("remainingWorkHour :", remainingWorkHour);
+//            console.log("smv :", smv);
+//            console.log("manpower :", manpower);
+//            //console.log("workingHours :", workingHours);
+//            console.log("qtyToSchedule :", qtyToSchedule);
+//        //    console.log("=====================================");
+
+//    return {
+//        startDate,
+//        endDate,
+//        endHour,
+//        duration: duration   // same precision as C#
+//    };
+    //}
+
+  
+
+    function getWorkingHour(workingDate) {
+
+        return 12;
+        if (!workingDate) return 0;
+
+        const dateObj = new Date(workingDate);
+
+        if (isNaN(dateObj)) return 0; // prevent invalid date crash
+
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+
+        const key = `${year}-${month}`;
+
+        return workingHourMap[key] ?? 0;
+    }
+
+   
     function calculateDuration({
         startDate,
-        startHour,
+        startHour = 0,
         row,
         totalQuantity,
+        learningCurve = [],
         isIncludedHoliday = 0
     }) {
+      
+        if (!startDate || totalQuantity <= 0) return null;
+      
+        //alert("startDate :", startDate);
 
-        console.log("startDate given :", startDate); // 2026-01-20
-        console.log("startHour given :", startHour);
-        console.log("row given :", row);
-        console.log("totalQuantity given :", totalQuantity);
-        console.log("is IncludedHoliday :", isIncludedHoliday);
+        let qtyToSchedule = totalQuantity;
+        let dayIterator = new Date(startDate);
+      
+        dayIterator.setHours(0, 0, 0, 0);
 
-        // ---------- READ MANPOWER DATA ----------
-        const hourlyQty = Number(row?.dataset.manpowercapacity) || 30;
-        console.log("is hourlyQty :", hourlyQty);
-        let efficiencyRaw = row?.dataset.efficiency || 0;
-        //const efficiency = efficiencyRaw.toString().includes("%")
-        //    ? parseFloat(efficiencyRaw) / 100
-        //    : parseFloat(efficiencyRaw);
-        const efficiency = 10;
-        console.log("is efficiency :", efficiency);
-        if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
+        const startDateOnly = new Date(startDate);
+        startDateOnly.setHours(0, 0, 0, 0);
+        
+        const manpower = Number(row?.dataset.manpower) || 50;
+        const smv = Number(row?.dataset.manpowercapacity) || 30;
 
-        // ---------- TOTAL REQUIRED HOURS ----------
-        const effectiveHourlyOutput = hourlyQty * efficiency;
-        let totalHours = totalQuantity / effectiveHourlyOutput;
+        let days = 0;
+        let iterator = 0;
+        let remainingWorkHour = 0;
+        let lastMonthKey = null;
+        let workingHours = 0;
 
-        // ---------- SPLIT INTO FULL DAYS + REMAINING HOURS ----------
-        const fullDays = Math.floor(totalHours / WORKING_HOURS);
-        const remainingHours = totalHours % WORKING_HOURS;
+        while (qtyToSchedule > 0) {
 
-        // ---------- CALCULATE END HOUR ----------
-        let endHour = startHour + remainingHours;
-        let extraDayFromHour = 0;
+            const monthKey = `${dayIterator.getFullYear()}-${dayIterator.getMonth()}`;
 
-        if (endHour >= WORKING_HOURS) {
-            endHour -= WORKING_HOURS;
-            extraDayFromHour = 1;
-        }
 
-        // ---------- TOTAL DAY OFFSET FOR END DATE ----------
-        const endDayOffset = fullDays + extraDayFromHour;
-
-        // ---------- CALCULATE END DATE ----------
-        const endDate = new Date(startDate);
-        endDate.setHours(0, 0, 0, 0);
-        if (isNaN(endDate)) return null;
-
-        let addedWorkingDays = 0;
-        let disabledDayCount = 0;
-        let disableWorkingHour = 0;
-        if (isIncludedHoliday == 1) {
-            endDate.setDate(endDate.getDate() + endDayOffset);
-        } else {
-            while (addedWorkingDays < endDayOffset) {
-                endDate.setDate(endDate.getDate() + 1);
-                if (!isDisabledDay(endDate)) {
-                    addedWorkingDays++;
-                } else {
-                    console.log("off Day");
-                    disabledDayCount++;
-                    disableWorkingHour += WORKING_HOURS;
+            // ---- Skip Holiday ----
+            if (isIncludedHoliday !== 1) {
+                while (isDisabledDay(dayIterator)) {
+                    dayIterator.setDate(dayIterator.getDate() + 1);
+                    days++;
                 }
             }
+
+            const monthNumber = dayIterator.getMonth() + 1; // 1-12
+            const year = dayIterator.getFullYear();
+
+            //if (monthKey !== lastMonthKey) {
+            //    workingHours = workingHourMap[monthKey] ?? 0;
+
+            //    lastMonthKey = monthKey;
+            //}
+
+            if (monthKey !== lastMonthKey) {
+
+                if (!(monthKey in workingHourMap)) {
+                    //alert(`Working hour not found for month: ${monthKey}`);
+                    workingHours = 12; // or return / throw error based on your logic
+                    //return;
+                } else {
+                    workingHours = workingHourMap[monthKey];
+                }
+
+                lastMonthKey = monthKey;
+            }
+
+
+            // ---- Get Working Hours ----
+           
+            let workhour = workingHours;
+
+            //console.clear();
+            console.log("workingHours :", workingHours);
+
+            console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~workhour~~~~~~~~~~~~~~~~~~~~~~~`");
+            console.log("workhour  :", workhour);
+            console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~workhour~~~~~~~~~~~~~~~~~~~~~~~`");
+            // ---- First Day Partial Handling ----
+            if (dayIterator.getTime() === startDateOnly.getTime()) {
+                workhour = Math.max(workingHours - startHour, 0);
+            }
+
+            if (workhour <= 0) {
+                dayIterator.setDate(dayIterator.getDate() + 1);
+                continue;
+            }
+
+            // ---- Learning Curve ----
+            let efficiency = 1;
+
+            if (learningCurve.length > 0) {
+                const index = Math.min(iterator, learningCurve.length - 1);
+                console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~learningCurve[index] :", learningCurve[index]);
+                efficiency = parseFloat(learningCurve[index]) / 100;
+            }
+
+            console.log("efficiency :", efficiency);
+            // ---- Daily Output ----
+            const totalDailyMinutes = manpower * workhour * 60;
+
+            let dayOutput = Math.floor(
+                efficiency * (totalDailyMinutes / smv)
+            );
+
+            if (dayOutput <= 0) return null;
+
+            let usedWorkHour = workhour;
+
+            // ---- Last Day Partial ----
+            if (dayOutput >= qtyToSchedule) {
+
+                const ratio = qtyToSchedule / dayOutput;
+                usedWorkHour = workhour * ratio;
+
+                remainingWorkHour = workhour - usedWorkHour;
+                dayOutput = qtyToSchedule;
+            }
+
+            qtyToSchedule -= dayOutput;
+
+            // ---- Add Day Fraction ----
+            days += usedWorkHour / workingHours;
+
+            // ---- Move Next Day ----
+            dayIterator.setDate(dayIterator.getDate() + 1);
+            iterator++;
+            startHour = 0;
         }
 
-        totalHours += disableWorkingHour;
-        //// ---------- FINAL UI DURATION (days.hours style) ----------
-        const totalDaySpan = fullDays + disabledDayCount;
-        
-        const remainingHoursInt = Math.round(remainingHours);
-        const duration = Number(
-            `${totalDaySpan}.${remainingHoursInt}`
-        );
+        // ---- Fix End Date ----
+        const endDate = new Date(dayIterator);
+        endDate.setDate(endDate.getDate() - 1);
 
+        const endDateWorkingHours = getWorkingHour(endDate);
+    //    const endDateWorkingHours = 12;
+        const endHour = parseInt(endDateWorkingHours - remainingWorkHour);
 
-        // ---------- ENSURE END HOUR IS INTEGER ----------
-        endHour = Math.floor(endHour);
-
-        // ---------- DEBUG LOG (OPTIONAL) ----------
-        console.log("========= CALCULATION RESULT ======1===");
-        console.log("Start Date :", startDate);
-        console.log("End Date   :", endDate.toString());
-        console.log("Start Hour :", startHour);
-        console.log("End Hour   :", endHour);
-        console.log("endDayOffset day   :", endDayOffset);
-        console.log("Total Hours:", totalHours.toFixed(2));
-        console.log("UI Duration (days.Endhours):", duration);
-        console.log("Disabled Days Skipped:", disabledDayCount);
-        console.log("=====================================");
-
-        // ---------- RETURN RESULT ----------
         return {
             startDate,
-            endDate,    // 00:00
-            endHour,    // integer working hour
-            duration    // days.hours integer hours format
+            endDate,
+            endHour,
+            duration: Number(days.toFixed(3))
         };
     }
 
@@ -1898,15 +2377,19 @@ function addDays(date,days){
 
 
 
-    function getDuration(hover, totalQuantity,isIncludedHoliday = 0) {
 
+    function getDuration(hover, totalQuantity,isIncludedHoliday = 0) {
+       
         const { row, cell, hour: startHour } = hover;
         isIncludedHoliday = 0;
+        const learningCurve = ["50", "100"]
+
         return calculateDuration({
             startDate: cell.dataset.date, // from cell
             startHour,
             row,
             totalQuantity,
+            learningCurve,
             isIncludedHoliday
         });
     }
@@ -1914,24 +2397,47 @@ function addDays(date,days){
     function getDurationForBalance(startDate, startHour, hover, totalQuantity, isIncludedHoliday = 0) {
 
         const { row } = hover;
+        const learningCurve = ["50", "60", "70", "80"]
         console.log("================================================================================getDurationForBalance");
         console.log("================================================================================startDate", startDate);
         console.log("================================================================================startDate", startHour);
         isIncludedHoliday = 0;
         return calculateDuration({
-            startDate,
+            startDate: startDate, // from cell
             startHour,
             row,
             totalQuantity,
+            learningCurve,
             isIncludedHoliday
         });
     }
 
-    function getDurationInDaysHours(totalHours) {
-        console.log("getDurationInDaysHours :", totalHours);
-        const days = Math.floor(totalHours / WORKING_HOURS);
-        const hours = Math.round(totalHours % WORKING_HOURS);
+    //function getDurationInDaysHours(totalHours,currentDate) {
+    //    console.log("getDurationInDaysHours :", totalHours);
+    //    const days = Math.floor(totalHours / WORKING_HOURS);
+    //    const hours = Math.round(totalHours % WORKING_HOURS);
 
+    //    return Number(`${days}.${hours}`);
+    //}
+
+    function getDurationInDaysHours(totalHours, task) {
+
+        console.log("getDurationInDaysHours task :", task);
+        if (!totalHours || totalHours <= 0) return 0;
+
+        const workingHoursPerDay = getWorkingHourByMonth(task.startDate);
+
+        if (!workingHoursPerDay) return 0;
+
+        const days = Math.floor(totalHours / workingHoursPerDay);
+        const hours = totalHours % workingHoursPerDay;
+
+        // Keep hours up to 2 decimal precision
+        const formattedHours = Number(hours.toFixed(2));
+        console.clear();
+        alert("test");
+        console.log("formattedHours days", days);
+        console.log("formattedHours hours", hours);
         return Number(`${days}.${hours}`);
     }
 
@@ -1941,6 +2447,7 @@ function addDays(date,days){
 
     function getQuantityByDateRenge(hoverInfo,task) {
 
+       
 
         const row = hoverInfo.row;
         const startDate = convertToDMY(task.start_date);
@@ -1953,17 +2460,17 @@ function addDays(date,days){
 
         const isIncludedHoliday = Number(task.IsIncludedHoliday);
 
+       
         const totalHours = calculateTotalHours(startDate, startHour, enddate, endhour, isIncludedHoliday);
-
         // ---------- READ MANPOWER DATA ----------
-        const hourlyQty = Number(row?.dataset.manpowercapacity) || 0;
+        const hourlyQty = Number(row?.dataset.manpowercapacity) || 50;
         let efficiencyRaw = row?.dataset.efficiency || 0;
         //const efficiency = efficiencyRaw.toString().includes("%")
         //    ? parseFloat(efficiencyRaw) / 100
         //    : parseFloat(efficiencyRaw);
 
         const efficiency = 10;
-
+        console.log("test test getQuantityByDateRenge");
         if (totalQuantity <= 0 || efficiency <= 0 || hourlyQty <= 0) return null;
 
         // ---------- TOTAL REQUIRED HOURS ----------
@@ -1971,15 +2478,17 @@ function addDays(date,days){
 
 
         const estimatedQuantity = totalHours * effectiveHourlyOutput;
-        const totalDuration = getDurationInDaysHours(totalHours);
+        const totalDuration = getDurationInDaysHours(totalHours,task);
 
         // ---------- DEBUG LOG (OPTIONAL) ----------
-        console.log("========= CALCULATION RESULT =========");
+       
+        console.log("========= CALCULATION RESULT(getQuantityByDateRenge) =========");
         console.log("Start Date :", startDate);
         console.log("End Date   :", enddate.toString());
         console.log("Start Hour :", startHour);
         console.log("End Hour   :", endhour);
         console.log("Total Hours:", totalHours);
+        console.log("Total Duration:", totalDuration);
         console.log("effectiveHourlyOutput :", effectiveHourlyOutput);
         console.log("Total Quantity  :", totalQuantity);
         console.log("estimatedQuantity  :", estimatedQuantity);
@@ -2024,12 +2533,18 @@ function addDays(date,days){
         let current = new Date(start);
 
         while (current <= end) {
+            const calmonthKey = `${current.getFullYear()}-${current.getMonth()}`;
 
+            let lastMonthKeyForCal = null;
+           
+
+            if (calmonthKey !== lastMonthKeyForCal) {
+                workingHour = workingHourMap[calmonthKey] ?? 0;
+                lastMonthKeyForCal = calmonthKey;
+            }
+
+            console.log("workingHour :", workingHour);
             if (!isDisabledDay(current)) {
-
-
-
-
 
                 if (
                     current.getTime() === start.getTime() &&
@@ -2046,11 +2561,6 @@ function addDays(date,days){
 
                     totalHours += WORKING_HOURS - startHour;
                         console.log("first Date : ", totalHours);
-
-
-
-
-
 
                 }
                 // Last day
@@ -2157,6 +2667,7 @@ function addDays(date,days){
         if (draggedTask !== null && draggedTask !== undefined) {
             previousTask = draggedTask;
             console.clear();
+            console.log("------------------------mousedown---------------------------");
             console.log("previousTask", previousTask);
             console.log("new Task", taskEl);
             const planId = previewTask.dataset.id;
@@ -2164,7 +2675,9 @@ function addDays(date,days){
             const planhover = getHoverInfo(e, row);
             const isIncludedHoliday = Number(draggedTask.dataset.isincludedholiday) ? 1 : 0;
             const totalQuantity = previousTask.dataset.quantity;
+           
             //durationPreData = getDuration(planhover, quantity, isIncludedHoliday);
+            console.log("move down row  :", planhover);
             console.log("previousTask.dataset :", previousTask.dataset);
             console.log("taskE  dataset :", taskEl.dataset);
             console.log("previousTask.dataset quantity", previousTask.dataset.quantity);
@@ -2178,25 +2691,27 @@ function addDays(date,days){
             const startHour = parseInt(taskEl.dataset.endHour);
             const LineId = parseInt(planhover.row.dataset.line);
             //const EndDate = convertToDMY(endCell.dataset.date);
-            
+
+            //AllPlansByLineId(LineId, previousTask, planhover);
+
             console.log("===================================convertToDMY(taskEl.dataset.endDate) :", convertToDMY(taskEl.dataset.endDate));
             console.log("===================================formatYMD(taskEl.dataset.endDate) :", formatYMD(taskEl.dataset.endDate));
             console.log("===================================parseDMY(taskEl.dataset.endDate) :", parseDMY(taskEl.dataset.endDate));
-
-           durationPreData= calculateDuration({
-               startDate, // from cell
-               startHour,
-                row,
-               totalQuantity,
-               isIncludedHoliday
-           })
-            console.log("durationPreData test", durationPreData);
-            duration = durationPreData.duration;
+            console.log("------------------------mousedown---------------------------");
+                               durationPreData= calculateDuration({
+                                   startDate, // from cell
+                                   startHour,
+                                    row,
+                                   totalQuantity,
+                                   isIncludedHoliday
+                               })
+                                console.log("durationPreData test", durationPreData);
+                                duration = durationPreData.duration;
            
-            const EndDate = convertToDMY(formatYMD(durationPreData.endDate));
-            const EndHour = durationPreData.endHour
-            const startDateForUpdate = taskEl.dataset.endDate;
-            console.log("==========================================================beforeUpdate :", startDateForUpdate);
+                               const EndDate = convertToDMY(formatYMD(durationPreData.endDate));
+                               const EndHour = durationPreData.endHour
+                               const startDateForUpdate = taskEl.dataset.endDate;
+                               // console.log("==========================================================beforeUpdate :", startDateForUpdate);
             updatePlan(planID, startDateForUpdate, startHour, EndDate, EndHour, LineId, duration, totalQuantity, planhover)
             cleanupDrag();
         }
@@ -2369,14 +2884,10 @@ function addDays(date,days){
      }
 
 
-
-
-
-
-
      const newTask = createPlanFromOrder(order, orderHover);
 
-     console.log("new task");
+     //console.clear();
+     console.log("new task", newTask);
 
 
      draggedOrder = null;
@@ -2440,22 +2951,28 @@ function addDays(date,days){
         }
 
     function createPlanFromOrder(order, orderHover) {
+        console.log("createPlanFromOrder :");
         // Validate input
         if (!order || !orderHover) {
-            console.error("Missing required parameters to create task");
+            alert("Missing required parameters to create task");
             return null;
         }
-
+        console.log("createPlanFromOrder 1 :");
         const lineId = parseInt(orderHover.row.dataset.line);
         const startDate = convertToDMY(orderHover.cell.dataset.date); // make sure this returns valid 'yyyy-mm-dd'
         const startHour = orderHover.hour || 0;
         const isIncludedHoliday = 1;
         // Calculate duration for this order
-        const durationForOrder = getDuration(orderHover, order.Quantity, isIncludedHoliday);
+        console.log("createPlanFromOrder orderHover :", orderHover);
+        console.log("createPlanFromOrder 2 :", order.Quantity);
+        //
+        const totalquantity = order.Quantity;
+        const durationForOrder = getDuration(orderHover, totalquantity, isIncludedHoliday);
+        console.log("durationForOrder 2 :", durationForOrder);
         if (!durationForOrder || !durationForOrder.endDate || !durationForOrder.endHour || !durationForOrder.duration === undefined) {
             alert("Duration calculation failed:", durationForOrder);
             return null;
-        }
+        } 
         console.log("==============================durationFor Order", durationForOrder);
         // Create the task object
         const task = {
@@ -2538,7 +3055,7 @@ function addDays(date,days){
     }
     //api data fetch
 
-
+   
     async function loadCalenderData(CompanyId, LocationId) {
         try {
             showLoader();
@@ -2555,10 +3072,11 @@ function addDays(date,days){
                     error: reject
                 });
             });
+            calenderdata = data;
+            console.log('````````````````````````~~~~~~~~~~~~~~~~Calendar Data:', data);
 
-            console.log('Calendar Data:', data);
-
-            allPlan = data;
+            calenderdata = data.resultset;
+            buildWorkingHourMap(calenderdata);
             // renderPlanningBoard(data);
             hideLoader();
             return data;
@@ -2573,7 +3091,7 @@ function addDays(date,days){
 
     let allPlan = [];
     let allLine = [];
-
+    let calenderdata = [];
     async function loadPlanData(companyId, locationId, floorId, autoBalancing) {
         try {
             const data = await $.ajax({
@@ -2590,11 +3108,37 @@ function addDays(date,days){
 
             console.log('Plan Data:', data);
             console.log('data.resultset:', data?.resultset);
-
+            3
             allPlan = Array.isArray(data?.resultset) ? data.resultset : [];
             console.log('Plan Data allPlan:', allPlan);
 
             return allPlan;
+
+        } catch (error) {
+            console.error('Plan API Error:', error);
+            return [];
+        }
+    }
+
+
+    async function loadPlanCapacity(companyId, locationId) {
+        try {
+            const data = await $.ajax({
+                url: '/Home/PlanLineCapacity',
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    CompanyID: companyId,
+                    locationId: locationId
+                }
+            });
+
+            console.log('Plan  Capacity Data:', data);
+            console.log('data.resultset:', data?.resultset);
+
+            
+
+            return data;
 
         } catch (error) {
             console.error('Plan API Error:', error);
@@ -2625,8 +3169,9 @@ function addDays(date,days){
 
 
             await loadPlanData(companyId, locationId, floorId, 0);
-            
-            renderCalendar(data.resultset);
+            await loadPlanCapacity(companyId, locationId);
+            await loadCalenderData(companyId, locationId);
+            renderCalendar(data.resultset,calenderdata);
             hideLoader();
         } catch (err) {
             hideLoader();
@@ -2884,7 +3429,7 @@ function addDays(date,days){
     function AllPlansByLineId(lineId, updatedTask, lastHover) {
         // Get all tasks in the line, excluding the updated task
         updateForSavePlan(updatedTask);
-        console.clear();
+        //console.clear();
         console.log("updatedTask in AllPlansByLineId", updatedTask);
 
         const lineTasks = allPlan
@@ -2943,6 +3488,18 @@ function addDays(date,days){
 
 
             } else {
+                
+                console.log("================================================================================");
+                //chainEndDate = task.end_date;
+                console.log("///////////////////////////////// task.end_hour", task.end_date);
+                console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ task.end_hour", task.end_hour);
+                //chainEndDate = task.end_date;
+                //chainEndHour = task.end_hour;
+                console.log("✅ Updated task overlaps chain start", lastHover); 
+                console.log("chainEndDate                 :", chainEndDate);
+                console.log("chainEndHour                 :", chainEndHour);
+                console.log("lastHover                 :", lastHover);
+                console.log("================================================================================");
                 const pushed = pushTaskAfter(task, chainEndDate, chainEndHour, lastHover);
 
 
@@ -2960,8 +3517,10 @@ function addDays(date,days){
 
         }
         if (IsUpdateMain) {
-            const updatedNewTask = tasks
-                .find(t => t.plan_id == updatedTask.plan_id);
+            //console.clear();
+            console.log("chainEndDate :", chainEndDate);
+
+            const updatedNewTask = allPlan.find(t => t.plan_id == updatedTask.plan_id);
             updatedNewTask.start_date = chainEndDate;
             updatedNewTask.start_hour = chainEndHour;
             const result = getDurationForBalance(
@@ -2999,6 +3558,7 @@ function addDays(date,days){
     function pushTaskAfter(task, startDate, startHour, hover) {
 
         updateForSavePlan(task);
+        console.log("=======================================startDate", startDate);
         const result = getDurationForBalance(
             convertToDMY(startDate),
             parseInt(startHour, 10),
@@ -3026,6 +3586,8 @@ function addDays(date,days){
             duration: result.duration
         };
     }
+
+  
 
     function updateForSavePlan(task) {
 
@@ -3264,7 +3826,7 @@ $(document).ready(()=>{
             if (!dayWidth || !hourWidth || !lineWidth) {
                 getLayout();
             }
-
+            var task = allPlan.find(t => t.plan_id == planID);
             console.log("dayWidth :", dayWidth);
             console.log("hourWidth :", hourWidth);
             console.log("lineWidth :", lineWidth);
@@ -3273,11 +3835,12 @@ $(document).ready(()=>{
                 console.log("split", hoverInfo.hour);
                 console.log("split clickDate", hoverInfo.cell.dataset.date);
 
-                var task = allPlan.find(t => t.plan_id == planID);
+                //var task = allPlan.find(t => t.plan_id == planID);
+               
                 console.log("task", task);
 
                 var estimatedPlan = getQuantityByDateRenge(hoverInfo, task);
-
+                console.log("estimatedPlan", estimatedPlan);
                 estimatedQty = Math.round(estimatedPlan.estimatedQuantity);
                 estimatedDuration = estimatedPlan.Duration;
 
@@ -3335,7 +3898,7 @@ $(document).ready(()=>{
 
             } else if (action === "details") {
 
-                const task = allPlan.find(t => t.plan_id == planID);
+               // const task = allPlan.find(t => t.plan_id == planID);
                 if (!task) return;
 
                 // Header
@@ -3344,8 +3907,17 @@ $(document).ready(()=>{
                     `Job No: ${task.JOB_NO?.split(",")[0] ?? "-"}`;
 
                 // Left column
-                document.getElementById("mdlStyleRef").innerText =
-                    task.STYLE_REF_NO?.split(",")[0] ?? "-";
+                //document.getElementById("mdlStyleRef").innerText =
+                //    task?.STYLE_REF_NO?.split(",")[0] ?? "-";
+
+                let styleRef = "-";
+
+                if (task && typeof task.STYLE_REF_NO === "string") {
+                    styleRef = task.STYLE_REF_NO.split(",")[0];
+                }
+
+                document.getElementById("mdlStyleRef").innerText = styleRef;
+
                 document.getElementById("mdlBuyer").innerText = task.BUYER_NAME ?? "-";
                 document.getElementById("mdlItem").innerText = task.item_name ?? "-";
                 document.getElementById("mdlLine").innerText = task.line_id ?? "-";
@@ -3391,6 +3963,67 @@ $(document).ready(()=>{
                 new bootstrap.Modal(
                     document.getElementById("detailsModal")
                 ).show();
+            }else if (action === "mergeline") {
+
+                const task = calendarContext.task;
+
+                // Set summary info
+                document.getElementById("mergeLineInfo").innerHTML = `
+        <strong>Plan:</strong> ${task ? task.id : "None"} <br>
+        <strong>Plan Width:</strong> ${task?.totalWidth ?? 0} <br>
+        <strong>Click %:</strong> ${task?.clickPercent ?? 0} <br>
+        <strong>Total Quantity:</strong> ${totalQuantity ?? 0} <br>
+        <strong>Estimated Quantity:</strong> ${estimatedQty ?? 0}
+    `;
+
+                const tbody = document.getElementById("lineListBody");
+                tbody.innerHTML = "";
+
+
+                allLine.forEach(line => {
+                    tbody.innerHTML += `
+            <tr>
+                <td>${line.LINE_ID}</td>
+                <td>${line.LINE_NAME}</td>
+                <td>${line.LOCATION_NAME}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger remove-line" data-id="${line.id}">
+                        Remove
+                    </button>
+                </td>
+            </tr>
+        `;
+                });
+
+                // Open modal
+                const modal = new bootstrap.Modal(document.getElementById('mergeLineModal'));
+                modal.show();
+
+
+
+
+
+            }else if (action === "deleteStrip") {
+
+                alert(" delete Button Clicked!!")
+
+            }else if (action === "revise") {
+
+                alert(" revise Button Clicked!!")
+
+            }else if (action === "supplyChain") {
+
+                alert("supply Chain Button Clicked!!")
+
+            }else if (action === "potracking") {
+
+                alert("Po tracking Button Clicked!!")
+
+            }
+            else if (action === "blockedsubline") {
+
+                alert("Blocked sub line Button Clicked!!")
+
             }
 
 
@@ -3420,10 +4053,20 @@ $(document).ready(()=>{
 
 
 
-    // Hide menu
-    $(document).on("click scroll", function () {
+    $(document).on("click wheel", function () {
         $("#contextMenu").hide();
     });
+
+    // Hide when any scroll happens
+    $(window).on("scroll", function () {
+        $("#contextMenu").hide();
+    });
+
+    // If you have custom scroll container
+    $(".planning-board").on("scroll", function () {
+        $("#contextMenu").hide();
+    });
+
 
     // ESC key
     $(document).on("keydown", function (e) {
@@ -3506,6 +4149,7 @@ $(document).ready(()=>{
         //);
     });
 
+   
 
     //loadPlanData();
     //loadLineData();
